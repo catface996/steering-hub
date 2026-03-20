@@ -9,12 +9,16 @@ import {
   AppBar,
   Toolbar,
   Typography,
+  IconButton,
+  Tooltip,
 } from '@mui/material'
 import DashboardIcon from '@mui/icons-material/Dashboard'
 import DescriptionIcon from '@mui/icons-material/Description'
 import SearchIcon from '@mui/icons-material/Search'
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser'
 import LabelIcon from '@mui/icons-material/Label'
+import LogoutIcon from '@mui/icons-material/Logout'
+import { removeToken } from '@/utils/auth'
 
 const DRAWER_WIDTH = 220
 
@@ -32,6 +36,11 @@ export default function MainLayout() {
 
   const selectedKey =
     menuItems.find((item) => location.pathname.startsWith(item.key))?.key ?? '/dashboard'
+
+  const handleLogout = () => {
+    removeToken()
+    navigate('/login')
+  }
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -101,9 +110,14 @@ export default function MainLayout() {
           }}
         >
           <Toolbar>
-            <Typography variant="body1" sx={{ color: '#555' }}>
+            <Typography variant="body1" sx={{ color: '#555', flexGrow: 1 }}>
               AI Coding Agent 规范管理平台
             </Typography>
+            <Tooltip title="退出登录">
+              <IconButton onClick={handleLogout} sx={{ color: '#555' }}>
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
           </Toolbar>
         </AppBar>
 

@@ -79,6 +79,7 @@ public class SpecServiceImpl extends ServiceImpl<SpecMapper, Spec> implements Sp
         if (request.getTags() != null) {
             spec.setTags(String.join(",", request.getTags()));
         }
+        spec.setAgentQueries(request.getAgentQueries());
         spec.setCurrentVersion(spec.getCurrentVersion() + 1);
         // Reset to DRAFT after edit if it was ACTIVE/REJECTED
         if (spec.getStatus() == SpecStatus.REJECTED || spec.getStatus() == SpecStatus.DEPRECATED) {

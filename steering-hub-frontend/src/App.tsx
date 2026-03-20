@@ -7,12 +7,30 @@ import SpecEditPage from '@/pages/spec/SpecEditPage'
 import SearchPage from '@/pages/search/SearchPage'
 import CompliancePage from '@/pages/compliance/CompliancePage'
 import CategoryPage from '@/pages/category/CategoryPage'
+import LoginPage from '@/pages/auth/LoginPage'
+import { isLoggedIn } from '@/utils/auth'
+
+// 路由守卫组件
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" replace />
+  }
+  return <>{children}</>
+}
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="specs" element={<SpecListPage />} />

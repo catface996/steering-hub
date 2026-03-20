@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS spec (
     tags            VARCHAR(500),
     keywords        VARCHAR(1000),
     author          VARCHAR(100),
+    agent_queries   TEXT,
     -- pgvector: 512-dimensional embedding (Titan Embeddings v2)
     embedding       vector(512),
     created_by      BIGINT,
@@ -228,3 +229,36 @@ CREATE TRIGGER trg_spec_updated_at
 CREATE TRIGGER trg_repo_updated_at
     BEFORE UPDATE ON repo
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- Table: sys_user (系统用户)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS sys_user (
+    id          BIGSERIAL       PRIMARY KEY,
+    username    VARCHAR(50)     NOT NULL UNIQUE,
+    password    VARCHAR(100)    NOT NULL,
+    nickname    VARCHAR(50),
+    role        VARCHAR(20)     NOT NULL DEFAULT 'user'
+                                CHECK (role IN ('admin', 'user')),
+    enabled     BOOLEAN         NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sys_user_username ON sys_user(username) WHERE enabled = TRUE;
+
+COMMENT ON TABLE sys_user IS '系统用户表';
+COMMENT ON COLUMN sys_user.password IS 'BCrypt 加密的密码';
+COMMENT ON COLUMN sys_user.role IS 'admin=管理员, user=普通用户';
+
+CREATE TRIGGER trg_sys_user_updated_at
+    BEFORE UPDATE ON sys_user
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- Seed Data: 默认管理员账号
+-- ============================================================
+-- 默认管理员账号 (用户名: admin, 密码: admin123)
+INSERT INTO sys_user (username, password, nickname, role)
+VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iKXpPSY7p9P1NQnmMJA4IqZHHxOW', '管理员', 'admin')
+ON CONFLICT (username) DO NOTHING;

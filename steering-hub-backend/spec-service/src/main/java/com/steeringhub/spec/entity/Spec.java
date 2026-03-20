@@ -30,6 +30,9 @@ public class Spec implements Serializable {
 
     private String keywords;
 
+    @TableField(typeHandler = com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler.class)
+    private List<String> agentQueries;
+
     private String author;
 
     /** embedding vector(512) 以字符串形式存储，实际使用时通过 native SQL 操作 */

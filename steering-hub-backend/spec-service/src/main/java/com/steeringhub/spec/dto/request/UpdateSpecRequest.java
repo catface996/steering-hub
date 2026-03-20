@@ -20,5 +20,7 @@ public class UpdateSpecRequest {
 
     private String keywords;
 
+    private List<String> agentQueries;
+
     private String changeLog;
 }

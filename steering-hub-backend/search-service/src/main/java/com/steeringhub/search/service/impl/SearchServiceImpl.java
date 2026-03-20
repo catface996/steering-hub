@@ -143,68 +143,106 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public SpecQualityReport analyzeSpecQuality(Long specId) {
+        // 1. 获取规范
         Spec spec = specService.getById(specId);
         if (spec == null) {
             throw new IllegalArgumentException("Spec not found: " + specId);
         }
 
-        // 用 title 进行混合检索
-        SearchRequest request = new SearchRequest();
-        request.setQuery(spec.getTitle());
-        request.setLimit(10);
-        List<SearchResult> searchResults = hybridSearch(request);
+        List<String> agentQueries = spec.getAgentQueries();
 
-        // 找到自己的排名和分数
-        int selfRank = 0;
-        double selfScore = 0.0;
-        for (int i = 0; i < searchResults.size(); i++) {
-            if (searchResults.get(i).getSpecId().equals(specId)) {
-                selfRank = i + 1;
-                selfScore = searchResults.get(i).getScore();
-                break;
-            }
-        }
+        SpecQualityReport report = new SpecQualityReport();
+        report.setSpecId(specId);
+        report.setTitle(spec.getTitle());
+
+        SpecQualityReport.QualityScores scores = new SpecQualityReport.QualityScores();
 
         // 计算 tag 和 keyword 数量
         int tagCount = 0;
         if (StringUtils.hasText(spec.getTags())) {
             tagCount = spec.getTags().split(",").length;
         }
+        scores.setTagCount(tagCount);
 
         int keywordCount = 0;
         if (StringUtils.hasText(spec.getKeywords())) {
             keywordCount = spec.getKeywords().split(",").length;
         }
-
-        // 计算综合评分
-        double overallScore = calculateOverallScore(selfRank, selfScore, tagCount, keywordCount);
-
-        // 构建报告
-        SpecQualityReport report = new SpecQualityReport();
-        report.setSpecId(specId);
-        report.setTitle(spec.getTitle());
-
-        SpecQualityReport.QualityScores scores = new SpecQualityReport.QualityScores();
-        scores.setSelfRetrievalRank(selfRank > 0 ? selfRank : null);
-        scores.setSelfRetrievalScore(selfScore);
-        scores.setTagCount(tagCount);
         scores.setKeywordCount(keywordCount);
-        scores.setOverallScore(overallScore);
-        report.setScores(scores);
 
-        // 生成建议
         List<String> suggestions = new ArrayList<>();
-        if (selfRank > 3 || selfRank == 0) {
-            suggestions.add("标题可能不够清晰或独特，建议优化标题以提高可检索性");
+
+        // 2. 如果有 agentQueries，用它们计算命中率
+        if (agentQueries != null && !agentQueries.isEmpty()) {
+            int hits = 0;
+            int firstRank = 0; // 第一个问题命中的排名
+
+            for (int i = 0; i < agentQueries.size(); i++) {
+                String query = agentQueries.get(i);
+                SearchRequest request = new SearchRequest();
+                request.setQuery(query);
+                request.setLimit(5);
+                List<SearchResult> results = hybridSearch(request);
+
+                boolean found = false;
+                for (int rank = 0; rank < results.size(); rank++) {
+                    if (results.get(rank).getSpecId().equals(specId)) {
+                        hits++;
+                        if (i == 0) {
+                            firstRank = rank + 1;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found && i == 0) {
+                    firstRank = 0;
+                }
+            }
+
+            double recall = (double) hits / agentQueries.size();
+            scores.setSelfRetrievalScore(recall);
+            scores.setSelfRetrievalRank(firstRank > 0 ? firstRank : null);
+
+            // 综合评分：命中率70% + tag/kw丰富度30%
+            double tagScore = Math.min(tagCount, 5) / 5.0 * 0.15;
+            double kwScore = Math.min(keywordCount, 5) / 5.0 * 0.15;
+            scores.setOverallScore(recall * 0.7 + tagScore + kwScore);
+
+            if (recall < 0.5) {
+                suggestions.add("可检索性较低(" + String.format("%.0f", recall * 100) + "%)，建议丰富关键词或优化标题");
+            }
+        } else {
+            // 无 agentQueries，降级用 title 搜索
+            SearchRequest request = new SearchRequest();
+            request.setQuery(spec.getTitle());
+            request.setLimit(10);
+            List<SearchResult> results = hybridSearch(request);
+
+            int rank = 0;
+            for (int i = 0; i < results.size(); i++) {
+                if (results.get(i).getSpecId().equals(specId)) {
+                    rank = i + 1;
+                    break;
+                }
+            }
+
+            double score = rank == 1 ? 0.5 : (rank <= 3 ? 0.3 : 0.1);
+            scores.setSelfRetrievalRank(rank > 0 ? rank : null);
+            scores.setSelfRetrievalScore(rank > 0 ? (1.0 / rank) : 0.0);
+            scores.setOverallScore(score + Math.min(tagCount, 5) / 5.0 * 0.15 + Math.min(keywordCount, 5) / 5.0 * 0.15);
+            suggestions.add("该规范尚未生成 agentQueries，评分仅供参考");
         }
+
         if (tagCount < 3) {
-            suggestions.add("建议添加更多标签（当前: " + tagCount + "，建议至少 3 个）");
+            suggestions.add("建议添加更多标签（当前:" + tagCount + "，建议≥3）");
         }
         if (keywordCount < 3) {
-            suggestions.add("建议添加更多关键词（当前: " + keywordCount + "，建议至少 3 个）");
+            suggestions.add("建议添加更多关键词（当前:" + keywordCount + "，建议≥3）");
         }
-        report.setSuggestions(suggestions);
 
+        report.setScores(scores);
+        report.setSuggestions(suggestions);
         return report;
     }
 
@@ -228,20 +266,4 @@ public class SearchServiceImpl implements SearchService {
                 .collect(Collectors.toList());
     }
 
-    private double calculateOverallScore(int selfRank, double selfScore, int tagCount, int keywordCount) {
-        double rankScore;
-        if (selfRank == 1) {
-            rankScore = 0.5;
-        } else if (selfRank <= 3 && selfRank > 0) {
-            rankScore = 0.3;
-        } else {
-            rankScore = 0.1;
-        }
-
-        double retrievalScore = selfScore * 0.3;
-        double tagScore = Math.min(tagCount, 5) / 5.0 * 0.1;
-        double keywordScore = Math.min(keywordCount, 5) / 5.0 * 0.1;
-
-        return rankScore + retrievalScore + tagScore + keywordScore;
-    }
 }

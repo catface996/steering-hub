@@ -18,6 +18,7 @@ public class SpecDetailResponse {
     private Integer currentVersion;
     private List<String> tags;
     private String keywords;
+    private List<String> agentQueries;
     private String author;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
