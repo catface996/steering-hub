@@ -1,0 +1,51 @@
+# Maven
+target/
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Environment & Secrets
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Frontend
+node_modules/
+dist/
+.vite/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+/tmp/
+
+# Debug/Test scripts (root level only)
+check_*.py
+debug_*.py
+diagnose_*.py
+inspect_*.py
+test_*.py
+regenerate_*.py
+generate_*.py
+enrich_*.py
+update_*.py
+verify_*.py
