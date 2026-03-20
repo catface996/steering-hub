@@ -7,6 +7,7 @@ import SpecEditPage from '@/pages/spec/SpecEditPage'
 import SearchPage from '@/pages/search/SearchPage'
 import CompliancePage from '@/pages/compliance/CompliancePage'
 import CategoryPage from '@/pages/category/CategoryPage'
+import SpecAnalyticsPage from '@/pages/spec/SpecAnalyticsPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import { isLoggedIn } from '@/utils/auth'
 
@@ -40,6 +41,7 @@ function App() {
           <Route path="search" element={<SearchPage />} />
           <Route path="compliance" element={<CompliancePage />} />
           <Route path="categories" element={<CategoryPage />} />
+          <Route path="analytics" element={<SpecAnalyticsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

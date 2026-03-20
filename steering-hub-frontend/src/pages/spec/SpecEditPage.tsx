@@ -8,7 +8,6 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
   Snackbar,
   Stack,
@@ -80,107 +79,146 @@ export default function SpecEditPage() {
     e.preventDefault()
     const tags = form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : []
     if (isEdit) {
-      const payload = {
-        ...form,
-        categoryId: form.categoryId ? Number(form.categoryId) : undefined,
-        tags,
-      }
-      updateMutation.mutate(payload)
+      updateMutation.mutate({ ...form, categoryId: form.categoryId ? Number(form.categoryId) : undefined, tags })
     } else {
-      const payload = {
-        ...form,
-        categoryId: Number(form.categoryId),
-        tags,
-      }
-      createMutation.mutate(payload)
+      createMutation.mutate({ ...form, categoryId: Number(form.categoryId), tags })
     }
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending
 
+  const labelSx = { color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }
+
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
-      <Typography variant="h5" fontWeight={600} mb={3}>
-        {isEdit ? '编辑规范' : '新建规范'}
-      </Typography>
-      <Paper elevation={1} sx={{ p: 3 }}>
-        <Box component="form" onSubmit={onSubmit}>
-          <Stack spacing={3}>
-            <TextField
-              label="规范标题"
-              required
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              fullWidth
-            />
-            <FormControl fullWidth>
-              <InputLabel>规范分类</InputLabel>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>
+          {isEdit ? '编辑规范' : '编辑规范'}
+        </Typography>
+        <Typography sx={{ color: '#8E8E93', fontSize: 14, mt: 0.5 }}>
+          创建或编辑代码规范文档
+        </Typography>
+      </Box>
+
+      <Box component="form" onSubmit={onSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* Title */}
+        <Box>
+          <Typography sx={labelSx}>规范标题</Typography>
+          <TextField
+            required
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            placeholder="Java异常处理规范 v2.0"
+            fullWidth
+            size="small"
+          />
+        </Box>
+
+        {/* Category + Author */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+          <Box>
+            <Typography sx={labelSx}>规范分类</Typography>
+            <FormControl fullWidth size="small">
               <Select
-                label="规范分类"
                 value={form.categoryId}
                 onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
+                displayEmpty
               >
                 <MenuItem value="">请选择分类</MenuItem>
                 {categories.map((c) => (
-                  <MenuItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </MenuItem>
+                  <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
                 ))}
               </Select>
             </FormControl>
+          </Box>
+          <Box>
+            <Typography sx={labelSx}>作者</Typography>
             <TextField
-              label="标签（逗号分隔）"
-              value={form.tags}
-              onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-              placeholder="例如: Java, SpringBoot, REST"
-              fullWidth
-            />
-            <TextField
-              label="关键词（用于全文检索，逗号分隔）"
-              value={form.keywords}
-              onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="作者"
               value={form.author}
               onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
               fullWidth
+              size="small"
             />
-            <TextField
-              label="规范内容（Markdown）"
-              required
-              multiline
-              rows={20}
-              value={form.content}
-              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-              placeholder="请输入 Markdown 格式的规范内容..."
-              fullWidth
-              sx={{ '& textarea': { fontFamily: 'monospace', fontSize: 14 } }}
-            />
-            {isEdit && (
-              <TextField
-                label="变更说明"
-                value={form.changeLog}
-                onChange={(e) => setForm((f) => ({ ...f, changeLog: e.target.value }))}
-                placeholder="简要描述本次修改内容"
-                fullWidth
-              />
-            )}
-            <Stack direction="row" spacing={2}>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isPending}
-                startIcon={isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
-              >
-                保存
-              </Button>
-              <Button variant="outlined" onClick={() => navigate(-1)}>取消</Button>
-            </Stack>
-          </Stack>
+          </Box>
         </Box>
-      </Paper>
+
+        {/* Tags */}
+        <Box>
+          <Typography sx={labelSx}>标签（逗号分隔）</Typography>
+          <TextField
+            value={form.tags}
+            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+            placeholder="Java, 异常处理, SpringBoot"
+            fullWidth
+            size="small"
+          />
+        </Box>
+
+        {/* Keywords */}
+        <Box>
+          <Typography sx={labelSx}>关键词（逗号分隔）</Typography>
+          <TextField
+            value={form.keywords}
+            onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
+            placeholder="try-catch Exception, 异常处理"
+            fullWidth
+            size="small"
+          />
+        </Box>
+
+        {/* Content */}
+        <Box>
+          <Typography sx={labelSx}>规范内容（Markdown）</Typography>
+          <TextField
+            required
+            multiline
+            rows={18}
+            value={form.content}
+            onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+            placeholder="请输入 Markdown 格式的规范内容..."
+            fullWidth
+            sx={{
+              '& textarea': { fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 13 },
+              '& .MuiOutlinedInput-root': { bgcolor: '#1A1A1E' },
+            }}
+          />
+        </Box>
+
+        {/* Changelog (edit mode) */}
+        {isEdit && (
+          <Box>
+            <Typography sx={labelSx}>变更说明</Typography>
+            <TextField
+              value={form.changeLog}
+              onChange={(e) => setForm((f) => ({ ...f, changeLog: e.target.value }))}
+              placeholder="简要描述本次修改内容"
+              fullWidth
+              size="small"
+            />
+          </Box>
+        )}
+
+        {/* Actions */}
+        <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 1 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate(-1)}
+            sx={{ borderColor: '#2A2A2E', color: '#8E8E93', px: 4 }}
+          >
+            取消
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isPending}
+            startIcon={isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
+            sx={{ px: 4 }}
+          >
+            保存
+          </Button>
+        </Stack>
+      </Box>
 
       <Snackbar open={!!snackMsg} autoHideDuration={3000} onClose={() => setSnackMsg('')}>
         <Alert severity="success" onClose={() => setSnackMsg('')}>{snackMsg}</Alert>

@@ -1,13 +1,10 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   Box,
-  Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  AppBar,
-  Toolbar,
   Typography,
   IconButton,
   Tooltip,
@@ -20,14 +17,14 @@ import LabelIcon from '@mui/icons-material/Label'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { removeToken } from '@/utils/auth'
 
-const DRAWER_WIDTH = 220
+const SIDEBAR_WIDTH = 220
 
 const menuItems = [
-  { key: '/dashboard', icon: <DashboardIcon />, label: '概览' },
-  { key: '/specs', icon: <DescriptionIcon />, label: '规范管理' },
-  { key: '/search', icon: <SearchIcon />, label: '规范检索' },
-  { key: '/compliance', icon: <VerifiedUserIcon />, label: '合规审查' },
-  { key: '/categories', icon: <LabelIcon />, label: '分类管理' },
+  { key: '/dashboard', icon: <DashboardIcon sx={{ fontSize: 20 }} />, label: '概览' },
+  { key: '/specs', icon: <DescriptionIcon sx={{ fontSize: 20 }} />, label: '规范编辑' },
+  { key: '/search', icon: <SearchIcon sx={{ fontSize: 20 }} />, label: '规范检索' },
+  { key: '/compliance', icon: <VerifiedUserIcon sx={{ fontSize: 20 }} />, label: '合规审查' },
+  { key: '/categories', icon: <LabelIcon sx={{ fontSize: 20 }} />, label: '分类管理' },
 ]
 
 export default function MainLayout() {
@@ -43,36 +40,50 @@ export default function MainLayout() {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <Drawer
-        variant="permanent"
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#0B0B0E' }}>
+      {/* Sidebar */}
+      <Box
         sx={{
-          width: DRAWER_WIDTH,
+          width: SIDEBAR_WIDTH,
           flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            bgcolor: '#1a2332',
-            color: '#fff',
-            height: '100vh',
-            overflow: 'hidden',
-          },
+          bgcolor: '#111114',
+          borderRight: '1px solid #2A2A2E',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
         }}
       >
+        {/* Logo */}
         <Box
           sx={{
             height: 64,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            borderBottom: '1px solid rgba(255,255,255,0.12)',
+            gap: 1.5,
+            px: 2.5,
+            borderBottom: '1px solid #2A2A2E',
           }}
         >
-          <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: '10px',
+              background: 'linear-gradient(180deg, #6366F1 0%, #4F46E5 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography sx={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>S</Typography>
+          </Box>
+          <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 15 }}>
             Steering Hub
           </Typography>
         </Box>
-        <List sx={{ px: 1, pt: 1, flexGrow: 1, bgcolor: '#1a2332' }}>
+
+        {/* Nav */}
+        <List sx={{ px: 1.5, pt: 2, flexGrow: 1 }}>
           {menuItems.map((item) => {
             const selected = selectedKey === item.key
             return (
@@ -81,49 +92,61 @@ export default function MainLayout() {
                 selected={selected}
                 onClick={() => navigate(item.key)}
                 sx={{
-                  borderRadius: 1,
+                  borderRadius: '10px',
                   mb: 0.5,
-                  color: selected ? '#90caf9' : 'rgba(255,255,255,0.7)',
+                  py: 1,
+                  px: 1.5,
+                  color: selected ? '#FAFAF9' : '#8E8E93',
+                  bgcolor: selected ? 'rgba(99,102,241,0.12)' : 'transparent',
                   '&.Mui-selected': {
-                    bgcolor: 'rgba(144,202,249,0.15)',
-                    '&:hover': { bgcolor: 'rgba(144,202,249,0.2)' },
+                    bgcolor: 'rgba(99,102,241,0.12)',
+                    '&:hover': { bgcolor: 'rgba(99,102,241,0.18)' },
                   },
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' },
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' },
                 }}
               >
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
+                <ListItemIcon
+                  sx={{
+                    color: selected ? '#6366F1' : '#4A4A50',
+                    minWidth: 36,
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontSize: 14,
+                    fontWeight: selected ? 600 : 400,
+                  }}
+                />
               </ListItemButton>
             )
           })}
         </List>
-      </Drawer>
 
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        <AppBar
-          position="static"
-          elevation={0}
-          sx={{
-            bgcolor: '#fff',
-            borderBottom: '1px solid #e0e0e0',
-            color: '#333',
-          }}
-        >
-          <Toolbar>
-            <Typography variant="body1" sx={{ color: '#555', flexGrow: 1 }}>
-              AI Coding Agent 规范管理平台
-            </Typography>
-            <Tooltip title="退出登录">
-              <IconButton onClick={handleLogout} sx={{ color: '#555' }}>
-                <LogoutIcon />
-              </IconButton>
-            </Tooltip>
-          </Toolbar>
-        </AppBar>
-
-        <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: '#f5f5f5', overflow: 'auto' }}>
-          <Outlet />
+        {/* Logout */}
+        <Box sx={{ p: 2, borderTop: '1px solid #2A2A2E' }}>
+          <Tooltip title="退出登录" placement="right">
+            <IconButton onClick={handleLogout} sx={{ color: '#4A4A50', '&:hover': { color: '#E85A4F' } }}>
+              <LogoutIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
         </Box>
+      </Box>
+
+      {/* Main content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          height: '100vh',
+          overflow: 'auto',
+          bgcolor: '#0B0B0E',
+          p: 4,
+        }}
+      >
+        <Outlet />
       </Box>
     </Box>
   )

@@ -12,7 +12,7 @@
 -- ============================================================
 -- Extensions
 -- ============================================================
-CREATE EXTENSION IF NOT EXISTS pgvector;
+CREATE EXTENSION IF NOT EXISTS vector;
 -- Optional: Chinese full-text search (requires zhparser compiled)
 -- CREATE EXTENSION IF NOT EXISTS zhparser;
 -- CREATE TEXT SEARCH CONFIGURATION chinese (PARSER = zhparser);
