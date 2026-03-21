@@ -19,14 +19,14 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ALTER TEXT SEARCH CONFIGURATION chinese ADD MAPPING FOR n,v,a,i,e,l WITH simple;
 
 -- ============================================================
--- Table: spec_category (规范分类)
+-- Table: steering_category (规范分类)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS spec_category (
+CREATE TABLE IF NOT EXISTS steering_category (
     id          BIGSERIAL       PRIMARY KEY,
     name        VARCHAR(100)    NOT NULL,
     code        VARCHAR(50)     NOT NULL UNIQUE,
     description TEXT,
-    parent_id   BIGINT          REFERENCES spec_category(id),
+    parent_id   BIGINT          REFERENCES steering_category(id),
     sort_order  INT             NOT NULL DEFAULT 0,
     enabled     BOOLEAN         NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
@@ -34,20 +34,20 @@ CREATE TABLE IF NOT EXISTS spec_category (
     deleted     BOOLEAN         NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_spec_category_parent ON spec_category(parent_id);
-CREATE INDEX IF NOT EXISTS idx_spec_category_code ON spec_category(code) WHERE deleted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_steering_category_parent ON steering_category(parent_id);
+CREATE INDEX IF NOT EXISTS idx_steering_category_code ON steering_category(code) WHERE deleted = FALSE;
 
-COMMENT ON TABLE spec_category IS '规范分类表';
-COMMENT ON COLUMN spec_category.code IS '分类唯一编码，如: coding/business/architecture';
+COMMENT ON TABLE steering_category IS '规范分类表';
+COMMENT ON COLUMN steering_category.code IS '分类唯一编码，如: coding/business/architecture';
 
 -- ============================================================
--- Table: spec (规范主表)
+-- Table: steering (规范主表)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS spec (
+CREATE TABLE IF NOT EXISTS steering (
     id              BIGSERIAL       PRIMARY KEY,
     title           VARCHAR(500)    NOT NULL,
     content         TEXT            NOT NULL,
-    category_id     BIGINT          NOT NULL REFERENCES spec_category(id),
+    category_id     BIGINT          NOT NULL REFERENCES steering_category(id),
     status          VARCHAR(20)     NOT NULL DEFAULT 'draft'
                                     CHECK (status IN ('draft','pending_review','approved','rejected','active','deprecated')),
     current_version INT             NOT NULL DEFAULT 1,
@@ -65,18 +65,18 @@ CREATE TABLE IF NOT EXISTS spec (
 );
 
 -- Index for status filtering (most common query)
-CREATE INDEX IF NOT EXISTS idx_spec_status ON spec(status) WHERE deleted = FALSE;
-CREATE INDEX IF NOT EXISTS idx_spec_category ON spec(category_id) WHERE deleted = FALSE;
-CREATE INDEX IF NOT EXISTS idx_spec_created_at ON spec(created_at DESC) WHERE deleted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_steering_status ON steering(status) WHERE deleted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_steering_category ON steering(category_id) WHERE deleted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_steering_created_at ON steering(created_at DESC) WHERE deleted = FALSE;
 
 -- pgvector HNSW index for fast approximate nearest neighbor search (cosine distance)
-CREATE INDEX IF NOT EXISTS idx_spec_embedding_hnsw
-    ON spec USING hnsw (embedding vector_cosine_ops)
+CREATE INDEX IF NOT EXISTS idx_steering_embedding_hnsw
+    ON steering USING hnsw (embedding vector_cosine_ops)
     WITH (m = 16, ef_construction = 64);
 
 -- Full-text search index (simple config; switch to 'chinese' if zhparser is available)
-CREATE INDEX IF NOT EXISTS idx_spec_fts
-    ON spec USING gin(
+CREATE INDEX IF NOT EXISTS idx_steering_fts
+    ON steering USING gin(
         to_tsvector('simple',
             coalesce(title,'') || ' ' ||
             coalesce(content,'') || ' ' ||
@@ -84,16 +84,16 @@ CREATE INDEX IF NOT EXISTS idx_spec_fts
         )
     ) WHERE deleted = FALSE;
 
-COMMENT ON TABLE spec IS '规范主表';
-COMMENT ON COLUMN spec.embedding IS 'Amazon Bedrock Titan Embeddings v2 生成的 512 维向量';
-COMMENT ON COLUMN spec.status IS 'draft=草稿, pending_review=待审核, approved=已通过, rejected=已驳回, active=已生效, deprecated=已废弃';
+COMMENT ON TABLE steering IS '规范主表';
+COMMENT ON COLUMN steering.embedding IS 'Amazon Bedrock Titan Embeddings v2 生成的 512 维向量';
+COMMENT ON COLUMN steering.status IS 'draft=草稿, pending_review=待审核, approved=已通过, rejected=已驳回, active=已生效, deprecated=已废弃';
 
 -- ============================================================
--- Table: spec_version (规范版本历史)
+-- Table: steering_version (规范版本历史)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS spec_version (
+CREATE TABLE IF NOT EXISTS steering_version (
     id              BIGSERIAL   PRIMARY KEY,
-    spec_id         BIGINT      NOT NULL REFERENCES spec(id),
+    steering_id     BIGINT      NOT NULL REFERENCES steering(id),
     version         INT         NOT NULL,
     title           VARCHAR(500) NOT NULL,
     content         TEXT        NOT NULL,
@@ -102,20 +102,20 @@ CREATE TABLE IF NOT EXISTS spec_version (
     change_log      TEXT,
     created_by      BIGINT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (spec_id, version)
+    UNIQUE (steering_id, version)
 );
 
-CREATE INDEX IF NOT EXISTS idx_spec_version_spec ON spec_version(spec_id);
+CREATE INDEX IF NOT EXISTS idx_steering_version_steering ON steering_version(steering_id);
 
-COMMENT ON TABLE spec_version IS '规范版本历史表，每次修改生成新版本';
+COMMENT ON TABLE steering_version IS '规范版本历史表，每次修改生成新版本';
 
 -- ============================================================
--- Table: spec_review (审核记录)
+-- Table: steering_review (审核记录)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS spec_review (
+CREATE TABLE IF NOT EXISTS steering_review (
     id              BIGSERIAL   PRIMARY KEY,
-    spec_id         BIGINT      NOT NULL REFERENCES spec(id),
-    spec_version    INT         NOT NULL,
+    steering_id     BIGINT      NOT NULL REFERENCES steering(id),
+    steering_version INT        NOT NULL,
     action          VARCHAR(20) NOT NULL
                                 CHECK (action IN ('submit','approve','reject','activate','deprecate','rollback')),
     comment         TEXT,
@@ -124,10 +124,10 @@ CREATE TABLE IF NOT EXISTS spec_review (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_spec_review_spec ON spec_review(spec_id);
-CREATE INDEX IF NOT EXISTS idx_spec_review_created ON spec_review(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_steering_review_steering ON steering_review(steering_id);
+CREATE INDEX IF NOT EXISTS idx_steering_review_created ON steering_review(created_at DESC);
 
-COMMENT ON TABLE spec_review IS '审核记录表';
+COMMENT ON TABLE steering_review IS '审核记录表';
 
 -- ============================================================
 -- Table: repo (代码仓库注册)
@@ -151,12 +151,12 @@ CREATE INDEX IF NOT EXISTS idx_repo_full_name ON repo(full_name) WHERE deleted =
 COMMENT ON TABLE repo IS '代码仓库注册表';
 
 -- ============================================================
--- Table: spec_usage (规范使用记录)
+-- Table: steering_usage (规范使用记录)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS spec_usage (
+CREATE TABLE IF NOT EXISTS steering_usage (
     id              BIGSERIAL   PRIMARY KEY,
-    spec_id         BIGINT      NOT NULL REFERENCES spec(id),
-    spec_version    INT,
+    steering_id     BIGINT      NOT NULL REFERENCES steering(id),
+    steering_version INT,
     repo_id         BIGINT      REFERENCES repo(id),
     repo_name       VARCHAR(300),
     task_description TEXT,
@@ -165,11 +165,11 @@ CREATE TABLE IF NOT EXISTS spec_usage (
     used_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_spec_usage_spec ON spec_usage(spec_id);
-CREATE INDEX IF NOT EXISTS idx_spec_usage_repo ON spec_usage(repo_id);
-CREATE INDEX IF NOT EXISTS idx_spec_usage_used_at ON spec_usage(used_at DESC);
+CREATE INDEX IF NOT EXISTS idx_steering_usage_steering ON steering_usage(steering_id);
+CREATE INDEX IF NOT EXISTS idx_steering_usage_repo ON steering_usage(repo_id);
+CREATE INDEX IF NOT EXISTS idx_steering_usage_used_at ON steering_usage(used_at DESC);
 
-COMMENT ON TABLE spec_usage IS '规范使用追踪表';
+COMMENT ON TABLE steering_usage IS '规范使用追踪表';
 
 -- ============================================================
 -- Table: compliance_report (合规报告)
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS compliance_report (
     task_description TEXT,
     score           NUMERIC(5,2)    NOT NULL DEFAULT 100,
     violations      JSONB,
-    related_specs   JSONB,
+    related_steerings JSONB,
     summary         TEXT,
     checked_by      VARCHAR(100),
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
@@ -198,7 +198,7 @@ COMMENT ON TABLE compliance_report IS '合规审查报告表';
 -- ============================================================
 -- Seed Data: 预置规范分类
 -- ============================================================
-INSERT INTO spec_category (name, code, description, sort_order) VALUES
+INSERT INTO steering_category (name, code, description, sort_order) VALUES
     ('编码规范', 'coding',       '代码风格、命名约定、注释规范等', 1),
     ('架构规范', 'architecture', '系统架构、模块划分、依赖管理等', 2),
     ('业务规范', 'business',     '业务逻辑、领域模型、接口契约等', 3),
@@ -218,12 +218,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_spec_category_updated_at
-    BEFORE UPDATE ON spec_category
+CREATE TRIGGER trg_steering_category_updated_at
+    BEFORE UPDATE ON steering_category
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER trg_spec_updated_at
-    BEFORE UPDATE ON spec
+CREATE TRIGGER trg_steering_updated_at
+    BEFORE UPDATE ON steering
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_repo_updated_at

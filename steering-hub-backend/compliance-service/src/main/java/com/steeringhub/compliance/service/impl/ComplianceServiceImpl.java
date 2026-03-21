@@ -9,12 +9,12 @@ import com.steeringhub.compliance.service.ComplianceService;
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
 import com.steeringhub.search.service.SearchService;
-import com.steeringhub.spec.entity.ComplianceReport;
-import com.steeringhub.spec.entity.Repo;
-import com.steeringhub.spec.entity.SpecUsage;
-import com.steeringhub.spec.mapper.ComplianceReportMapper;
-import com.steeringhub.spec.service.RepoService;
-import com.steeringhub.spec.service.SpecUsageService;
+import com.steeringhub.steering.entity.ComplianceReport;
+import com.steeringhub.steering.entity.Repo;
+import com.steeringhub.steering.entity.SteeringUsage;
+import com.steeringhub.steering.mapper.ComplianceReportMapper;
+import com.steeringhub.steering.service.RepoService;
+import com.steeringhub.steering.service.SteeringUsageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class ComplianceServiceImpl implements ComplianceService {
 
     private final RepoService repoService;
-    private final SpecUsageService specUsageService;
+    private final SteeringUsageService steeringUsageService;
     private final SearchService searchService;
     private final ComplianceReportMapper complianceReportMapper;
     private final ObjectMapper objectMapper;
@@ -43,27 +43,27 @@ public class ComplianceServiceImpl implements ComplianceService {
             throw new BusinessException(ResultCode.REPO_NOT_FOUND);
         }
 
-        // 1. Semantic search for relevant specs
+        // 1. Semantic search for relevant steerings
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setQuery(request.getCodeSnippet().substring(0, Math.min(500, request.getCodeSnippet().length())));
         searchRequest.setCategoryId(request.getCategoryId());
         searchRequest.setLimit(10);
         searchRequest.setMode("hybrid");
 
-        List<SearchResult> relevantSpecs = searchService.hybridSearch(searchRequest);
+        List<SearchResult> relevantSteerings = searchService.hybridSearch(searchRequest);
 
-        // 2. Build related specs list
-        List<RelatedSpec> relatedSpecs = relevantSpecs.stream().map(sr -> {
-            RelatedSpec rs = new RelatedSpec();
-            rs.setSpecId(sr.getSpecId());
-            rs.setSpecTitle(sr.getTitle());
-            rs.setSpecContent(sr.getContent());
+        // 2. Build related steerings list
+        List<RelatedSteering> relatedSteerings = relevantSteerings.stream().map(sr -> {
+            RelatedSteering rs = new RelatedSteering();
+            rs.setSteeringId(sr.getSteeringId());
+            rs.setSteeringTitle(sr.getTitle());
+            rs.setSteeringContent(sr.getContent());
             rs.setRelevanceScore(sr.getScore());
             return rs;
         }).collect(Collectors.toList());
 
         // 3. Simple rule-based violation detection (placeholder for LLM-based analysis)
-        List<ViolationDetail> violations = detectViolations(request.getCodeSnippet(), relatedSpecs);
+        List<ViolationDetail> violations = detectViolations(request.getCodeSnippet(), relatedSteerings);
 
         // 4. Calculate score
         BigDecimal score = calculateScore(violations);
@@ -83,7 +83,7 @@ public class ComplianceServiceImpl implements ComplianceService {
         report.setSummary(summary);
         try {
             report.setViolations(objectMapper.writeValueAsString(violations));
-            report.setRelatedSpecs(objectMapper.writeValueAsString(relatedSpecs));
+            report.setRelatedSteerings(objectMapper.writeValueAsString(relatedSteerings));
         } catch (Exception e) {
             log.warn("Failed to serialize report details", e);
         }
@@ -96,7 +96,7 @@ public class ComplianceServiceImpl implements ComplianceService {
         response.setCompliant(compliant);
         response.setSummary(summary);
         response.setViolations(violations);
-        response.setRelatedSpecs(relatedSpecs);
+        response.setRelatedSteerings(relatedSteerings);
         return response;
     }
 
@@ -123,9 +123,9 @@ public class ComplianceServiceImpl implements ComplianceService {
         return toResponse(report);
     }
 
-    private List<ViolationDetail> detectViolations(String codeSnippet, List<RelatedSpec> specs) {
+    private List<ViolationDetail> detectViolations(String codeSnippet, List<RelatedSteering> steerings) {
         // Placeholder: in production, this would call an LLM (Claude via Bedrock) to analyze
-        // the code against each spec and return structured violations
+        // the code against each steering and return structured violations
         return Collections.emptyList();
     }
 

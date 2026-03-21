@@ -64,7 +64,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     }
 
     @Override
-    public float[] embedSpec(String title, String keywords, String tags) {
+    public float[] embedSteering(String title, String keywords, String tags) {
         StringBuilder sb = new StringBuilder();
         if (title != null) sb.append(title).append("\n");
         if (keywords != null) sb.append(keywords).append("\n");

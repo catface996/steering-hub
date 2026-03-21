@@ -23,7 +23,7 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
         // 自动填充 updatedAt
         this.strictInsertFill(metaObject, "updatedAt", OffsetDateTime.class, now);
 
-        // 自动填充 usedAt (用于 SpecUsage 实体)
+        // 自动填充 usedAt (用于 SteeringUsage 实体)
         this.strictInsertFill(metaObject, "usedAt", OffsetDateTime.class, now);
     }
 

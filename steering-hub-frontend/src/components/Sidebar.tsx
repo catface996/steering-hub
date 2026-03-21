@@ -10,6 +10,7 @@ import {
   Key,
   ChevronDown,
   ChevronRight,
+  Compass,
 } from 'lucide-react';
 
 const drawerWidth = 280;
@@ -23,7 +24,7 @@ interface NavItem {
 
 const mainItems: NavItem[] = [
   { icon: <LayoutDashboard size={20} />, label: '概览', path: '/dashboard', iconColor: '#a78bfa' },
-  { icon: <FileText size={20} />, label: '规范编辑', path: '/specs', iconColor: '#818cf8' },
+  { icon: <FileText size={20} />, label: '规范管理', path: '/steerings', iconColor: '#818cf8' },
   { icon: <Search size={20} />, label: '规范检索', path: '/search', iconColor: '#22d3ee' },
   { icon: <ShieldCheck size={20} />, label: '合规审查', path: '/compliance', iconColor: '#f59e0b' },
   { icon: <Tag size={20} />, label: '分类管理', path: '/categories', iconColor: '#4ade80' },
@@ -117,7 +118,7 @@ export default function Sidebar() {
               justifyContent: 'center',
             }}
           >
-            <Typography.Text style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>S</Typography.Text>
+            <Compass size={18} color="#fff" strokeWidth={2.5} />
           </div>
           <Typography.Text style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#e4e4e7' }}>Steering Hub</Typography.Text>
         </Flex>

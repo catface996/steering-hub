@@ -105,8 +105,8 @@ export default function SearchPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             {pagedResults.map((r) => (
               <Card
-                key={r.specId}
-                onClick={() => navigate(`/specs/${r.specId}`)}
+                key={r.steeringId}
+                onClick={() => navigate(`/steerings/${r.steeringId}`)}
                 style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
                 hoverable
               >

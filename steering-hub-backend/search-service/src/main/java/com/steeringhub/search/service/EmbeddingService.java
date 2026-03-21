@@ -13,5 +13,5 @@ public interface EmbeddingService {
     /**
      * 将多段文本拼接后生成 embedding（用于规范内容 = title + keywords + tags）
      */
-    float[] embedSpec(String title, String keywords, String tags);
+    float[] embedSteering(String title, String keywords, String tags);
 }

@@ -1,4 +1,4 @@
-export type SpecStatus =
+export type SteeringStatus =
   | 'draft'
   | 'pending_review'
   | 'approved'
@@ -14,7 +14,7 @@ export type ReviewAction =
   | 'deprecate'
   | 'rollback'
 
-export interface SpecCategory {
+export interface SteeringCategory {
   id: number
   name: string
   code: string
@@ -24,13 +24,13 @@ export interface SpecCategory {
   enabled: boolean
 }
 
-export interface Spec {
+export interface Steering {
   id: number
   title: string
   content: string
   categoryId: number
   categoryName?: string
-  status: SpecStatus
+  status: SteeringStatus
   currentVersion: number
   tags?: string[]
   keywords?: string
@@ -41,9 +41,9 @@ export interface Spec {
   updatedAt: string
 }
 
-export interface SpecVersion {
+export interface SteeringVersion {
   id: number
-  specId: number
+  steeringId: number
   version: number
   title: string
   content: string
@@ -52,12 +52,12 @@ export interface SpecVersion {
 }
 
 export interface SearchResult {
-  specId: number
+  steeringId: number
   title: string
   content: string
   categoryId: number
   categoryName?: string
-  status: SpecStatus
+  status: SteeringStatus
   currentVersion: number
   tags?: string[]
   keywords?: string
@@ -83,22 +83,22 @@ export interface ComplianceReport {
   compliant: boolean
   summary: string
   violations?: ViolationDetail[]
-  relatedSpecs?: RelatedSpec[]
+  relatedSteerings?: RelatedSteering[]
 }
 
 export interface ViolationDetail {
-  specId: number
-  specTitle: string
+  steeringId: number
+  steeringTitle: string
   violationType: string
   description: string
   suggestion?: string
   severity: 'HIGH' | 'MEDIUM' | 'LOW'
 }
 
-export interface RelatedSpec {
-  specId: number
-  specTitle: string
-  specContent: string
+export interface RelatedSteering {
+  steeringId: number
+  steeringTitle: string
+  steeringContent: string
   relevanceScore: number
 }
 

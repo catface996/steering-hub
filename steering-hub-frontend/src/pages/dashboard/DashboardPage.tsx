@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Typography, Card, Button, Tag, Flex, Spin } from 'antd';
 import { FileText, CheckCircle, Search, ShieldCheck, Plus, Tag as TagIcon } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
-import { specService } from '../../services/specService';
-import type { Spec, SpecStatus } from '../../types';
+import { steeringService } from '../../services/steeringService';
+import type { Steering, SteeringStatus } from '../../types';
 
-const STATUS_LABEL: Record<SpecStatus, string> = {
+const STATUS_LABEL: Record<SteeringStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
   rejected: '已驳回', active: '已生效', deprecated: '已废弃',
 };
 
-const STATUS_CLASS: Record<SpecStatus, string> = {
+const STATUS_CLASS: Record<SteeringStatus, string> = {
   draft: 'tag-status-draft', pending_review: 'tag-status-pending', approved: 'tag-status-approved',
   rejected: 'tag-status-rejected', active: 'tag-status-active', deprecated: 'tag-status-deprecated',
 };
@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const { setBreadcrumbs } = useHeader();
   const [totalCount, setTotalCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
-  const [recentSpecs, setRecentSpecs] = useState<Spec[]>([]);
+  const [recentSteerings, setRecentSteerings] = useState<Steering[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,13 +34,13 @@ export default function DashboardPage() {
     const load = async () => {
       try {
         const [total, active, recent] = await Promise.all([
-          specService.page({ current: 1, size: 1 }),
-          specService.page({ current: 1, size: 1, status: 'active' }),
-          specService.page({ current: 1, size: 5 }),
+          steeringService.page({ current: 1, size: 1 }),
+          steeringService.page({ current: 1, size: 1, status: 'active' }),
+          steeringService.page({ current: 1, size: 5 }),
         ]);
         setTotalCount(total.total);
         setActiveCount(active.total);
-        setRecentSpecs(recent.records);
+        setRecentSteerings(recent.records);
       } catch {
         // ignore
       } finally {
@@ -58,7 +58,7 @@ export default function DashboardPage() {
   ];
 
   const quickActions = [
-    { label: '新建规范', icon: <Plus size={16} />, onClick: () => navigate('/specs/new'), color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
+    { label: '新建规范', icon: <Plus size={16} />, onClick: () => navigate('/steerings/new'), color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
     { label: '搜索规范', icon: <Search size={16} />, onClick: () => navigate('/search'), color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
     { label: '合规检查', icon: <ShieldCheck size={16} />, onClick: () => navigate('/compliance'), color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
     { label: '分类管理', icon: <TagIcon size={16} />, onClick: () => navigate('/categories'), color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
@@ -90,7 +90,7 @@ export default function DashboardPage() {
           title={
             <Flex justify="space-between" align="center">
               <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>最近更新</Typography.Text>
-              <Button type="link" onClick={() => navigate('/specs')} style={{ fontSize: 13 }}>查看全部</Button>
+              <Button type="link" onClick={() => navigate('/steerings')} style={{ fontSize: 13 }}>查看全部</Button>
             </Flex>
           }
           styles={{ body: { padding: 0 } }}
@@ -104,22 +104,22 @@ export default function DashboardPage() {
             <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '15%' }}>状态</Typography.Text>
             <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '15%' }}>更新时间</Typography.Text>
           </Flex>
-          {recentSpecs.map((spec) => (
+          {recentSteerings.map((steering) => (
             <Flex
-              key={spec.id}
+              key={steering.id}
               align="center"
-              onClick={() => navigate(`/specs/${spec.id}`)}
+              onClick={() => navigate(`/steerings/${steering.id}`)}
               style={{ padding: '10px 20px', borderBottom: '1px solid #27273a', cursor: 'pointer' }}
             >
               <div style={{ width: '35%', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }} ellipsis>{spec.title}</Typography.Text>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }} ellipsis>{steering.title}</Typography.Text>
               </div>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '20%' }} ellipsis>{spec.categoryName}</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '15%' }}>v{spec.currentVersion}</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '20%' }} ellipsis>{steering.categoryName}</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '15%' }}>v{steering.currentVersion}</Typography.Text>
               <div style={{ width: '15%' }}>
-                <Tag className={`tag-base ${STATUS_CLASS[spec.status]}`}>{STATUS_LABEL[spec.status]}</Tag>
+                <Tag className={`tag-base ${STATUS_CLASS[steering.status]}`}>{STATUS_LABEL[steering.status]}</Tag>
               </div>
-              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{spec.updatedAt?.slice(0, 10)}</Typography.Text>
+              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{steering.updatedAt?.slice(0, 10)}</Typography.Text>
             </Flex>
           ))}
         </Card>

@@ -8,10 +8,10 @@ import RequireAuth from './components/RequireAuth';
 import MainLayout from './components/Layout/MainLayout';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import SpecListPage from './pages/spec/SpecListPage';
-import SpecDetailPage from './pages/spec/SpecDetailPage';
-import SpecEditPage from './pages/spec/SpecEditPage';
-import SpecAnalyticsPage from './pages/spec/SpecAnalyticsPage';
+import SteeringListPage from './pages/steering/SteeringListPage';
+import SteeringDetailPage from './pages/steering/SteeringDetailPage';
+import SteeringEditPage from './pages/steering/SteeringEditPage';
+import SteeringAnalyticsPage from './pages/steering/SteeringAnalyticsPage';
 import SearchPage from './pages/search/SearchPage';
 import CompliancePage from './pages/compliance/CompliancePage';
 import CategoryPage from './pages/category/CategoryPage';
@@ -31,14 +31,14 @@ function ThemedApp() {
           <Route path="/" element={<RequireAuth><MainLayout /></RequireAuth>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="specs" element={<SpecListPage />} />
-            <Route path="specs/new" element={<SpecEditPage />} />
-            <Route path="specs/:id" element={<SpecDetailPage />} />
-            <Route path="specs/:id/edit" element={<SpecEditPage />} />
+            <Route path="steerings" element={<SteeringListPage />} />
+            <Route path="steerings/new" element={<SteeringEditPage />} />
+            <Route path="steerings/:id" element={<SteeringDetailPage />} />
+            <Route path="steerings/:id/edit" element={<SteeringEditPage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="compliance" element={<CompliancePage />} />
             <Route path="categories" element={<CategoryPage />} />
-            <Route path="analytics" element={<SpecAnalyticsPage />} />
+            <Route path="analytics" element={<SteeringAnalyticsPage />} />
             <Route path="settings/api-keys" element={<ApiKeyPage />} />
           </Route>
         </Routes>

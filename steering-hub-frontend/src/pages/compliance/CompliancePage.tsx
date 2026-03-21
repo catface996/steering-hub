@@ -124,7 +124,7 @@ export default function CompliancePage() {
                 <CheckCircle size={18} color={report.compliant ? '#32D583' : '#FFB547'} />
                 <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>审查报告</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>
-                  - 基于 {report.relatedSpecs?.length || 0} 条规范进行检查分析
+                  - 基于 {report.relatedSteerings?.length || 0} 条规范进行检查分析
                 </Typography.Text>
               </Flex>
               <Flex gap={8} align="center">
@@ -159,7 +159,7 @@ export default function CompliancePage() {
               </div>
               <div style={{ background: '#1e1e2a', borderRadius: 10, padding: 16, textAlign: 'center' }}>
                 <Typography.Text style={{ color: '#32D583', fontWeight: 700, fontSize: 24, display: 'block' }}>
-                  {report.relatedSpecs?.length || 0}
+                  {report.relatedSteerings?.length || 0}
                 </Typography.Text>
                 <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>关联规范</Typography.Text>
               </div>
@@ -195,7 +195,7 @@ export default function CompliancePage() {
                       >
                         {v.severity}
                       </Tag>
-                      <Typography.Text style={{ fontWeight: 600, fontSize: 15 }}>{v.specTitle}</Typography.Text>
+                      <Typography.Text style={{ fontWeight: 600, fontSize: 15 }}>{v.steeringTitle}</Typography.Text>
                     </Flex>
                     <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, display: 'block', marginBottom: 8 }}>
                       {v.description}

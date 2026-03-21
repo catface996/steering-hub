@@ -8,8 +8,8 @@ export interface SearchParams {
   mode?: 'semantic' | 'fulltext' | 'hybrid';
 }
 
-export interface SpecQuality {
-  specId: number;
+export interface SteeringQuality {
+  steeringId: number;
   title: string;
   scores: {
     selfRetrievalRank: number;
@@ -32,9 +32,9 @@ export const searchService = {
 };
 
 export const qualityService = {
-  getQuality: (specId: number) =>
-    get<SpecQuality>(`/api/v1/search/quality/${specId}`).then((r) => r.data),
+  getQuality: (steeringId: number) =>
+    get<SteeringQuality>(`/api/v1/search/quality/${steeringId}`).then((r) => r.data),
 
   getBatchQuality: (limit = 20) =>
-    get<SpecQuality[]>(`/api/v1/search/quality/batch?limit=${limit}`).then((r) => r.data),
+    get<SteeringQuality[]>(`/api/v1/search/quality/batch?limit=${limit}`).then((r) => r.data),
 };

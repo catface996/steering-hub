@@ -2,7 +2,7 @@ package com.steeringhub.search.service;
 
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
-import com.steeringhub.search.dto.SpecQualityReport;
+import com.steeringhub.search.dto.SteeringQualityReport;
 
 import java.util.List;
 
@@ -26,15 +26,15 @@ public interface SearchService {
     /**
      * 规范保存/更新后触发异步 embedding 生成
      */
-    void triggerEmbeddingUpdate(Long specId);
+    void triggerEmbeddingUpdate(Long steeringId);
 
     /**
      * 分析规范的可检索性质量
      */
-    SpecQualityReport analyzeSpecQuality(Long specId);
+    SteeringQualityReport analyzeSteeringQuality(Long steeringId);
 
     /**
      * 批量分析规范质量，返回质量最差的 N 条规范
      */
-    List<SpecQualityReport> analyzeBatchQuality(int limit);
+    List<SteeringQualityReport> analyzeBatchQuality(int limit);
 }

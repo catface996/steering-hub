@@ -2,7 +2,7 @@
 Steering Hub MCP Server
 
 Provides MCP tools for AI Coding Agents to search, retrieve, submit, and
-track usage of development specifications managed by Steering Hub.
+track usage of development steerings managed by Steering Hub.
 """
 import asyncio
 import os
@@ -43,12 +43,12 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="get_steering_tags",
             description=(
-                "Get tags and categories in the specification system (two-level design to control token usage). "
+                "Get tags and categories in the steering system (two-level design to control token usage). "
                 "\n\nUsage:"
-                "\n1. Call without category_code: Get categories overview with tag/spec counts (~100 tokens)"
+                "\n1. Call without category_code: Get categories overview with tag/steering counts (~100 tokens)"
                 "\n2. Call with category_code: Get specific category's tags list"
                 "\n\nAI Coding Agents should call this before starting coding tasks to understand "
-                "what specification dimensions exist, then choose appropriate tags based on task semantics."
+                "what steering dimensions exist, then choose appropriate tags based on task semantics."
             ),
             inputSchema={
                 "type": "object",
@@ -66,13 +66,13 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="search_steering",
             description=(
-                "Search for the most relevant coding/business specifications to guide AI Coding Agents "
+                "Search for the most relevant coding/business steerings to guide AI Coding Agents "
                 "in writing standards-compliant code. "
                 "\n\nWhen to call:"
                 "\n- Before starting to write a new module (call get_steering_tags first to learn available tags)"
                 "\n- When facing uncertain technical decisions"
                 "\n- When needing to understand business rules"
-                "\n\nReturns only 'active' (officially effective) specs."
+                "\n\nReturns only 'active' (officially effective) steerings."
             ),
             inputSchema={
                 "type": "object",
@@ -89,7 +89,7 @@ async def list_tools() -> list[Tool]:
                         "items": {"type": "string"},
                         "description": (
                             "Select relevant tags from get_steering_tags results, e.g. ['Controller', 'Order']. "
-                            "Helps prioritize specs matching these tags."
+                            "Helps prioritize steerings matching these tags."
                         ),
                     },
                     "category_code": {
@@ -121,39 +121,39 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="get_spec",
+            name="get_steering",
             description=(
-                "Retrieve the full content of a specific specification by its ID. "
-                "Only returns specs in 'active' status."
+                "Retrieve the full content of a specific steering by its ID. "
+                "Only returns steerings in 'active' status."
             ),
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "spec_id": {
+                    "steering_id": {
                         "type": "integer",
-                        "description": "The numeric ID of the specification",
+                        "description": "The numeric ID of the steering",
                     },
                 },
-                "required": ["spec_id"],
+                "required": ["steering_id"],
             },
         ),
         Tool(
-            name="submit_spec",
+            name="submit_steering",
             description=(
-                "Submit a new specification for human review. "
-                "Use this when you identify a missing or needed specification during coding. "
-                "The spec will be created in 'draft' status and requires human approval before taking effect."
+                "Submit a new steering for human review. "
+                "Use this when you identify a missing or needed steering during coding. "
+                "The steering will be created in 'draft' status and requires human approval before taking effect."
             ),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "title": {
                         "type": "string",
-                        "description": "Clear, concise title of the specification",
+                        "description": "Clear, concise title of the steering",
                     },
                     "content": {
                         "type": "string",
-                        "description": "Full Markdown content of the specification",
+                        "description": "Full Markdown content of the steering",
                     },
                     "category": {
                         "type": "string",
@@ -171,15 +171,15 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="record_usage",
             description=(
-                "Record that a specification was used in a coding task. "
-                "Call this after loading and applying a spec, to enable usage tracking and compliance auditing."
+                "Record that a steering was used in a coding task. "
+                "Call this after loading and applying a steering, to enable usage tracking and compliance auditing."
             ),
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "spec_id": {
+                    "steering_id": {
                         "type": "integer",
-                        "description": "ID of the specification that was used",
+                        "description": "ID of the steering that was used",
                     },
                     "repo": {
                         "type": "string",
@@ -187,10 +187,10 @@ async def list_tools() -> list[Tool]:
                     },
                     "task_description": {
                         "type": "string",
-                        "description": "Brief description of the task where the spec was applied",
+                        "description": "Brief description of the task where the steering was applied",
                     },
                 },
-                "required": ["spec_id", "repo", "task_description"],
+                "required": ["steering_id", "repo", "task_description"],
             },
         ),
     ]
@@ -209,10 +209,10 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             return await handle_get_steering_tags(arguments)
         elif name == "search_steering":
             return await handle_search_steering(arguments)
-        elif name == "get_spec":
-            return await handle_get_spec(arguments)
-        elif name == "submit_spec":
-            return await handle_submit_spec(arguments)
+        elif name == "get_steering":
+            return await handle_get_steering(arguments)
+        elif name == "submit_steering":
+            return await handle_submit_steering(arguments)
         elif name == "record_usage":
             return await handle_record_usage(arguments)
         else:
@@ -229,7 +229,7 @@ async def handle_get_steering_tags(args: dict) -> list[types.ContentBlock]:
     if category_code is None:
         # Overview mode: show categories with counts
         lines = [
-            "# Specification Categories Overview\n",
+            "# Steering Categories Overview\n",
             result.get("hint", ""),
             "\n## Categories\n"
         ]
@@ -238,7 +238,7 @@ async def handle_get_steering_tags(args: dict) -> list[types.ContentBlock]:
             lines.append(
                 f"- **{cat['name']}** (code: `{cat['code']}`)\n"
                 f"  - Tags: {cat['tag_count']}\n"
-                f"  - Active specs: {cat['spec_count']}\n"
+                f"  - Active steerings: {cat['steering_count']}\n"
             )
 
         lines.append(
@@ -293,16 +293,16 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     if tags:
         enhanced_query = f"{query} {' '.join(tags)}"
 
-    results = await client.search_specs(enhanced_query, category_id, limit * 2)  # Fetch more for filtering
+    results = await client.search_steerings(enhanced_query, category_id, limit * 2)  # Fetch more for filtering
 
     if not results:
-        return [TextContent(type="text", text="No active specifications found matching your query.")]
+        return [TextContent(type="text", text="No active steerings found matching your query.")]
 
     # Post-filter and boost results matching tags
     filtered_results = []
     for r in results:
-        spec_tags = set(r.get("tags") or [])
-        tag_matches = len(spec_tags.intersection(set(tags))) if tags else 0
+        steering_tags = set(r.get("tags") or [])
+        tag_matches = len(steering_tags.intersection(set(tags))) if tags else 0
         r["_tag_matches"] = tag_matches
         filtered_results.append(r)
 
@@ -320,12 +320,12 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
         response_time_ms=response_time_ms
     ))
 
-    lines = [f"Found {len(filtered_results)} specification(s):\n"]
+    lines = [f"Found {len(filtered_results)} steering(s):\n"]
     for r in filtered_results:
         tags_str = ", ".join(r.get("tags") or [])
         tag_match_info = f" (matched {r['_tag_matches']} tags)" if r["_tag_matches"] > 0 else ""
         lines.append(
-            f"## [{r['specId']}] {r['title']}{tag_match_info}\n"
+            f"## [{r['steeringId']}] {r['title']}{tag_match_info}\n"
             f"- Category: {r.get('categoryName', 'N/A')}\n"
             f"- Tags: {tags_str or 'N/A'}\n"
             f"- Score: {r.get('score', 0):.2f}\n"
@@ -336,56 +336,56 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     return [TextContent(type="text", text="\n".join(lines))]
 
 
-async def handle_get_spec(args: dict) -> list[types.ContentBlock]:
-    spec_id = int(args["spec_id"])
-    spec = await client.get_spec(spec_id)
+async def handle_get_steering(args: dict) -> list[types.ContentBlock]:
+    steering_id = int(args["steering_id"])
+    steering = await client.get_steering(steering_id)
 
-    tags_str = ", ".join(spec.get("tags") or [])
+    tags_str = ", ".join(steering.get("tags") or [])
     content = (
-        f"# {spec['title']}\n\n"
-        f"**ID:** {spec['id']}  \n"
-        f"**Category:** {spec.get('categoryName', 'N/A')}  \n"
-        f"**Version:** {spec.get('currentVersion', 1)}  \n"
+        f"# {steering['title']}\n\n"
+        f"**ID:** {steering['id']}  \n"
+        f"**Category:** {steering.get('categoryName', 'N/A')}  \n"
+        f"**Version:** {steering.get('currentVersion', 1)}  \n"
         f"**Tags:** {tags_str or 'N/A'}  \n"
-        f"**Status:** {spec.get('status')}  \n\n"
+        f"**Status:** {steering.get('status')}  \n\n"
         f"---\n\n"
-        f"{spec.get('content', '')}"
+        f"{steering.get('content', '')}"
     )
     return [TextContent(type="text", text=content)]
 
 
-async def handle_submit_spec(args: dict) -> list[types.ContentBlock]:
+async def handle_submit_steering(args: dict) -> list[types.ContentBlock]:
     title = args["title"]
     content = args["content"]
     category = args["category"]
     tags = args.get("tags", [])
 
-    result = await client.submit_spec(title, content, category, tags)
+    result = await client.submit_steering(title, content, category, tags)
 
     return [TextContent(
         type="text",
         text=(
-            f"Specification submitted successfully for human review.\n\n"
+            f"Steering submitted successfully for human review.\n\n"
             f"**ID:** {result.get('id')}  \n"
             f"**Title:** {result.get('title')}  \n"
             f"**Status:** draft (pending human review)  \n\n"
-            f"The specification will become effective after it passes the review process."
+            f"The steering will become effective after it passes the review process."
         )
     )]
 
 
 async def handle_record_usage(args: dict) -> list[types.ContentBlock]:
-    spec_id = int(args["spec_id"])
+    steering_id = int(args["steering_id"])
     repo = args["repo"]
     task_description = args["task_description"]
 
-    result = await client.record_usage(spec_id, repo, task_description)
+    result = await client.record_usage(steering_id, repo, task_description)
 
     return [TextContent(
         type="text",
         text=(
             f"Usage recorded successfully.\n"
-            f"Spec {spec_id} usage in '{repo}' has been logged for compliance tracking."
+            f"Steering {steering_id} usage in '{repo}' has been logged for compliance tracking."
         )
     )]
 

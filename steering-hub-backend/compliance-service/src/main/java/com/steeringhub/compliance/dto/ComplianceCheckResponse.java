@@ -21,5 +21,5 @@ public class ComplianceCheckResponse {
 
     private List<ViolationDetail> violations;
 
-    private List<RelatedSpec> relatedSpecs;
+    private List<RelatedSteering> relatedSteerings;
 }

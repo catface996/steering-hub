@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>com.steeringhub</groupId>
-            <artifactId>steering-hub-spec-service</artifactId>
+            <artifactId>steering-hub-steering-service</artifactId>
         </dependency>
         <dependency>
             <groupId>com.steeringhub</groupId>

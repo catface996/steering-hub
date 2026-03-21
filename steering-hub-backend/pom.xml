@@ -16,7 +16,7 @@
 
     <modules>
         <module>common</module>
-        <module>spec-service</module>
+        <module>steering-service</module>
         <module>search-service</module>
         <module>compliance-service</module>
         <module>app</module>

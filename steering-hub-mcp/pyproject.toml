@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "steering-hub-mcp"
 version = "1.0.0"
-description = "MCP Server for Steering Hub - AI Coding Agent spec management"
+description = "MCP Server for Steering Hub - AI Coding Agent steering management"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

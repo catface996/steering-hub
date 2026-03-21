@@ -2,14 +2,14 @@ package com.steeringhub.search.service.impl;
 
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
-import com.steeringhub.search.dto.SpecQualityReport;
+import com.steeringhub.search.dto.SteeringQualityReport;
 import com.steeringhub.search.service.EmbeddingService;
 import com.steeringhub.search.service.SearchService;
-import com.steeringhub.spec.entity.Spec;
-import com.steeringhub.spec.entity.SpecCategory;
-import com.steeringhub.spec.mapper.SpecCategoryMapper;
-import com.steeringhub.spec.mapper.SpecMapper;
-import com.steeringhub.spec.service.SpecService;
+import com.steeringhub.steering.entity.Steering;
+import com.steeringhub.steering.entity.SteeringCategory;
+import com.steeringhub.steering.mapper.SteeringCategoryMapper;
+import com.steeringhub.steering.mapper.SteeringMapper;
+import com.steeringhub.steering.service.SteeringService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
 
-    private final SpecMapper specMapper;
-    private final SpecCategoryMapper specCategoryMapper;
-    private final SpecService specService;
+    private final SteeringMapper steeringMapper;
+    private final SteeringCategoryMapper steeringCategoryMapper;
+    private final SteeringService steeringService;
     private final EmbeddingService embeddingService;
 
     @Override
@@ -34,23 +34,23 @@ public class SearchServiceImpl implements SearchService {
         List<SearchResult> semanticResults = semanticSearch(request.getQuery(), request.getCategoryId(), request.getLimit());
         List<SearchResult> fulltextResults = fullTextSearch(request.getQuery(), request.getCategoryId(), request.getLimit());
 
-        // Merge and deduplicate by specId, keeping highest score
+        // Merge and deduplicate by steeringId, keeping highest score
         Map<Long, SearchResult> merged = new LinkedHashMap<>();
 
         for (SearchResult r : semanticResults) {
             r.setMatchType("semantic");
-            merged.put(r.getSpecId(), r);
+            merged.put(r.getSteeringId(), r);
         }
 
         for (SearchResult r : fulltextResults) {
-            if (merged.containsKey(r.getSpecId())) {
+            if (merged.containsKey(r.getSteeringId())) {
                 // Boost score for results found in both
-                SearchResult existing = merged.get(r.getSpecId());
+                SearchResult existing = merged.get(r.getSteeringId());
                 existing.setScore(Math.min(1.0, existing.getScore() + r.getScore() * 0.5));
                 existing.setMatchType("hybrid");
             } else {
                 r.setMatchType("fulltext");
-                merged.put(r.getSpecId(), r);
+                merged.put(r.getSteeringId(), r);
             }
         }
 
@@ -73,60 +73,60 @@ public class SearchServiceImpl implements SearchService {
         float[] queryEmbedding = embeddingService.embed(query);
         String embeddingStr = toEmbeddingString(queryEmbedding);
 
-        List<Spec> specs = specMapper.vectorSearch(embeddingStr, limit, categoryId);
-        return specs.stream()
-                .map(spec -> {
-                    double score = spec.getSimilarityScore() != null ? spec.getSimilarityScore() : 0.5;
-                    return toSearchResult(spec, Math.min(1.0, Math.max(0.0, score)), "semantic");
+        List<Steering> steerings = steeringMapper.vectorSearch(embeddingStr, limit, categoryId);
+        return steerings.stream()
+                .map(steering -> {
+                    double score = steering.getSimilarityScore() != null ? steering.getSimilarityScore() : 0.5;
+                    return toSearchResult(steering, Math.min(1.0, Math.max(0.0, score)), "semantic");
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<SearchResult> fullTextSearch(String query, Long categoryId, int limit) {
-        List<Spec> specs = specMapper.fullTextSearch(query, categoryId, limit);
+        List<Steering> steerings = steeringMapper.fullTextSearch(query, categoryId, limit);
         List<SearchResult> results = new ArrayList<>();
-        for (int i = 0; i < specs.size(); i++) {
+        for (int i = 0; i < steerings.size(); i++) {
             double score = Math.max(0.4, 0.9 - i * 0.05);
-            results.add(toSearchResult(specs.get(i), score, "fulltext"));
+            results.add(toSearchResult(steerings.get(i), score, "fulltext"));
         }
         return results;
     }
 
     @Override
     @Async
-    public void triggerEmbeddingUpdate(Long specId) {
+    public void triggerEmbeddingUpdate(Long steeringId) {
         try {
-            Spec spec = specService.getById(specId);
-            if (spec == null) return;
-            float[] embedding = embeddingService.embedSpec(spec.getTitle(), spec.getKeywords(), spec.getTags());
-            specService.updateEmbedding(specId, embedding);
-            log.info("Embedding updated for spec: {}", specId);
+            Steering steering = steeringService.getById(steeringId);
+            if (steering == null) return;
+            float[] embedding = embeddingService.embedSteering(steering.getTitle(), steering.getKeywords(), steering.getTags());
+            steeringService.updateEmbedding(steeringId, embedding);
+            log.info("Embedding updated for steering: {}", steeringId);
         } catch (Exception e) {
-            log.error("Failed to update embedding for spec: {}", specId, e);
+            log.error("Failed to update embedding for steering: {}", steeringId, e);
         }
     }
 
-    private SearchResult toSearchResult(Spec spec, double score, String matchType) {
+    private SearchResult toSearchResult(Steering steering, double score, String matchType) {
         SearchResult result = new SearchResult();
-        result.setSpecId(spec.getId());
-        result.setTitle(spec.getTitle());
-        result.setContent(spec.getContent());
-        result.setCategoryId(spec.getCategoryId());
-        if (spec.getCategoryId() != null) {
-            SpecCategory category = specCategoryMapper.selectById(spec.getCategoryId());
+        result.setSteeringId(steering.getId());
+        result.setTitle(steering.getTitle());
+        result.setContent(steering.getContent());
+        result.setCategoryId(steering.getCategoryId());
+        if (steering.getCategoryId() != null) {
+            SteeringCategory category = steeringCategoryMapper.selectById(steering.getCategoryId());
             if (category != null) {
                 result.setCategoryName(category.getName());
             }
         }
-        result.setStatus(spec.getStatus());
-        result.setCurrentVersion(spec.getCurrentVersion());
-        result.setKeywords(spec.getKeywords());
-        result.setUpdatedAt(spec.getUpdatedAt());
+        result.setStatus(steering.getStatus());
+        result.setCurrentVersion(steering.getCurrentVersion());
+        result.setKeywords(steering.getKeywords());
+        result.setUpdatedAt(steering.getUpdatedAt());
         result.setScore(score);
         result.setMatchType(matchType);
-        if (StringUtils.hasText(spec.getTags())) {
-            result.setTags(Arrays.asList(spec.getTags().split(",")));
+        if (StringUtils.hasText(steering.getTags())) {
+            result.setTags(Arrays.asList(steering.getTags().split(",")));
         }
         return result;
     }
@@ -142,31 +142,31 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public SpecQualityReport analyzeSpecQuality(Long specId) {
+    public SteeringQualityReport analyzeSteeringQuality(Long steeringId) {
         // 1. 获取规范
-        Spec spec = specService.getById(specId);
-        if (spec == null) {
-            throw new IllegalArgumentException("Spec not found: " + specId);
+        Steering steering = steeringService.getById(steeringId);
+        if (steering == null) {
+            throw new IllegalArgumentException("Steering not found: " + steeringId);
         }
 
-        List<String> agentQueries = spec.getAgentQueries();
+        List<String> agentQueries = steering.getAgentQueries();
 
-        SpecQualityReport report = new SpecQualityReport();
-        report.setSpecId(specId);
-        report.setTitle(spec.getTitle());
+        SteeringQualityReport report = new SteeringQualityReport();
+        report.setSteeringId(steeringId);
+        report.setTitle(steering.getTitle());
 
-        SpecQualityReport.QualityScores scores = new SpecQualityReport.QualityScores();
+        SteeringQualityReport.QualityScores scores = new SteeringQualityReport.QualityScores();
 
         // 计算 tag 和 keyword 数量
         int tagCount = 0;
-        if (StringUtils.hasText(spec.getTags())) {
-            tagCount = spec.getTags().split(",").length;
+        if (StringUtils.hasText(steering.getTags())) {
+            tagCount = steering.getTags().split(",").length;
         }
         scores.setTagCount(tagCount);
 
         int keywordCount = 0;
-        if (StringUtils.hasText(spec.getKeywords())) {
-            keywordCount = spec.getKeywords().split(",").length;
+        if (StringUtils.hasText(steering.getKeywords())) {
+            keywordCount = steering.getKeywords().split(",").length;
         }
         scores.setKeywordCount(keywordCount);
 
@@ -186,7 +186,7 @@ public class SearchServiceImpl implements SearchService {
 
                 boolean found = false;
                 for (int rank = 0; rank < results.size(); rank++) {
-                    if (results.get(rank).getSpecId().equals(specId)) {
+                    if (results.get(rank).getSteeringId().equals(steeringId)) {
                         hits++;
                         if (i == 0) {
                             firstRank = rank + 1;
@@ -215,13 +215,13 @@ public class SearchServiceImpl implements SearchService {
         } else {
             // 无 agentQueries，降级用 title 搜索
             SearchRequest request = new SearchRequest();
-            request.setQuery(spec.getTitle());
+            request.setQuery(steering.getTitle());
             request.setLimit(10);
             List<SearchResult> results = hybridSearch(request);
 
             int rank = 0;
             for (int i = 0; i < results.size(); i++) {
-                if (results.get(i).getSpecId().equals(specId)) {
+                if (results.get(i).getSteeringId().equals(steeringId)) {
                     rank = i + 1;
                     break;
                 }
@@ -247,16 +247,16 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<SpecQualityReport> analyzeBatchQuality(int limit) {
+    public List<SteeringQualityReport> analyzeBatchQuality(int limit) {
         // 获取所有 active 状态的规范
-        List<Spec> allSpecs = specMapper.selectList(null);
+        List<Steering> allSteerings = steeringMapper.selectList(null);
 
-        return allSpecs.stream()
-                .map(spec -> {
+        return allSteerings.stream()
+                .map(steering -> {
                     try {
-                        return analyzeSpecQuality(spec.getId());
+                        return analyzeSteeringQuality(steering.getId());
                     } catch (Exception e) {
-                        log.error("Failed to analyze quality for spec: {}", spec.getId(), e);
+                        log.error("Failed to analyze quality for steering: {}", steering.getId(), e);
                         return null;
                     }
                 })

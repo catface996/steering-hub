@@ -3,10 +3,10 @@ package com.steeringhub.search.controller;
 import com.steeringhub.common.response.Result;
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
-import com.steeringhub.search.dto.SpecQualityReport;
+import com.steeringhub.search.dto.SteeringQualityReport;
 import com.steeringhub.search.service.SearchService;
-import com.steeringhub.spec.entity.SpecQueryLog;
-import com.steeringhub.spec.mapper.SpecQueryLogMapper;
+import com.steeringhub.steering.entity.SteeringQueryLog;
+import com.steeringhub.steering.mapper.SteeringQueryLogMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class SearchController {
 
     private final SearchService searchService;
-    private final SpecQueryLogMapper specQueryLogMapper;
+    private final SteeringQueryLogMapper steeringQueryLogMapper;
 
     @Operation(summary = "混合检索规范（语义 + 全文）")
     @GetMapping
@@ -41,29 +41,29 @@ public class SearchController {
     }
 
     @Operation(summary = "触发规范 Embedding 更新")
-    @PostMapping("/embedding/{specId}")
-    public Result<Void> triggerEmbedding(@PathVariable Long specId) {
-        searchService.triggerEmbeddingUpdate(specId);
+    @PostMapping("/embedding/{steeringId}")
+    public Result<Void> triggerEmbedding(@PathVariable Long steeringId) {
+        searchService.triggerEmbeddingUpdate(steeringId);
         return Result.ok();
     }
 
     @Operation(summary = "分析规范可检索性质量")
-    @GetMapping("/quality/{specId}")
-    public Result<SpecQualityReport> analyzeQuality(@PathVariable Long specId) {
-        return Result.ok(searchService.analyzeSpecQuality(specId));
+    @GetMapping("/quality/{steeringId}")
+    public Result<SteeringQualityReport> analyzeQuality(@PathVariable Long steeringId) {
+        return Result.ok(searchService.analyzeSteeringQuality(steeringId));
     }
 
     @Operation(summary = "批量分析规范质量，返回质量最差的 N 条")
     @GetMapping("/quality/batch")
-    public Result<List<SpecQualityReport>> analyzeBatchQuality(
+    public Result<List<SteeringQualityReport>> analyzeBatchQuality(
             @RequestParam(defaultValue = "20") int limit) {
         return Result.ok(searchService.analyzeBatchQuality(limit));
     }
 
     @Operation(summary = "记录查询日志")
     @PostMapping("/log")
-    public Result<Void> logQuery(@RequestBody SpecQueryLog log) {
-        specQueryLogMapper.insert(log);
+    public Result<Void> logQuery(@RequestBody SteeringQueryLog log) {
+        steeringQueryLogMapper.insert(log);
         return Result.ok();
     }
 
@@ -77,15 +77,15 @@ public class SearchController {
         Map<String, Object> analytics = new HashMap<>();
 
         // 总查询次数
-        Long totalQueries = specQueryLogMapper.selectCount(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SpecQueryLog>()
+        Long totalQueries = steeringQueryLogMapper.selectCount(
+            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .ge("created_at", since)
         );
         analytics.put("totalQueries", totalQueries);
 
         // 热门查询词 (Top 10)
-        List<Map<String, Object>> topQueries = specQueryLogMapper.selectMaps(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SpecQueryLog>()
+        List<Map<String, Object>> topQueries = steeringQueryLogMapper.selectMaps(
+            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("query_text", "COUNT(*) as count")
                 .ge("created_at", since)
                 .groupBy("query_text")
@@ -95,8 +95,8 @@ public class SearchController {
         analytics.put("topQueries", topQueries);
 
         // 活跃 Agent (Top 10)
-        List<Map<String, Object>> activeAgents = specQueryLogMapper.selectMaps(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SpecQueryLog>()
+        List<Map<String, Object>> activeAgents = steeringQueryLogMapper.selectMaps(
+            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("agent_id", "COUNT(*) as count")
                 .ge("created_at", since)
                 .isNotNull("agent_id")
@@ -107,8 +107,8 @@ public class SearchController {
         analytics.put("activeAgents", activeAgents);
 
         // 按天统计
-        List<Map<String, Object>> dailyStats = specQueryLogMapper.selectMaps(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SpecQueryLog>()
+        List<Map<String, Object>> dailyStats = steeringQueryLogMapper.selectMaps(
+            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("DATE(created_at) as date", "COUNT(*) as count")
                 .ge("created_at", since)
                 .groupBy("DATE(created_at)")
@@ -117,8 +117,8 @@ public class SearchController {
         analytics.put("dailyStats", dailyStats);
 
         // 平均响应时间
-        Map<String, Object> avgResponseTime = specQueryLogMapper.selectMaps(
-            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SpecQueryLog>()
+        Map<String, Object> avgResponseTime = steeringQueryLogMapper.selectMaps(
+            new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("AVG(response_time_ms) as avg_ms")
                 .ge("created_at", since)
                 .isNotNull("response_time_ms")

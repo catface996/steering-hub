@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SteeringUsageMapper">
+
+    <select id="selectByRepoId" resultType="com.steeringhub.steering.entity.SteeringUsage">
+        SELECT * FROM steering_usage
+        WHERE repo_id = #{repoId}
+        ORDER BY used_at DESC
+    </select>
+
+    <select id="selectBySteeringId" resultType="com.steeringhub.steering.entity.SteeringUsage">
+        SELECT * FROM steering_usage
+        WHERE steering_id = #{steeringId}
+        ORDER BY used_at DESC
+    </select>
+
+    <select id="selectUsageStats" resultType="java.util.Map">
+        SELECT
+            su.steering_id AS steeringId,
+            s.title AS steeringTitle,
+            COUNT(*) AS usageCount,
+            MAX(su.used_at) AS lastUsedAt
+        FROM steering_usage su
+        JOIN steering s ON s.id = su.steering_id
+        GROUP BY su.steering_id, s.title
+        ORDER BY usageCount DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

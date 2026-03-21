@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Typography, Button, Input, Card, Flex, Spin, Modal, App } from 'antd';
 import { Plus, ChevronRight } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
-import { categoryService } from '../../services/specService';
-import type { SpecCategory } from '../../types';
+import { categoryService } from '../../services/steeringService';
+import type { SteeringCategory } from '../../types';
 
 export default function CategoryPage() {
   const { setBreadcrumbs, setActions } = useHeader();
   const { message } = App.useApp();
-  const [categories, setCategories] = useState<SpecCategory[]>([]);
+  const [categories, setCategories] = useState<SteeringCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);

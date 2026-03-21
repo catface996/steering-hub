@@ -1,6 +1,6 @@
 package com.steeringhub.search.dto;
 
-import com.steeringhub.common.enums.SpecStatus;
+import com.steeringhub.common.enums.SteeringStatus;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
@@ -9,12 +9,12 @@ import java.util.List;
 @Data
 public class SearchResult {
 
-    private Long specId;
+    private Long steeringId;
     private String title;
     private String content;
     private Long categoryId;
     private String categoryName;
-    private SpecStatus status;
+    private SteeringStatus status;
     private Integer currentVersion;
     private List<String> tags;
     private String keywords;

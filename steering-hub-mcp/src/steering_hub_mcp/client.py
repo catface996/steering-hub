@@ -17,8 +17,8 @@ def _get_headers() -> dict:
     return headers
 
 
-async def search_specs(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid") -> list[dict]:
-    """Call /api/v1/search with hybrid mode, only returns 'active' specs"""
+async def search_steerings(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid") -> list[dict]:
+    """Call /api/v1/search with hybrid mode, only returns 'active' steerings"""
     params: dict[str, Any] = {
         "query": query,
         "limit": limit,
@@ -31,25 +31,25 @@ async def search_specs(query: str, category_id: Optional[int] = None, limit: int
         resp = await client.get("/api/v1/search", params=params)
         resp.raise_for_status()
         data = resp.json()
-        # Filter to active specs only (should already be filtered server-side)
+        # Filter to active steerings only (should already be filtered server-side)
         results = data.get("data", [])
         return [r for r in results if r.get("status") == "active"]
 
 
-async def get_spec(spec_id: int) -> dict:
-    """Get spec detail by ID"""
+async def get_steering(steering_id: int) -> dict:
+    """Get steering detail by ID"""
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.get(f"/api/v1/specs/{spec_id}")
+        resp = await client.get(f"/api/v1/steerings/{steering_id}")
         resp.raise_for_status()
         data = resp.json()
-        spec = data.get("data", {})
-        if spec.get("status") != "active":
-            raise ValueError(f"Spec {spec_id} is not active (status={spec.get('status')})")
-        return spec
+        steering = data.get("data", {})
+        if steering.get("status") != "active":
+            raise ValueError(f"Steering {steering_id} is not active (status={steering.get('status')})")
+        return steering
 
 
 async def get_categories() -> list[dict]:
-    """Get all spec categories"""
+    """Get all steering categories"""
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
         resp = await client.get("/api/v1/categories")
         resp.raise_for_status()
@@ -64,12 +64,12 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
         category_code: Optional category code (e.g. 'coding', 'business')
 
     Returns:
-        - If category_code is None: dict with categories overview (tag_count, spec_count)
+        - If category_code is None: dict with categories overview (tag_count, steering_count)
         - If category_code provided: dict with category info and tags list
     """
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
         if category_code is None:
-            # Return categories overview with tag/spec counts
+            # Return categories overview with tag/steering counts
             categories = await get_categories()
             category_stats = []
 
@@ -78,8 +78,8 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
                     continue
 
                 cat_id = cat["id"]
-                # Fetch specs for this category
-                resp = await client.get("/api/v1/specs", params={
+                # Fetch steerings for this category
+                resp = await client.get("/api/v1/steerings", params={
                     "page": 1,
                     "size": 200,
                     "categoryId": cat_id
@@ -88,12 +88,12 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
                 data = resp.json().get("data", {})
                 records = data.get("records", [])
 
-                # Count active specs and extract tags
-                active_specs = [s for s in records if s.get("status") == "active"]
+                # Count active steerings and extract tags
+                active_steerings = [s for s in records if s.get("status") == "active"]
                 tags_set = set()
-                for spec in active_specs:
-                    if spec.get("tags"):
-                        for tag in spec["tags"]:
+                for steering in active_steerings:
+                    if steering.get("tags"):
+                        for tag in steering["tags"]:
                             if tag:
                                 tags_set.add(tag)
 
@@ -101,7 +101,7 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
                     "code": cat.get("code"),
                     "name": cat.get("name"),
                     "tag_count": len(tags_set),
-                    "spec_count": len(active_specs)
+                    "steering_count": len(active_steerings)
                 })
 
             return {
@@ -120,8 +120,8 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
             if not category:
                 raise ValueError(f"Category not found: {category_code}")
 
-            # Fetch specs for this category
-            resp = await client.get("/api/v1/specs", params={
+            # Fetch steerings for this category
+            resp = await client.get("/api/v1/steerings", params={
                 "page": 1,
                 "size": 200,
                 "categoryId": category["id"]
@@ -130,11 +130,11 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
             data = resp.json().get("data", {})
             records = data.get("records", [])
 
-            # Extract tags from active specs
+            # Extract tags from active steerings
             tags_set = set()
-            for spec in records:
-                if spec.get("status") == "active" and spec.get("tags"):
-                    for tag in spec["tags"]:
+            for steering in records:
+                if steering.get("status") == "active" and steering.get("tags"):
+                    for tag in steering["tags"]:
                         if tag:
                             tags_set.add(tag)
 
@@ -148,8 +148,8 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
             }
 
 
-async def submit_spec(title: str, content: str, category: str, tags: list[str]) -> dict:
-    """Submit a new spec for human review (creates in DRAFT status)"""
+async def submit_steering(title: str, content: str, category: str, tags: list[str]) -> dict:
+    """Submit a new steering for human review (creates in DRAFT status)"""
     # Resolve category id from code
     category_id = await _resolve_category_id(category)
     payload = {
@@ -159,17 +159,17 @@ async def submit_spec(title: str, content: str, category: str, tags: list[str]) 
         "tags": tags,
     }
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.post("/api/v1/specs", json=payload)
+        resp = await client.post("/api/v1/steerings", json=payload)
         resp.raise_for_status()
         return resp.json().get("data", {})
 
 
-async def record_usage(spec_id: int, repo: str, task_description: str, agent_id: str = "mcp-agent") -> dict:
-    """Record spec usage from MCP tool call"""
+async def record_usage(steering_id: int, repo: str, task_description: str, agent_id: str = "mcp-agent") -> dict:
+    """Record steering usage from MCP tool call"""
     # Ensure repo is registered
     repo_id = await _ensure_repo(repo)
     payload = {
-        "specId": spec_id,
+        "steeringId": steering_id,
         "repoId": repo_id,
         "repoName": repo,
         "taskDescription": task_description,
@@ -218,7 +218,7 @@ async def log_search_query(
         "queryText": query,
         "searchMode": mode,
         "resultCount": len(results),
-        "resultSpecIds": _json.dumps([r.get("specId") for r in results if r.get("specId")]),
+        "resultSteeringIds": _json.dumps([r.get("steeringId") for r in results if r.get("steeringId")]),
         "agentId": agent_id,
         "repo": repo,
         "taskDescription": task_description,

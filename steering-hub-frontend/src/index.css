@@ -166,7 +166,7 @@ input:-webkit-autofill:active,
 .tag-status-active      { border: 1px solid #32D583; color: #32D583; }
 .tag-status-deprecated  { border: 1px solid #FFB547; color: #FFB547; }
 
-/* Content tag — used for spec tags, match types, general labels */
+/* Content tag — used for steering tags, match types, general labels */
 .tag-content {
   border: 1px solid rgba(var(--primary-rgb), 0.5);
   color: var(--primary-color);

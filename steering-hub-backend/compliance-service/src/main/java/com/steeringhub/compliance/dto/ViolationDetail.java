@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class ViolationDetail {
 
-    private Long specId;
-    private String specTitle;
+    private Long steeringId;
+    private String steeringTitle;
     private String violationType;
     private String description;
     private String suggestion;

@@ -1,8 +1,8 @@
 package com.steeringhub.filter;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.steeringhub.spec.entity.ApiKey;
-import com.steeringhub.spec.mapper.ApiKeyMapper;
+import com.steeringhub.steering.entity.ApiKey;
+import com.steeringhub.steering.mapper.ApiKeyMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

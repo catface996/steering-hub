@@ -2,8 +2,8 @@ package com.steeringhub.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.common.response.Result;
-import com.steeringhub.spec.entity.ApiKey;
-import com.steeringhub.spec.mapper.ApiKeyMapper;
+import com.steeringhub.steering.entity.ApiKey;
+import com.steeringhub.steering.mapper.ApiKeyMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

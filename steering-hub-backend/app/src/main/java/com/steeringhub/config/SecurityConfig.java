@@ -1,7 +1,7 @@
 package com.steeringhub.config;
 
 import com.steeringhub.filter.ApiKeyFilter;
-import com.steeringhub.spec.mapper.ApiKeyMapper;
+import com.steeringhub.steering.mapper.ApiKeyMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

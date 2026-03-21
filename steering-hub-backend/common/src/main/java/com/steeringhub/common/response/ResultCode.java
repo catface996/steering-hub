@@ -13,10 +13,10 @@ public enum ResultCode {
     CONFLICT(409, "资源冲突"),
     INTERNAL_ERROR(500, "服务器内部错误"),
 
-    // Spec module
-    SPEC_NOT_FOUND(1001, "规范不存在"),
-    SPEC_STATUS_INVALID(1002, "规范状态不合法"),
-    SPEC_VERSION_CONFLICT(1003, "版本冲突"),
+    // Steering module
+    STEERING_NOT_FOUND(1001, "规范不存在"),
+    STEERING_STATUS_INVALID(1002, "规范状态不合法"),
+    STEERING_VERSION_CONFLICT(1003, "版本冲突"),
     CATEGORY_NOT_FOUND(1004, "规范分类不存在"),
 
     // Search module
