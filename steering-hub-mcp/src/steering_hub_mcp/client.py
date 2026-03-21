@@ -201,3 +201,31 @@ async def _ensure_repo(full_name: str) -> int:
         )
         resp.raise_for_status()
         return resp.json()["data"]["id"]
+
+
+async def log_search_query(
+    query: str,
+    mode: str,
+    results: list,
+    agent_id: str = "mcp-agent",
+    repo: str = "",
+    task_description: str = "",
+    response_time_ms: int = 0,
+) -> None:
+    """异步记录 MCP 搜索查询日志，失败不影响搜索结果"""
+    import json as _json
+    payload = {
+        "queryText": query,
+        "searchMode": mode,
+        "resultCount": len(results),
+        "resultSpecIds": _json.dumps([r.get("specId") for r in results if r.get("specId")]),
+        "agentId": agent_id,
+        "repo": repo,
+        "taskDescription": task_description,
+        "responseTimeMs": response_time_ms,
+    }
+    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=5) as client:
+        try:
+            await client.post("/api/v1/search/log", json=payload)
+        except Exception:
+            pass  # 日志记录失败不影响搜索结果

@@ -14,8 +14,10 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import SearchIcon from '@mui/icons-material/Search'
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser'
 import LabelIcon from '@mui/icons-material/Label'
+import VpnKeyIcon from '@mui/icons-material/VpnKey'
 import LogoutIcon from '@mui/icons-material/Logout'
 import { removeToken } from '@/utils/auth'
+import { PageHeaderProvider, usePageHeader } from '@/contexts/PageHeaderContext'
 
 const SIDEBAR_WIDTH = 220
 
@@ -25,7 +27,53 @@ const menuItems = [
   { key: '/search', icon: <SearchIcon sx={{ fontSize: 20 }} />, label: '规范检索' },
   { key: '/compliance', icon: <VerifiedUserIcon sx={{ fontSize: 20 }} />, label: '合规审查' },
   { key: '/categories', icon: <LabelIcon sx={{ fontSize: 20 }} />, label: '分类管理' },
+  { key: '/settings/api-keys', icon: <VpnKeyIcon sx={{ fontSize: 20 }} />, label: 'API Keys' },
 ]
+
+function PageHeader() {
+  const { config } = usePageHeader()
+
+  return (
+    <Box sx={{
+      height: 64,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      px: 4,
+      borderBottom: '1px solid #2A2A2E',
+      flexShrink: 0,
+    }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {config.breadcrumbs ? (
+          config.breadcrumbs.map((crumb, i) => (
+            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {i > 0 && <Typography sx={{ color: '#444', fontSize: 14 }}>/</Typography>}
+              <Typography
+                sx={{
+                  color: i < config.breadcrumbs!.length - 1 ? '#8E8E93' : '#FAFAF9',
+                  fontWeight: i < config.breadcrumbs!.length - 1 ? 500 : 700,
+                  fontSize: i < config.breadcrumbs!.length - 1 ? 14 : 20,
+                  cursor: i < config.breadcrumbs!.length - 1 ? 'pointer' : 'default',
+                  '&:hover': i < config.breadcrumbs!.length - 1 ? { color: '#6366F1' } : {},
+                }}
+                onClick={() => config.onBreadcrumbClick?.(i)}
+              >
+                {crumb}
+              </Typography>
+            </Box>
+          ))
+        ) : (
+          <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 20 }}>
+            {config.title ?? ''}
+          </Typography>
+        )}
+      </Box>
+      {config.actions && (
+        <Box>{config.actions}</Box>
+      )}
+    </Box>
+  )
+}
 
 export default function MainLayout() {
   const navigate = useNavigate()
@@ -40,7 +88,8 @@ export default function MainLayout() {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#0B0B0E' }}>
+    <PageHeaderProvider>
+      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#0B0B0E' }}>
       {/* Sidebar */}
       <Box
         sx={{
@@ -143,11 +192,16 @@ export default function MainLayout() {
           height: '100vh',
           overflow: 'auto',
           bgcolor: '#0B0B0E',
-          p: 4,
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <Outlet />
+        <PageHeader />
+        <Box sx={{ px: 4, py: 3, flexGrow: 1 }}>
+          <Outlet />
+        </Box>
       </Box>
     </Box>
+    </PageHeaderProvider>
   )
 }

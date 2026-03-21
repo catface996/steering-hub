@@ -64,7 +64,7 @@ export default function DashboardPage() {
   ]
 
   return (
-    <Box>
+    <Box sx={{ pt: 4 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
         <Box>

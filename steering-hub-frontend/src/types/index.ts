@@ -35,6 +35,8 @@ export interface Spec {
   tags?: string[]
   keywords?: string
   author?: string
+  qualityScore?: number
+  agentQueries?: string[]
   createdAt: string
   updatedAt: string
 }
@@ -112,4 +114,14 @@ export interface ApiResult<T> {
   code: number
   message: string
   data: T
+}
+
+export interface ApiKeyItem {
+  id: number
+  name: string
+  keyValue: string
+  description: string
+  enabled: boolean
+  lastUsedAt: string | null
+  createdAt: string
 }

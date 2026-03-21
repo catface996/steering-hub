@@ -8,6 +8,7 @@ import SearchPage from '@/pages/search/SearchPage'
 import CompliancePage from '@/pages/compliance/CompliancePage'
 import CategoryPage from '@/pages/category/CategoryPage'
 import SpecAnalyticsPage from '@/pages/spec/SpecAnalyticsPage'
+import ApiKeyPage from '@/pages/settings/ApiKeyPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import { isLoggedIn } from '@/utils/auth'
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="compliance" element={<CompliancePage />} />
           <Route path="categories" element={<CategoryPage />} />
           <Route path="analytics" element={<SpecAnalyticsPage />} />
+          <Route path="settings/api-keys" element={<ApiKeyPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

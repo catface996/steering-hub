@@ -31,6 +31,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { specApi } from '@/api/spec'
 import { qualityApi, type SpecQuality } from '@/api/search'
 import type { Spec, SpecStatus } from '@/types'
+import { useSetPageHeader } from '@/hooks/useSetPageHeader'
 
 const STATUS_LABEL: Record<SpecStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
@@ -56,6 +57,15 @@ export default function SpecListPage() {
   const [qualityDetail, setQualityDetail] = useState<SpecQuality | null>(null)
   const [snackbar, setSnackbar] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' }>({
     open: false, msg: '', severity: 'success',
+  })
+
+  useSetPageHeader({
+    title: '规范管理',
+    actions: (
+      <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/specs/new')}>
+        + 新建规范
+      </Button>
+    )
   })
 
   const { data, isLoading } = useQuery({
@@ -105,14 +115,6 @@ export default function SpecListPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>规范管理</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/specs/new')}>
-          + 新建规范
-        </Button>
-      </Box>
-
       {/* Filters */}
       <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
         <TextField

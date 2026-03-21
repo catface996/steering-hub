@@ -104,6 +104,18 @@ async def list_tools() -> list[Tool]:
                         "description": "Maximum number of results to return (default: 5, max: 20)",
                         "default": 5,
                     },
+                    "agent_id": {
+                        "type": "string",
+                        "description": "Calling agent identifier for usage tracking",
+                    },
+                    "repo": {
+                        "type": "string",
+                        "description": "Source repository name for context",
+                    },
+                    "task_description": {
+                        "type": "string",
+                        "description": "Current coding task description for context",
+                    },
                 },
                 "required": ["query"],
             },
@@ -259,6 +271,11 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     tags = args.get("tags", [])
     category_code = args.get("category_code")
     limit = min(int(args.get("limit", 5)), 20)
+    agent_id = args.get("agent_id", "mcp-agent")
+    repo = args.get("repo", "")
+    task_description = args.get("task_description", "")
+    import time
+    start_time = time.time()
 
     # Resolve category_id if category_code provided
     category_id = None
@@ -294,6 +311,14 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
 
     # Take top N
     filtered_results = filtered_results[:limit]
+
+    # 异步记录查询日志
+    response_time_ms = int((time.time() - start_time) * 1000)
+    asyncio.create_task(client.log_search_query(
+        query=query, mode="hybrid", results=filtered_results,
+        agent_id=agent_id, repo=repo, task_description=task_description,
+        response_time_ms=response_time_ms
+    ))
 
     lines = [f"Found {len(filtered_results)} specification(s):\n"]
     for r in filtered_results:

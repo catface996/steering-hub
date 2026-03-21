@@ -52,7 +52,7 @@ export default function SearchPage() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 64px)', pt: 4 }}>
       {/* Header */}
       <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28, mb: 3 }}>规范检索</Typography>
 
@@ -108,7 +108,7 @@ export default function SearchPage() {
           <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 2 }}>
             找到 {results.length} 条结果
           </Typography>
-          <Stack spacing={2}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
             {pagedResults.map((r) => (
               <Box
                 key={r.specId}
@@ -119,6 +119,9 @@ export default function SearchPage() {
                   borderRadius: '16px',
                   p: 3,
                   cursor: 'pointer',
+                  minHeight: 200,
+                  display: 'flex',
+                  flexDirection: 'column',
                   '&:hover': { borderColor: '#3A3A40', bgcolor: '#1A1A1E' },
                 }}
               >
@@ -144,13 +147,14 @@ export default function SearchPage() {
                     fontSize: 13,
                     lineHeight: 1.6,
                     display: '-webkit-box',
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 4,
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
                     mb: 1.5,
+                    flex: 1,
                   }}
                 >
-                  {r.content}
+                  {r.content.slice(0, 150)}
                 </Typography>
                 <Stack direction="row" spacing={0.5} flexWrap="wrap">
                   {r.tags?.map((t) => (
@@ -159,7 +163,7 @@ export default function SearchPage() {
                 </Stack>
               </Box>
             ))}
-          </Stack>
+          </Box>
 
           {/* Pagination */}
           {totalPages > 1 && (
