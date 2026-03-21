@@ -57,13 +57,13 @@ export default function SteeringAnalyticsPage() {
 
   useEffect(() => {
     setLoading(true);
-    get<AnalyticsData>(`/api/v1/search/analytics/queries?days=${days}`)
+    get<AnalyticsData>(`/api/v1/web/search/analytics/queries?days=${days}`)
       .then(r => setAnalytics(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
 
     // 获取无效查询列表
-    get<FailureLog[]>(`/api/v1/search/log/failures?days=${days}&limit=50`)
+    get<FailureLog[]>(`/api/v1/web/search/log/failures?days=${days}&limit=50`)
       .then(r => setFailures(r.data || []))
       .catch(() => setFailures([]));
   }, [days]);

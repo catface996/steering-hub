@@ -17,7 +17,7 @@ import java.util.UUID;
  * API Key 管理控制器
  */
 @RestController
-@RequestMapping("/api/v1/api-keys")
+@RequestMapping("/api/v1/web/api-keys")
 @RequiredArgsConstructor
 @Tag(name = "API Key 管理", description = "API Key 创建、查询、启用/禁用、删除")
 public class ApiKeyController {

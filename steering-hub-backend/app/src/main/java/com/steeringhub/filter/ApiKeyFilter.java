@@ -22,10 +22,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(ApiKeyFilter.class);
 
-    // 需要 API Key 鉴权的路径前缀（只限 MCP 使用的 search 接口）
-    private static final List<String> PROTECTED_PATHS = List.of(
-        "/api/v1/search"
-    );
+    // 需要 API Key 鉴权的路径前缀（所有 MCP 接口）
+    // /api/v1/api/** 由前端通过 JWT 访问，不需要 API Key
+    private static final String PROTECTED_PATH_PREFIX = "/api/v1/mcp/";
 
     private final ApiKeyMapper apiKeyMapper;
 
@@ -42,8 +41,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String authHeader = request.getHeader("Authorization");
 
-        // 检查路径是否需要 API Key 鉴权
-        boolean requiresApiKey = PROTECTED_PATHS.stream().anyMatch(path::startsWith);
+        // 只有以 /api/v1/mcp/ 开头的路径才要求 API Key
+        // /api/v1/api/** 路径由前端用 JWT 访问，不需要 API Key
+        boolean requiresApiKey = path.startsWith(PROTECTED_PATH_PREFIX);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);

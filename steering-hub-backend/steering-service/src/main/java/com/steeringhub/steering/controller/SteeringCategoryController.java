@@ -12,7 +12,7 @@ import java.util.List;
 
 @Tag(name = "规范分类管理")
 @RestController
-@RequestMapping("/api/v1/categories")
+@RequestMapping("/api/v1/web/categories")
 @RequiredArgsConstructor
 public class SteeringCategoryController {
 

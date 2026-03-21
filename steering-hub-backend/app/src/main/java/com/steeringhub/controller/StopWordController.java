@@ -14,7 +14,7 @@ import java.util.Map;
  * 停用词管理控制器
  */
 @RestController
-@RequestMapping("/api/v1/stop-words")
+@RequestMapping("/api/v1/web/stop-words")
 @RequiredArgsConstructor
 public class StopWordController {
 

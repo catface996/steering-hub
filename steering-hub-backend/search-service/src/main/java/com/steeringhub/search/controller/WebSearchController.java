@@ -13,22 +13,21 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Tag(name = "规范检索")
+@Tag(name = "Web 检索管理")
 @RestController
-@RequestMapping("/api/v1/search")
+@RequestMapping("/api/v1/web/search")
 @RequiredArgsConstructor
-public class SearchController {
+public class WebSearchController {
 
     private final SearchService searchService;
     private final SteeringQueryLogMapper steeringQueryLogMapper;
 
-    @Operation(summary = "混合检索规范（语义 + 全文）")
+    @Operation(summary = "混合检索规范（语义 + 全文），供 Web 前端用户调用，使用 JWT 鉴权")
     @GetMapping
     public Result<List<SearchResult>> search(@Valid @ModelAttribute SearchRequest request) {
         return switch (request.getMode()) {
@@ -60,30 +59,20 @@ public class SearchController {
         return Result.ok(searchService.analyzeBatchQuality(limit));
     }
 
-    @Operation(summary = "记录查询日志")
-    @PostMapping("/log")
-    public Result<Map<String, Object>> logQuery(@RequestBody SteeringQueryLog log) {
-        steeringQueryLogMapper.insert(log);
-        return Result.ok(java.util.Map.of("id", log.getId()));
-    }
-
     @Operation(summary = "查询分析统计")
     @GetMapping("/analytics/queries")
     public Result<Map<String, Object>> queryAnalytics(
             @RequestParam(defaultValue = "7") int days) {
         OffsetDateTime since = OffsetDateTime.now().minusDays(days);
 
-        // 查询统计数据
         Map<String, Object> analytics = new HashMap<>();
 
-        // 总查询次数
         Long totalQueries = steeringQueryLogMapper.selectCount(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .ge("created_at", since)
         );
         analytics.put("totalQueries", totalQueries);
 
-        // 有效/无效/待分析查询数量（直接用 apply 写 SQL 避免 Boolean 映射问题）
         Long effectiveQueries = steeringQueryLogMapper.selectCount(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .ge("created_at", since)
@@ -105,7 +94,6 @@ public class SearchController {
         );
         analytics.put("pendingQueries", pendingQueries);
 
-        // 热门查询词 (Top 10)
         List<Map<String, Object>> topQueries = steeringQueryLogMapper.selectMaps(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("query_text", "COUNT(*) as count")
@@ -116,7 +104,6 @@ public class SearchController {
         );
         analytics.put("topQueries", topQueries);
 
-        // 热门无结果查询词 (Top 10)
         List<Map<String, Object>> noResultQueries = steeringQueryLogMapper.selectMaps(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("query_text", "COUNT(*) as count")
@@ -128,19 +115,17 @@ public class SearchController {
         );
         analytics.put("noResultQueries", noResultQueries);
 
-        // 失败原因分布
         List<Map<String, Object>> failureReasons = steeringQueryLogMapper.selectMaps(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("failure_reason", "COUNT(*) as count")
                 .ge("created_at", since)
-                .eq("is_effective", false)
+                .apply("is_effective = false")
                 .isNotNull("failure_reason")
                 .groupBy("failure_reason")
                 .orderByDesc("COUNT(*)")
         );
         analytics.put("failureReasons", failureReasons);
 
-        // 活跃 Agent (Top 10)
         List<Map<String, Object>> activeAgents = steeringQueryLogMapper.selectMaps(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("agent_id", "COUNT(*) as count")
@@ -152,7 +137,6 @@ public class SearchController {
         );
         analytics.put("activeAgents", activeAgents);
 
-        // 按天统计
         List<Map<String, Object>> dailyStats = steeringQueryLogMapper.selectMaps(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("DATE(created_at) as date", "COUNT(*) as count")
@@ -162,7 +146,6 @@ public class SearchController {
         );
         analytics.put("dailyStats", dailyStats);
 
-        // 平均响应时间
         Map<String, Object> avgResponseTime = steeringQueryLogMapper.selectMaps(
             new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SteeringQueryLog>()
                 .select("AVG(response_time_ms) as avg_ms")
@@ -188,28 +171,5 @@ public class SearchController {
                 .last("LIMIT " + limit)
         );
         return Result.ok(logs);
-    }
-
-    @Operation(summary = "上报检索失败")
-    @PostMapping("/report-failure")    public Result<Map<String, Object>> reportSearchFailure(@RequestBody Map<String, Object> body) {
-        Long logId = Long.valueOf(body.get("logId").toString());
-        SteeringQueryLog log = new SteeringQueryLog();
-        log.setId(logId);
-        log.setIsEffective(false);
-        log.setFailureReason((String) body.getOrDefault("reason", "other"));
-        log.setExpectedTopic((String) body.getOrDefault("expectedTopic", ""));
-        steeringQueryLogMapper.updateById(log);
-        return Result.ok(java.util.Map.of("reported", true));
-    }
-
-    @Operation(summary = "上报检索成功")
-    @PostMapping("/report-success")
-    public Result<Map<String, Object>> reportSearchSuccess(@RequestBody Map<String, Object> body) {
-        Long logId = Long.valueOf(body.get("logId").toString());
-        SteeringQueryLog log = new SteeringQueryLog();
-        log.setId(logId);
-        log.setIsEffective(true);
-        steeringQueryLogMapper.updateById(log);
-        return Result.ok(java.util.Map.of("reported", true));
     }
 }

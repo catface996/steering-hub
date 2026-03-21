@@ -10,11 +10,11 @@ export interface ComplianceCheckParams {
 
 export const complianceService = {
   check: (params: ComplianceCheckParams) =>
-    post<ComplianceReport>('/api/v1/compliance/check', params).then((r) => r.data),
+    post<ComplianceReport>('/api/v1/web/compliance/check', params).then((r) => r.data),
 
   listReports: (repoFullName: string, limit = 20) =>
-    get<ComplianceReport[]>(`/api/v1/compliance/reports?repoFullName=${encodeURIComponent(repoFullName)}&limit=${limit}`).then((r) => r.data),
+    get<ComplianceReport[]>(`/api/v1/web/compliance/reports?repoFullName=${encodeURIComponent(repoFullName)}&limit=${limit}`).then((r) => r.data),
 
   getReport: (reportId: number) =>
-    get<ComplianceReport>(`/api/v1/compliance/reports/${reportId}`).then((r) => r.data),
+    get<ComplianceReport>(`/api/v1/web/compliance/reports/${reportId}`).then((r) => r.data),
 };

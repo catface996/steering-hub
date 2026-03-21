@@ -52,12 +52,13 @@ function clearUser(): void {
 }
 
 export function isAuthenticated(): boolean {
-  return getToken() !== null;
+  const token = getToken();
+  return token !== null && token.length > 0;
 }
 
 export async function login(params: LoginParams): Promise<AuthUser> {
   const res: ApiResponse<LoginResponseData> = await post<LoginResponseData>(
-    '/api/v1/auth/login',
+    '/api/v1/web/auth/login',
     params,
     { skipAuth: true },
   );
@@ -73,7 +74,7 @@ export async function login(params: LoginParams): Promise<AuthUser> {
 
 export async function logout(): Promise<void> {
   try {
-    await post('/api/v1/auth/logout');
+    await post('/api/v1/web/auth/logout');
   } catch {
     // Ignore
   } finally {

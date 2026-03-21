@@ -66,7 +66,7 @@ export default function FailureListPage() {
 
   useEffect(() => {
     setLoading(true);
-    get<FailureLog[]>(`/api/v1/search/log/failures?days=${days}&limit=200`)
+    get<FailureLog[]>(`/api/v1/web/search/log/failures?days=${days}&limit=200`)
       .then(r => setFailures(r.data || []))
       .catch(() => setFailures([]))
       .finally(() => setLoading(false));

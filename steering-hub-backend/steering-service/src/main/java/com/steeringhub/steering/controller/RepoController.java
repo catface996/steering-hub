@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Tag(name = "代码仓库管理")
 @RestController
-@RequestMapping("/api/v1/repos")
+@RequestMapping("/api/v1/web/repos")
 @RequiredArgsConstructor
 public class RepoController {
 

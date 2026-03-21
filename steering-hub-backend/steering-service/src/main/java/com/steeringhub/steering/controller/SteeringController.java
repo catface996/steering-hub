@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "规范管理")
 @RestController
-@RequestMapping("/api/v1/steerings")
+@RequestMapping("/api/v1/web/steerings")
 @RequiredArgsConstructor
 public class SteeringController {
 

@@ -18,7 +18,7 @@ def _get_headers() -> dict:
 
 
 async def search_steerings(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid") -> list[dict]:
-    """Call /api/v1/search with hybrid mode, only returns 'active' steerings"""
+    """Call /api/v1/mcp/search with hybrid mode, only returns 'active' steerings"""
     params: dict[str, Any] = {
         "query": query,
         "limit": limit,
@@ -28,7 +28,7 @@ async def search_steerings(query: str, category_id: Optional[int] = None, limit:
         params["categoryId"] = category_id
 
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.get("/api/v1/search", params=params)
+        resp = await client.get("/api/v1/mcp/search", params=params)
         resp.raise_for_status()
         data = resp.json()
         # Filter to active steerings only (should already be filtered server-side)
@@ -39,7 +39,7 @@ async def search_steerings(query: str, category_id: Optional[int] = None, limit:
 async def get_steering(steering_id: int) -> dict:
     """Get steering detail by ID"""
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.get(f"/api/v1/steerings/{steering_id}")
+        resp = await client.get(f"/api/v1/web/steerings/{steering_id}")
         resp.raise_for_status()
         data = resp.json()
         steering = data.get("data", {})
@@ -51,7 +51,7 @@ async def get_steering(steering_id: int) -> dict:
 async def get_categories() -> list[dict]:
     """Get all steering categories"""
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.get("/api/v1/categories")
+        resp = await client.get("/api/v1/web/categories")
         resp.raise_for_status()
         return resp.json().get("data", [])
 
@@ -79,7 +79,7 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
 
                 cat_id = cat["id"]
                 # Fetch steerings for this category
-                resp = await client.get("/api/v1/steerings", params={
+                resp = await client.get("/api/v1/web/steerings", params={
                     "page": 1,
                     "size": 200,
                     "categoryId": cat_id
@@ -121,7 +121,7 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
                 raise ValueError(f"Category not found: {category_code}")
 
             # Fetch steerings for this category
-            resp = await client.get("/api/v1/steerings", params={
+            resp = await client.get("/api/v1/web/steerings", params={
                 "page": 1,
                 "size": 200,
                 "categoryId": category["id"]
@@ -159,7 +159,7 @@ async def submit_steering(title: str, content: str, category: str, tags: list[st
         "tags": tags,
     }
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.post("/api/v1/steerings", json=payload)
+        resp = await client.post("/api/v1/web/steerings", json=payload)
         resp.raise_for_status()
         return resp.json().get("data", {})
 
@@ -176,14 +176,14 @@ async def record_usage(steering_id: int, repo: str, task_description: str, agent
         "agentId": agent_id,
     }
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.post("/api/v1/usage", json=payload)
+        resp = await client.post("/api/v1/web/usage", json=payload)
         resp.raise_for_status()
         return resp.json().get("data", {})
 
 
 async def _resolve_category_id(code: str) -> int:
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.get("/api/v1/categories")
+        resp = await client.get("/api/v1/web/categories")
         resp.raise_for_status()
         categories = resp.json().get("data", [])
         for cat in categories:
@@ -196,56 +196,30 @@ async def _ensure_repo(full_name: str) -> int:
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
         name = full_name.split("/")[-1] if "/" in full_name else full_name
         resp = await client.post(
-            "/api/v1/repos",
+            "/api/v1/web/repos",
             params={"name": name, "fullName": full_name},
         )
         resp.raise_for_status()
         return resp.json()["data"]["id"]
 
 
-async def log_search_query(
-    query: str,
-    mode: str,
-    results: list,
-    agent_id: str = "mcp-agent",
-    repo: str = "",
-    task_description: str = "",
-    response_time_ms: int = 0,
-) -> int:
-    """记录 MCP 搜索查询日志，返回 log_id 供后续上报失败/成功使用"""
-    import json as _json
-    payload = {
-        "queryText": query,
-        "searchMode": mode,
-        "resultCount": len(results),
-        "resultSteeringIds": _json.dumps([r.get("steeringId") for r in results if r.get("steeringId")]),
-        "agentId": agent_id,
-        "repo": repo,
-        "taskDescription": task_description,
-        "responseTimeMs": response_time_ms,
-    }
-    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=5) as client:
-        try:
-            resp = await client.post("/api/v1/search/log", json=payload)
-            return resp.json().get("data", {}).get("id", 0)
-        except Exception:
-            return 0  # 日志记录失败不影响搜索结果
-
-
-async def report_search_failure(log_id: int, reason: str, expected_topic: str = "") -> None:
+async def report_search_failure(query_id: int, reason: str, expected_topic: str = "") -> None:
     """上报本次检索无效，帮助改进规范系统"""
-    payload = {"logId": log_id, "reason": reason, "expectedTopic": expected_topic}
+    payload = {"queryId": query_id, "result": "failure", "reason": reason}
+    if expected_topic:
+        payload["expectedTopic"] = expected_topic
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=10) as client:
         try:
-            await client.post("/api/v1/search/report-failure", json=payload)
+            await client.post("/api/v1/mcp/search/feedback", json=payload)
         except Exception:
             pass
 
 
-async def report_search_success(log_id: int) -> None:
+async def report_search_success(query_id: int) -> None:
     """上报本次检索有效"""
+    payload = {"queryId": query_id, "result": "success"}
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=10) as client:
         try:
-            await client.post("/api/v1/search/report-success", json={"logId": log_id})
+            await client.post("/api/v1/mcp/search/feedback", json=payload)
         except Exception:
             pass

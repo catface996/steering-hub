@@ -10,14 +10,14 @@ export interface StopWordItem {
 
 export const stopWordApi = {
   list: () =>
-    get<StopWordItem[]>('/api/v1/stop-words').then((r) => r.data),
+    get<StopWordItem[]>('/api/v1/web/stop-words').then((r) => r.data),
 
   create: (word: string, language = 'zh') =>
-    post('/api/v1/stop-words', { word, language }),
+    post('/api/v1/web/stop-words', { word, language }),
 
   delete: (id: number) =>
-    del(`/api/v1/stop-words/${id}`),
+    del(`/api/v1/web/stop-words/${id}`),
 
   toggle: (id: number) =>
-    put(`/api/v1/stop-words/${id}/toggle`, {}),
+    put(`/api/v1/web/stop-words/${id}/toggle`, {}),
 };
