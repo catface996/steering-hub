@@ -53,12 +53,7 @@ public class ApiKeyController {
             new LambdaQueryWrapper<ApiKey>().orderByDesc(ApiKey::getCreatedAt)
         );
 
-        // 脱敏：只显示前10位 + ...
-        keys.forEach(k -> {
-            if (k.getKeyValue() != null && k.getKeyValue().length() > 10) {
-                k.setKeyValue(k.getKeyValue().substring(0, 10) + "...");
-            }
-        });
+        // 管理后台：返回完整 key 供复制使用（接口受 JWT 保护，仅管理员可访问）
 
         return Result.ok(keys);
     }

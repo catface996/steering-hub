@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Typography, Button, Input, Card, Flex, Spin, Modal, Switch, Tag, Tooltip, App } from 'antd';
-import { Plus, Trash2, Copy, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Copy, Check, AlertTriangle } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { apiKeyService } from '../../services/apiKeyService';
 import type { ApiKeyItem } from '../../types';
@@ -12,6 +12,7 @@ export default function ApiKeyPage() {
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [keyDisplayModal, setKeyDisplayModal] = useState<{ open: boolean; key: string; name: string }>({
     open: false, key: '', name: '',
   });
@@ -87,6 +88,12 @@ export default function ApiKeyPage() {
     });
   };
 
+  const handleCopy = (id: number, keyValue: string) => {
+    navigator.clipboard.writeText(keyValue);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
   const handleCopyKey = () => {
     navigator.clipboard.writeText(keyDisplayModal.key);
     message.success('API Key 已复制到剪贴板');
@@ -122,7 +129,16 @@ export default function ApiKeyPage() {
               apiKeys.map((item) => (
                 <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                   <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 180 }} ellipsis>{item.name}</Typography.Text>
-                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 260, fontFamily: 'monospace' }} ellipsis>{item.keyValue}</Typography.Text>
+                  <Flex gap={8} align="center" style={{ width: 260 }}>
+                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, fontFamily: 'monospace', flex: 1 }} ellipsis>{item.keyValue}</Typography.Text>
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={copiedId === item.id ? <Check size={14} color="#32D583" /> : <Copy size={14} color="#a1a1aa" />}
+                      onClick={() => handleCopy(item.id, item.keyValue)}
+                      style={{ padding: '0 4px' }}
+                    />
+                  </Flex>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, flex: 1 }} ellipsis>{item.description || '-'}</Typography.Text>
                   <div style={{ width: 80, textAlign: 'center' }}>
                     <Tag

@@ -13,7 +13,7 @@ API_KEY = os.getenv("STEERING_HUB_API_KEY", "")
 def _get_headers() -> dict:
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if API_KEY:
-        headers["X-API-Key"] = API_KEY
+        headers["Authorization"] = f"Bearer {API_KEY}"
     return headers
 
 
