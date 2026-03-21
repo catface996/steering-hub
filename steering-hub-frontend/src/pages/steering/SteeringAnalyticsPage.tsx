@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Typography, Button, Card, Flex, Tag, Select, Table, Statistic, Empty } from 'antd';
 import { BarChart3, TrendingUp, AlertCircle, Clock, Download } from 'lucide-react';
 import ReactECharts from 'echarts-for-react';
+import { useNavigate } from 'react-router-dom';
 import { useHeader } from '../../contexts/HeaderContext';
 import { get } from '../../utils/request';
 
@@ -35,6 +36,7 @@ const REASON_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function SteeringAnalyticsPage() {
   const { setBreadcrumbs, setActions } = useHeader();
+  const navigate = useNavigate();
   const [days, setDays] = useState(7);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [failures, setFailures] = useState<FailureLog[]>([]);
@@ -96,11 +98,19 @@ export default function SteeringAnalyticsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {stats.map(s => (
           <Card key={s.label} style={{ borderRadius: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, marginBottom: 12 }}>
-              {s.icon}
-            </div>
-            <Typography.Text style={{ fontSize: 13, color: '#a1a1aa', display: 'block' }}>{s.label}</Typography.Text>
-            <Typography.Text style={{ fontSize: 28, fontWeight: 700, color: '#f4f4f5' }}>{s.value}</Typography.Text>
+            <Flex align="center" gap={12} style={{ marginBottom: 8 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: s.color, flexShrink: 0 }}>
+                {s.icon}
+              </div>
+              <Typography.Text style={{ fontSize: 32, fontWeight: 700, color: '#f4f4f5', lineHeight: 1 }}>
+                {s.value}
+              </Typography.Text>
+            </Flex>
+            <Typography.Text style={{ fontSize: 13, color: '#a1a1aa', display: 'block' }}>
+              {s.label}
+            </Typography.Text>
           </Card>
         ))}
       </div>
@@ -177,7 +187,14 @@ export default function SteeringAnalyticsPage() {
       <Card
         title={<Typography.Text style={{ color: '#f4f4f5' }}>无效查询记录</Typography.Text>}
         style={{ borderRadius: 12 }}
-        extra={<Typography.Text style={{ color: '#a1a1aa', fontSize: 12 }}>Agent 上报的无效检索，帮助改进规范系统</Typography.Text>}
+        extra={
+          <Flex align="center" gap={12}>
+            <Typography.Text style={{ color: '#a1a1aa', fontSize: 12 }}>Agent 上报的无效检索，帮助改进规范系统</Typography.Text>
+            <Button type="link" size="small" onClick={() => navigate('/analytics/failures')}>
+              查看全部 →
+            </Button>
+          </Flex>
+        }
       >
         {failures.length > 0 ? (
           <Table

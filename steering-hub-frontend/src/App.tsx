@@ -12,6 +12,7 @@ import SteeringListPage from './pages/steering/SteeringListPage';
 import SteeringDetailPage from './pages/steering/SteeringDetailPage';
 import SteeringEditPage from './pages/steering/SteeringEditPage';
 import SteeringAnalyticsPage from './pages/steering/SteeringAnalyticsPage';
+import FailureListPage from './pages/steering/FailureListPage';
 import SearchPage from './pages/search/SearchPage';
 import CompliancePage from './pages/compliance/CompliancePage';
 import CategoryPage from './pages/category/CategoryPage';
@@ -40,6 +41,7 @@ function ThemedApp() {
             <Route path="compliance" element={<CompliancePage />} />
             <Route path="categories" element={<CategoryPage />} />
             <Route path="analytics" element={<SteeringAnalyticsPage />} />
+            <Route path="analytics/failures" element={<FailureListPage />} />
             <Route path="settings/api-keys" element={<ApiKeyPage />} />
             <Route path="settings/stop-words" element={<StopWordPage />} />
           </Route>

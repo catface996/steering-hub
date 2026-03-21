@@ -211,8 +211,8 @@ async def log_search_query(
     repo: str = "",
     task_description: str = "",
     response_time_ms: int = 0,
-) -> None:
-    """异步记录 MCP 搜索查询日志，失败不影响搜索结果"""
+) -> int:
+    """记录 MCP 搜索查询日志，返回 log_id 供后续上报失败/成功使用"""
     import json as _json
     payload = {
         "queryText": query,
@@ -226,9 +226,10 @@ async def log_search_query(
     }
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=5) as client:
         try:
-            await client.post("/api/v1/search/log", json=payload)
+            resp = await client.post("/api/v1/search/log", json=payload)
+            return resp.json().get("data", {}).get("id", 0)
         except Exception:
-            pass  # 日志记录失败不影响搜索结果
+            return 0  # 日志记录失败不影响搜索结果
 
 
 async def report_search_failure(log_id: int, reason: str, expected_topic: str = "") -> None:
