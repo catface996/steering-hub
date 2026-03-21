@@ -1,92 +1,50 @@
-import { Box, Typography } from '@mui/material'
-import QueryStatsIcon from '@mui/icons-material/QueryStats'
-import TrendingUpIcon from '@mui/icons-material/TrendingUp'
-import AccessTimeIcon from '@mui/icons-material/AccessTime'
-import SpeedIcon from '@mui/icons-material/Speed'
-import DownloadIcon from '@mui/icons-material/Download'
-import Button from '@mui/material/Button'
-import InboxIcon from '@mui/icons-material/Inbox'
+import { useEffect } from 'react';
+import { Typography, Button, Card, Flex } from 'antd';
+import { BarChart3, TrendingUp, Clock, Gauge, Download, Inbox } from 'lucide-react';
+import { useHeader } from '../../contexts/HeaderContext';
 
 export default function SpecAnalyticsPage() {
+  const { setBreadcrumbs, setActions } = useHeader();
+
+  useEffect(() => {
+    setBreadcrumbs(
+      <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>规范使用分析</Typography.Text>
+    );
+    setActions(
+      <Button icon={<Download size={14} />} disabled>导出</Button>
+    );
+  }, [setBreadcrumbs, setActions]);
+
   const stats = [
-    { label: '总查询次数', value: '--', icon: <QueryStatsIcon />, color: '#6366F1', bgColor: '#6366F11A' },
-    { label: '本月查询', value: '--', icon: <TrendingUpIcon />, color: '#32D583', bgColor: '#32D58320' },
-    { label: '活跃规范数', value: '--', icon: <AccessTimeIcon />, color: '#FFB547', bgColor: '#FFB54720' },
-    { label: '平均响应时间', value: '--', icon: <SpeedIcon />, color: '#E85A4F', bgColor: '#E85A4F20' },
-  ]
+    { label: '总查询次数', value: '--', icon: <BarChart3 size={20} />, color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
+    { label: '本月查询', value: '--', icon: <TrendingUp size={20} />, color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
+    { label: '活跃规范数', value: '--', icon: <Clock size={20} />, color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
+    { label: '平均响应时间', value: '--', icon: <Gauge size={20} />, color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
+  ];
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-        <Box>
-          <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>规范使用分析</Typography>
-          <Typography sx={{ color: '#8E8E93', fontSize: 14, mt: 0.5 }}>
-            了解规范使用情况 — 按时间区间查看数据
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          startIcon={<DownloadIcon />}
-          sx={{ borderColor: '#2A2A2E', color: '#8E8E93' }}
-          disabled
-        >
-          导出
-        </Button>
-      </Box>
-
+    <div style={{ padding: 24 }}>
       {/* Stat Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mb: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {stats.map((stat) => (
-          <Box
-            key={stat.label}
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              p: 2.5,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1.5,
-            }}
-          >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '10px',
-                bgcolor: stat.bgColor,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: stat.color,
-              }}
-            >
+          <Card key={stat.label} style={{ borderRadius: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: stat.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color, marginBottom: 12 }}>
               {stat.icon}
-            </Box>
-            <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>{stat.label}</Typography>
-            <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>{stat.value}</Typography>
-          </Box>
+            </div>
+            <Typography.Text style={{ fontSize: 13, color: '#a1a1aa', display: 'block' }}>{stat.label}</Typography.Text>
+            <Typography.Text style={{ fontSize: 28, fontWeight: 700, color: '#f4f4f5' }}>{stat.value}</Typography.Text>
+          </Card>
         ))}
-      </Box>
+      </div>
 
       {/* Empty State */}
-      <Box
-        sx={{
-          bgcolor: '#16161A',
-          border: '1px solid #2A2A2E',
-          borderRadius: '16px',
-          py: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-        }}
-      >
-        <InboxIcon sx={{ fontSize: 48, color: '#2A2A2E' }} />
-        <Typography sx={{ color: '#4A4A50', fontSize: 15 }}>暂无分析数据</Typography>
-        <Typography sx={{ color: '#4A4A50', fontSize: 13 }}>后端统计接口就绪后将自动展示使用分析</Typography>
-      </Box>
-    </Box>
-  )
+      <Card style={{ borderRadius: 12 }}>
+        <Flex vertical align="center" gap={12} style={{ padding: 48 }}>
+          <Inbox size={48} color="#27273a" />
+          <Typography.Text style={{ color: '#71717a', fontSize: 15 }}>暂无分析数据</Typography.Text>
+          <Typography.Text style={{ color: '#71717a', fontSize: 13 }}>后端统计接口就绪后将自动展示使用分析</Typography.Text>
+        </Flex>
+      </Card>
+    </div>
+  );
 }

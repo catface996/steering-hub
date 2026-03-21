@@ -1,346 +1,195 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  LinearProgress,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material'
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import { specApi } from '@/api/spec'
-import type { SpecStatus } from '@/types'
-import { useSetPageHeader } from '@/hooks/useSetPageHeader'
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Typography, Button, Tag, Card, Flex, Spin, Modal, App, Progress } from 'antd';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useHeader } from '../../contexts/HeaderContext';
+import { specService } from '../../services/specService';
+import type { Spec, SpecStatus } from '../../types';
 
 const STATUS_LABEL: Record<SpecStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
   rejected: '已驳回', active: '已生效', deprecated: '已废弃',
-}
+};
 
-const STATUS_CHIP_SX: Record<SpecStatus, object> = {
-  draft: { bgcolor: '#2A2A2E', color: '#8E8E93' },
-  pending_review: { bgcolor: '#6366F120', color: '#6366F1' },
-  approved: { bgcolor: '#6366F120', color: '#818CF8' },
-  rejected: { bgcolor: '#E85A4F20', color: '#E85A4F' },
-  active: { bgcolor: '#32D58320', color: '#32D583' },
-  deprecated: { bgcolor: '#FFB54720', color: '#FFB547' },
-}
+const STATUS_CLASS: Record<SpecStatus, string> = {
+  draft: 'tag-status-draft', pending_review: 'tag-status-pending', approved: 'tag-status-approved',
+  rejected: 'tag-status-rejected', active: 'tag-status-active', deprecated: 'tag-status-deprecated',
+};
 
 export default function SpecDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [deprecateOpen, setDeprecateOpen] = useState(false)
-  const [snackMsg, setSnackMsg] = useState('')
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+  const { setBreadcrumbs, setActions } = useHeader();
+  const [spec, setSpec] = useState<Spec | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [deprecateOpen, setDeprecateOpen] = useState(false);
 
-  const { data: spec, isLoading } = useQuery({
-    queryKey: ['spec', id],
-    queryFn: () => specApi.get(Number(id)),
-    enabled: !!id,
-  })
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await specService.get(Number(id));
+        setSpec(data);
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [id]);
 
-  const reviewMutation = useMutation({
-    mutationFn: ({ action, comment }: { action: any; comment?: string }) =>
-      specApi.review(Number(id), action, comment),
-    onSuccess: () => {
-      setSnackMsg('操作成功')
-      queryClient.invalidateQueries({ queryKey: ['spec', id] })
-    },
-  })
+  useEffect(() => {
+    if (!spec) return;
 
-  if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress sx={{ color: '#6366F1' }} /></Box>
-  if (!spec) return <Typography sx={{ color: '#8E8E93' }}>规范不存在</Typography>
+    setBreadcrumbs(
+      <Flex align="center" gap={8}>
+        <Typography.Text
+          style={{ color: '#a1a1aa', fontSize: 20, fontWeight: 700, cursor: 'pointer' }}
+          onClick={() => navigate('/specs')}
+        >
+          规范管理
+        </Typography.Text>
+        <Typography.Text style={{ color: '#71717a', fontSize: 20 }}>/</Typography.Text>
+        <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>{spec.title}</Typography.Text>
+      </Flex>
+    );
+
+    const actionButtons = (
+      <Flex gap={8}>
+        <Button onClick={() => navigate('/specs')}>返回</Button>
+        <Button type="primary" onClick={() => navigate(`/specs/${id}/edit`)}>编辑规范</Button>
+        {spec.status === 'draft' && (
+          <Button type="primary" onClick={() => handleReview('submit')}>提交审核</Button>
+        )}
+        {spec.status === 'pending_review' && (
+          <>
+            <Button type="primary" style={{ background: '#32D583' }} onClick={() => handleReview('approve')}>审核通过</Button>
+            <Button danger onClick={() => handleReview('reject')}>驳回</Button>
+          </>
+        )}
+        {spec.status === 'approved' && (
+          <Button type="primary" onClick={() => handleReview('activate')}>生效</Button>
+        )}
+        {spec.status === 'active' && (
+          <Button danger onClick={() => setDeprecateOpen(true)}>废弃</Button>
+        )}
+      </Flex>
+    );
+    setActions(actionButtons);
+  }, [spec, setBreadcrumbs, setActions, navigate, id]);
+
+  const handleReview = async (action: string) => {
+    try {
+      await specService.review(Number(id), action as any);
+      message.success('操作成功');
+      const data = await specService.get(Number(id));
+      setSpec(data);
+    } catch {
+      message.error('操作失败');
+    }
+  };
+
+  if (loading) return <Flex justify="center" style={{ padding: 64 }}><Spin size="large" /></Flex>;
+  if (!spec) return <Typography.Text type="secondary">规范不存在</Typography.Text>;
 
   return (
-    <Box>
-      {/* Header - 负margin抵消 main 的 padding，贴顶显示 */}
-      <Box sx={{
-        height: 64,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        mx: -4,  // 抵消 main 的 px: 4
-        px: 4,
-        mt: 0,  // main 的 pt 已经是 0，不需要抵消
-        mb: 3,
-        borderBottom: '1px solid #2A2A2E',
-        bgcolor: 'transparent',
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography
-            sx={{ color: '#8E8E93', fontWeight: 500, fontSize: 14, cursor: 'pointer', '&:hover': { color: '#6366F1' } }}
-            onClick={() => navigate('/specs')}
-          >
-            规范管理
-          </Typography>
-          <Typography sx={{ color: '#444', fontSize: 14 }}>/</Typography>
-          <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 20 }}>
-            {spec.title}
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" onClick={() => navigate('/specs')} sx={{ borderColor: '#2A2A2E', color: '#8E8E93' }}>
-            返回
-          </Button>
-          <Button variant="contained" onClick={() => navigate(`/specs/${id}/edit`)}>
-            编辑规范
-          </Button>
-          {spec.status === 'draft' && (
-            <Button variant="contained" onClick={() => reviewMutation.mutate({ action: 'submit' })}>
-              提交审核
-            </Button>
-          )}
-          {spec.status === 'pending_review' && (
-            <>
-              <Button
-                variant="contained"
-                onClick={() => reviewMutation.mutate({ action: 'approve' })}
-                sx={{ bgcolor: '#32D583', '&:hover': { bgcolor: '#28b06e' } }}
-              >
-                审核通过
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => reviewMutation.mutate({ action: 'reject' })}
-                sx={{ borderColor: '#E85A4F', color: '#E85A4F' }}
-              >
-                驳回
-              </Button>
-            </>
-          )}
-          {spec.status === 'approved' && (
-            <Button variant="contained" onClick={() => reviewMutation.mutate({ action: 'activate' })}>
-              生效
-            </Button>
-          )}
-          {spec.status === 'active' && (
-            <Button
-              variant="outlined"
-              onClick={() => setDeprecateOpen(true)}
-              sx={{ borderColor: '#E85A4F', color: '#E85A4F' }}
-            >
-              废弃
-            </Button>
-          )}
-        </Stack>
-      </Box>
-
-      {/* 左右分栏布局 */}
-      <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mt: 0 }}>
-        {/* 左侧 70%：内容 */}
-        <Box sx={{ flex: '0 0 70%' }}>
-
-          {/* 内容 */}
-          <Box
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              p: 4,
-            }}
-          >
-            <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 18, mb: 2 }}>规范内容</Typography>
-            <Box sx={{ borderTop: '1px solid #2A2A2E', pt: 3 }} className="markdown-body">
+    <div style={{ padding: 24 }}>
+      {/* Left-right layout */}
+      <Flex gap={20} align="flex-start">
+        {/* Left: Content */}
+        <div style={{ flex: '0 0 70%' }}>
+          <Card style={{ borderRadius: 12 }}>
+            <Typography.Text style={{ fontWeight: 600, fontSize: 18, display: 'block', marginBottom: 16 }}>规范内容</Typography.Text>
+            <div style={{ borderTop: '1px solid #27273a', paddingTop: 20 }} className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
-            </Box>
-          </Box>
-        </Box>
+            </div>
+          </Card>
+        </div>
 
-        {/* 右侧 30%：元信息 + 可检索性 + Agent测试问题 */}
-        <Box sx={{
-          flex: '0 0 calc(30% - 24px)',
-          alignSelf: 'flex-start',
-        }}>
-          {/* 元信息卡片 */}
-          <Card
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              boxShadow: 'none',
-            }}
-          >
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16, mb: 2 }}>
-                元信息
-              </Typography>
+        {/* Right: Metadata */}
+        <div style={{ flex: '0 0 calc(30% - 20px)' }}>
+          <Card style={{ borderRadius: 12 }}>
+            <Typography.Text style={{ fontWeight: 600, fontSize: 16, display: 'block', marginBottom: 16 }}>元信息</Typography.Text>
 
-              {/* 分类 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>分类</Typography>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 14, fontWeight: 500 }}>
-                  {spec.categoryName || '-'}
-                </Typography>
-              </Box>
-
-              {/* 状态 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>状态</Typography>
-                <Chip
-                  label={STATUS_LABEL[spec.status]}
-                  size="small"
-                  sx={{ ...STATUS_CHIP_SX[spec.status], fontSize: 12, fontWeight: 600 }}
-                />
-              </Box>
-
-              {/* 版本 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>版本</Typography>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 14, fontWeight: 500 }}>
-                  v{spec.currentVersion}
-                </Typography>
-              </Box>
-
-              {/* 标签 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>标签</Typography>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                  {spec.tags && spec.tags.length > 0 ? (
-                    spec.tags.map((t) => (
-                      <Chip key={t} label={t} size="small" sx={{ bgcolor: '#6366F120', color: '#818CF8', fontSize: 11, height: 22 }} />
-                    ))
-                  ) : (
-                    <Typography sx={{ color: '#4A4A50', fontSize: 13 }}>-</Typography>
-                  )}
-                </Stack>
-              </Box>
-
-              {/* 关键词 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>关键词</Typography>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 14, fontWeight: 500 }}>
-                  {spec.keywords || '-'}
-                </Typography>
-              </Box>
-
-              {/* 作者 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>作者</Typography>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 14, fontWeight: 500 }}>
-                  {spec.author || '-'}
-                </Typography>
-              </Box>
-
-              {/* 更新时间 */}
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>更新时间</Typography>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 14, fontWeight: 500 }}>
-                  {spec.updatedAt}
-                </Typography>
-              </Box>
-
-              {/* 创建时间 */}
-              <Box>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12, mb: 0.5 }}>创建时间</Typography>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 14, fontWeight: 500 }}>
-                  {spec.createdAt}
-                </Typography>
-              </Box>
-            </CardContent>
+            {[
+              { label: '分类', value: spec.categoryName || '-' },
+              { label: '状态', value: <Tag className={`tag-base ${STATUS_CLASS[spec.status]}`}>{STATUS_LABEL[spec.status]}</Tag> },
+              { label: '版本', value: `v${spec.currentVersion}` },
+              {
+                label: '标签',
+                value: spec.tags && spec.tags.length > 0
+                  ? <Flex wrap="wrap" gap={4}>{spec.tags.map((t) => <Tag key={t} className="tag-base tag-content">{t}</Tag>)}</Flex>
+                  : '-'
+              },
+              { label: '关键词', value: spec.keywords || '-' },
+              { label: '作者', value: spec.author || '-' },
+              { label: '更新时间', value: spec.updatedAt },
+              { label: '创建时间', value: spec.createdAt },
+            ].map((item) => (
+              <div key={item.label} style={{ marginBottom: 16 }}>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12, display: 'block', marginBottom: 4 }}>{item.label}</Typography.Text>
+                {typeof item.value === 'string' ? (
+                  <Typography.Text style={{ fontSize: 14, fontWeight: 500 }}>{item.value}</Typography.Text>
+                ) : (
+                  item.value
+                )}
+              </div>
+            ))}
           </Card>
 
-          {/* 可检索性评分 */}
-          <Card
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              boxShadow: 'none',
-              mt: 2,
-            }}
-          >
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16, mb: 2 }}>
-                可检索性评分
-              </Typography>
-              <Box sx={{ mb: 1 }}>
-                <LinearProgress
-                  value={(spec.qualityScore ?? 0) * 100}
-                  variant="determinate"
-                  color={
-                    (spec.qualityScore ?? 0) >= 0.7
-                      ? 'success'
-                      : (spec.qualityScore ?? 0) >= 0.4
-                      ? 'warning'
-                      : 'error'
-                  }
-                  sx={{ height: 8, borderRadius: 1 }}
-                />
-              </Box>
-              <Typography sx={{ color: '#FAFAF9', fontSize: 20, fontWeight: 700 }}>
+          {/* Quality Score */}
+          {spec.qualityScore !== undefined && (
+            <Card style={{ borderRadius: 12, marginTop: 16 }}>
+              <Typography.Text style={{ fontWeight: 600, fontSize: 16, display: 'block', marginBottom: 12 }}>可检索性评分</Typography.Text>
+              <Progress
+                percent={(spec.qualityScore ?? 0) * 100}
+                strokeColor={
+                  (spec.qualityScore ?? 0) >= 0.7 ? '#32D583'
+                    : (spec.qualityScore ?? 0) >= 0.4 ? '#FFB547'
+                    : '#E85A4F'
+                }
+                style={{ marginBottom: 8 }}
+              />
+              <Typography.Text style={{ fontSize: 20, fontWeight: 700 }}>
                 {((spec.qualityScore ?? 0) * 100).toFixed(0)}%
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Agent 测试问题 */}
-          {spec.agentQueries && spec.agentQueries.length > 0 && (
-            <Card
-              sx={{
-                bgcolor: '#16161A',
-                border: '1px solid #2A2A2E',
-                borderRadius: '16px',
-                boxShadow: 'none',
-                mt: 2,
-              }}
-            >
-              <CardContent sx={{ p: 2.5 }}>
-                <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16, mb: 1 }}>
-                  Agent 测试问题
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#8E8E93', display: 'block', mb: 2 }}>
-                  AI Coding Agent 可能用以下问题检索到此规范
-                </Typography>
-                {spec.agentQueries.map((q: string, i: number) => (
-                  <Box key={i} sx={{ display: 'flex', gap: 1, mb: 1.5, alignItems: 'flex-start' }}>
-                    <Typography sx={{ color: '#6366F1', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
-                      Q{i + 1}
-                    </Typography>
-                    <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>
-                      {q}
-                    </Typography>
-                  </Box>
-                ))}
-              </CardContent>
+              </Typography.Text>
             </Card>
           )}
-        </Box>
-      </Box>
 
-      {/* Deprecate Dialog */}
-      <Dialog open={deprecateOpen} onClose={() => setDeprecateOpen(false)}>
-        <DialogTitle>确认废弃</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ color: '#8E8E93' }}>确认废弃此规范？废弃后将无法通过 MCP 工具检索到此规范。</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeprecateOpen(false)} sx={{ color: '#8E8E93' }}>取消</Button>
-          <Button
-            variant="contained"
-            onClick={() => { reviewMutation.mutate({ action: 'deprecate' }); setDeprecateOpen(false) }}
-            sx={{ bgcolor: '#E85A4F', '&:hover': { bgcolor: '#d04a3f' } }}
-          >
-            废弃
-          </Button>
-        </DialogActions>
-      </Dialog>
+          {/* Agent Queries */}
+          {spec.agentQueries && spec.agentQueries.length > 0 && (
+            <Card style={{ borderRadius: 12, marginTop: 16 }}>
+              <Typography.Text style={{ fontWeight: 600, fontSize: 16, display: 'block', marginBottom: 4 }}>Agent 测试问题</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, display: 'block', marginBottom: 12 }}>
+                AI Coding Agent 可能用以下问题检索到此规范
+              </Typography.Text>
+              {spec.agentQueries.map((q, i) => (
+                <Flex key={i} gap={8} style={{ marginBottom: 10 }} align="flex-start">
+                  <Typography.Text style={{ color: 'var(--primary-color)', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+                    Q{i + 1}
+                  </Typography.Text>
+                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>{q}</Typography.Text>
+                </Flex>
+              ))}
+            </Card>
+          )}
+        </div>
+      </Flex>
 
-      <Snackbar open={!!snackMsg} autoHideDuration={3000} onClose={() => setSnackMsg('')}>
-        <Alert severity="success" onClose={() => setSnackMsg('')}>{snackMsg}</Alert>
-      </Snackbar>
-    </Box>
-  )
+      {/* Deprecate Modal */}
+      <Modal
+        open={deprecateOpen}
+        onCancel={() => setDeprecateOpen(false)}
+        onOk={() => { handleReview('deprecate'); setDeprecateOpen(false); }}
+        title="确认废弃"
+        okText="废弃"
+        cancelText="取消"
+        okButtonProps={{ danger: true }}
+      >
+        <Typography.Text type="secondary">确认废弃此规范？废弃后将无法通过 MCP 工具检索到此规范。</Typography.Text>
+      </Modal>
+    </div>
+  );
 }

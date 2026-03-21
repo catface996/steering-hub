@@ -1,254 +1,168 @@
-import { useNavigate } from 'react-router-dom'
-import { Box, Button, Chip, Stack, Typography } from '@mui/material'
-import DescriptionIcon from '@mui/icons-material/Description'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import SearchIcon from '@mui/icons-material/Search'
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser'
-import AddIcon from '@mui/icons-material/Add'
-import CategoryIcon from '@mui/icons-material/Category'
-import { useQuery } from '@tanstack/react-query'
-import { specApi } from '@/api/spec'
-import type { Spec, SpecStatus } from '@/types'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Typography, Card, Button, Tag, Flex, Spin } from 'antd';
+import { FileText, CheckCircle, Search, ShieldCheck, Plus, Tag as TagIcon } from 'lucide-react';
+import { useHeader } from '../../contexts/HeaderContext';
+import { specService } from '../../services/specService';
+import type { Spec, SpecStatus } from '../../types';
 
 const STATUS_LABEL: Record<SpecStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
   rejected: '已驳回', active: '已生效', deprecated: '已废弃',
-}
+};
 
-const STATUS_CHIP_SX: Record<SpecStatus, object> = {
-  draft: { bgcolor: '#2A2A2E', color: '#8E8E93' },
-  pending_review: { bgcolor: '#6366F120', color: '#6366F1' },
-  approved: { bgcolor: '#6366F120', color: '#818CF8' },
-  rejected: { bgcolor: '#E85A4F20', color: '#E85A4F' },
-  active: { bgcolor: '#32D58320', color: '#32D583' },
-  deprecated: { bgcolor: '#FFB54720', color: '#FFB547' },
-}
+const STATUS_CLASS: Record<SpecStatus, string> = {
+  draft: 'tag-status-draft', pending_review: 'tag-status-pending', approved: 'tag-status-approved',
+  rejected: 'tag-status-rejected', active: 'tag-status-active', deprecated: 'tag-status-deprecated',
+};
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { setBreadcrumbs } = useHeader();
+  const [totalCount, setTotalCount] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [recentSpecs, setRecentSpecs] = useState<Spec[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: totalData } = useQuery({
-    queryKey: ['specs-total'],
-    queryFn: () => specApi.page({ current: 1, size: 1 }),
-  })
+  useEffect(() => {
+    setBreadcrumbs(
+      <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>平台概览</Typography.Text>
+    );
+  }, [setBreadcrumbs]);
 
-  const { data: activeData } = useQuery({
-    queryKey: ['specs-active'],
-    queryFn: () => specApi.page({ current: 1, size: 1, status: 'active' }),
-  })
-
-  const { data: recentData } = useQuery({
-    queryKey: ['specs-recent'],
-    queryFn: () => specApi.page({ current: 1, size: 5 }),
-  })
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [total, active, recent] = await Promise.all([
+          specService.page({ current: 1, size: 1 }),
+          specService.page({ current: 1, size: 1, status: 'active' }),
+          specService.page({ current: 1, size: 5 }),
+        ]);
+        setTotalCount(total.total);
+        setActiveCount(active.total);
+        setRecentSpecs(recent.records);
+      } catch {
+        // ignore
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   const stats = [
-    { label: '规范总数', value: totalData?.total ?? 0, icon: <DescriptionIcon />, color: '#6366F1', bgColor: '#6366F11A' },
-    { label: '已生效规范', value: activeData?.total ?? 0, icon: <CheckCircleIcon />, color: '#32D583', bgColor: '#32D58320' },
-    { label: '本周检索次数', value: '--', icon: <SearchIcon />, color: '#FFB547', bgColor: '#FFB54720' },
-    { label: '合规检查次数', value: '--', icon: <VerifiedUserIcon />, color: '#E85A4F', bgColor: '#E85A4F20' },
-  ]
+    { label: '规范总数', value: totalCount, icon: <FileText size={20} />, color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
+    { label: '已生效规范', value: activeCount, icon: <CheckCircle size={20} />, color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
+    { label: '本周检索次数', value: '--', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
+    { label: '合规检查次数', value: '--', icon: <ShieldCheck size={20} />, color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
+  ];
 
   const quickActions = [
-    { label: '新建规范', icon: <AddIcon sx={{ fontSize: 16 }} />, onClick: () => navigate('/specs/new'), color: '#6366F1', bgColor: '#6366F120' },
-    { label: '搜索规范', icon: <SearchIcon sx={{ fontSize: 16 }} />, onClick: () => navigate('/search'), color: '#32D583', bgColor: '#32D58320' },
-    { label: '合规检查', icon: <VerifiedUserIcon sx={{ fontSize: 16 }} />, onClick: () => navigate('/compliance'), color: '#FFB547', bgColor: '#FFB54720' },
-    { label: '分类管理', icon: <CategoryIcon sx={{ fontSize: 16 }} />, onClick: () => navigate('/categories'), color: '#E85A4F', bgColor: '#E85A4F20' },
-  ]
+    { label: '新建规范', icon: <Plus size={16} />, onClick: () => navigate('/specs/new'), color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
+    { label: '搜索规范', icon: <Search size={16} />, onClick: () => navigate('/search'), color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
+    { label: '合规检查', icon: <ShieldCheck size={16} />, onClick: () => navigate('/compliance'), color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
+    { label: '分类管理', icon: <TagIcon size={16} />, onClick: () => navigate('/categories'), color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
+  ];
 
-  const systemStatus = [
-    { label: 'API 状态', status: '正常运行', chipSx: { bgcolor: '#32D58320', color: '#32D583' } },
-    { label: '向量数据库', status: '已连接', chipSx: { bgcolor: '#32D58320', color: '#32D583' } },
-    { label: '全文索引', status: '运行中', chipSx: { bgcolor: '#6366F120', color: '#6366F1' } },
-    { label: '缓存服务', status: '正常', chipSx: { bgcolor: '#32D58320', color: '#32D583' } },
-  ]
+  if (loading) {
+    return <Flex justify="center" align="center" style={{ flex: 1, padding: 48 }}><Spin size="large" /></Flex>;
+  }
 
   return (
-    <Box sx={{ pt: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-        <Box>
-          <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>
-            平台概览
-          </Typography>
-          <Typography sx={{ color: '#8E8E93', fontSize: 14, mt: 0.5 }}>
-            Steering Hub 您的规范管理平台的全方位一览
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          onClick={() => navigate('/specs')}
-          sx={{ borderColor: '#2A2A2E', color: '#8E8E93', '&:hover': { borderColor: '#3A3A40' } }}
-        >
-          查看所有规范
-        </Button>
-      </Box>
-
+    <div style={{ padding: 24 }}>
       {/* Stat Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, mb: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {stats.map((stat) => (
-          <Box
-            key={stat.label}
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              p: 2.5,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1.5,
-            }}
-          >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '10px',
-                bgcolor: stat.bgColor,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: stat.color,
-              }}
-            >
+          <Card key={stat.label} style={{ borderRadius: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: stat.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color, marginBottom: 12 }}>
               {stat.icon}
-            </Box>
-            <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>{stat.label}</Typography>
-            <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>{stat.value}</Typography>
-          </Box>
+            </div>
+            <Typography.Text style={{ fontSize: 13, color: '#a1a1aa', display: 'block' }}>{stat.label}</Typography.Text>
+            <Typography.Text style={{ fontSize: 28, fontWeight: 700, color: '#f4f4f5' }}>{stat.value}</Typography.Text>
+          </Card>
         ))}
-      </Box>
+      </div>
 
-      {/* Bottom Section: Recent Updates + Quick Actions & System Status */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 3 }}>
+      {/* Bottom Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
         {/* Recent Updates */}
-        <Box
-          sx={{
-            bgcolor: '#16161A',
-            border: '1px solid #2A2A2E',
-            borderRadius: '16px',
-            overflow: 'hidden',
-          }}
+        <Card
+          title={
+            <Flex justify="space-between" align="center">
+              <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>最近更新</Typography.Text>
+              <Button type="link" onClick={() => navigate('/specs')} style={{ fontSize: 13 }}>查看全部</Button>
+            </Flex>
+          }
+          styles={{ body: { padding: 0 } }}
+          style={{ borderRadius: 12 }}
         >
-          <Box sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #2A2A2E' }}>
-            <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16 }}>
-              最近更新
-            </Typography>
-            <Button
-              size="small"
-              onClick={() => navigate('/specs')}
-              sx={{ color: '#6366F1', fontSize: 13, '&:hover': { bgcolor: 'rgba(99,102,241,0.08)' } }}
-            >
-              查看全部
-            </Button>
-          </Box>
-          {/* Table Header */}
-          <Box sx={{ display: 'flex', px: 3, py: 2, borderBottom: '1px solid #2A2A2E', alignItems: 'center', minHeight: 56 }}>
-            <Typography sx={{ color: '#4A4A50', fontSize: 12, fontWeight: 600, width: '35%' }}>标题</Typography>
-            <Typography sx={{ color: '#4A4A50', fontSize: 12, fontWeight: 600, width: '20%' }}>分类</Typography>
-            <Typography sx={{ color: '#4A4A50', fontSize: 12, fontWeight: 600, width: '15%' }}>版本</Typography>
-            <Typography sx={{ color: '#4A4A50', fontSize: 12, fontWeight: 600, width: '15%' }}>状态</Typography>
-            <Typography sx={{ color: '#4A4A50', fontSize: 12, fontWeight: 600, width: '15%' }}>更新时间</Typography>
-          </Box>
-          {/* Table Rows */}
-          {recentData?.records?.map((spec: Spec) => (
-            <Box
+          {/* Header */}
+          <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a' }}>
+            <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '35%' }}>标题</Typography.Text>
+            <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '20%' }}>分类</Typography.Text>
+            <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '15%' }}>版本</Typography.Text>
+            <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '15%' }}>状态</Typography.Text>
+            <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '15%' }}>更新时间</Typography.Text>
+          </Flex>
+          {recentSpecs.map((spec) => (
+            <Flex
               key={spec.id}
+              align="center"
               onClick={() => navigate(`/specs/${spec.id}`)}
-              sx={{
-                display: 'flex',
-                px: 3,
-                py: 1.5,
-                borderBottom: '1px solid #2A2A2E',
-                cursor: 'pointer',
-                '&:hover': { bgcolor: '#1A1A1E' },
-                alignItems: 'center',
-              }}
+              style={{ padding: '10px 20px', borderBottom: '1px solid #27273a', cursor: 'pointer' }}
             >
-              <Box sx={{ width: '35%', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography sx={{ color: '#FAFAF9', fontSize: 13, fontWeight: 500 }} noWrap>
-                  {spec.title}
-                </Typography>
-                {spec.tags?.slice(0, 1).map((t) => (
-                  <Chip key={t} label={t} size="small" sx={{ bgcolor: '#6366F120', color: '#818CF8', fontSize: 11, height: 22 }} />
-                ))}
-              </Box>
-              <Typography sx={{ color: '#8E8E93', fontSize: 13, width: '20%' }} noWrap>{spec.categoryName}</Typography>
-              <Typography sx={{ color: '#8E8E93', fontSize: 13, width: '15%' }}>v{spec.currentVersion}</Typography>
-              <Box sx={{ width: '15%' }}>
-                <Chip
-                  label={STATUS_LABEL[spec.status]}
-                  size="small"
-                  sx={{ ...STATUS_CHIP_SX[spec.status], fontSize: 11, height: 24, fontWeight: 600 }}
-                />
-              </Box>
-              <Typography sx={{ color: '#4A4A50', fontSize: 12, width: '15%' }}>{spec.updatedAt?.slice(0, 10)}</Typography>
-            </Box>
+              <div style={{ width: '35%', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }} ellipsis>{spec.title}</Typography.Text>
+              </div>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '20%' }} ellipsis>{spec.categoryName}</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '15%' }}>v{spec.currentVersion}</Typography.Text>
+              <div style={{ width: '15%' }}>
+                <Tag className={`tag-base ${STATUS_CLASS[spec.status]}`}>{STATUS_LABEL[spec.status]}</Tag>
+              </div>
+              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{spec.updatedAt?.slice(0, 10)}</Typography.Text>
+            </Flex>
           ))}
-        </Box>
+        </Card>
 
-        {/* Right column */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Quick Actions */}
-          <Box
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              p: 3,
-            }}
-          >
-            <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16, mb: 2 }}>
-              快速操作
-            </Typography>
-            <Stack spacing={1.5}>
+        {/* Right Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <Card title={<Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>快速操作</Typography.Text>} style={{ borderRadius: 12 }}>
+            <Flex vertical gap={10}>
               {quickActions.map((action) => (
-                <Button
+                <div
                   key={action.label}
                   onClick={action.onClick}
-                  startIcon={action.icon}
-                  fullWidth
-                  sx={{
-                    justifyContent: 'flex-start',
-                    color: action.color,
-                    bgcolor: action.bgColor,
-                    borderRadius: '10px',
-                    py: 1,
-                    px: 2,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    '&:hover': { bgcolor: action.bgColor, filter: 'brightness(1.2)' },
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '8px 12px', borderRadius: 10,
+                    background: action.bgColor, color: action.color,
+                    cursor: 'pointer', fontSize: 13, fontWeight: 500,
                   }}
                 >
+                  {action.icon}
                   {action.label}
-                </Button>
+                </div>
               ))}
-            </Stack>
-          </Box>
+            </Flex>
+          </Card>
 
-          {/* System Status */}
-          <Box
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              p: 3,
-            }}
-          >
-            <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16, mb: 2 }}>
-              系统状态
-            </Typography>
-            <Stack spacing={1.5}>
-              {systemStatus.map((item) => (
-                <Box key={item.label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75 }}>
-                  <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>{item.label}</Typography>
-                  <Chip label={item.status} size="small" sx={{ ...item.chipSx, fontSize: 11, height: 22, fontWeight: 600 }} />
-                </Box>
+          <Card title={<Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>系统状态</Typography.Text>} style={{ borderRadius: 12 }}>
+            <Flex vertical gap={10}>
+              {[
+                { label: 'API 状态', status: '正常运行', color: '#32D583' },
+                { label: '向量数据库', status: '已连接', color: '#32D583' },
+                { label: '全文索引', status: '运行中', color: 'var(--primary-color)' },
+                { label: '缓存服务', status: '正常', color: '#32D583' },
+              ].map((item) => (
+                <Flex key={item.label} justify="space-between" align="center" style={{ padding: '4px 0' }}>
+                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>{item.label}</Typography.Text>
+                  <Tag className="tag-base tag-system" style={{ border: `1px solid ${item.color}`, color: item.color }}>{item.status}</Tag>
+                </Flex>
               ))}
-            </Stack>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  )
+            </Flex>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
 }

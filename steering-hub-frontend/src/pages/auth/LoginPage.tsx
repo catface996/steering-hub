@@ -1,170 +1,89 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-} from '@mui/material'
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
-import { authApi } from '@/api/auth'
-import { setToken } from '@/utils/auth'
+import React, { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { Card, Input, Button, Typography, Flex, App } from 'antd';
+import { login, isAuthenticated } from '../../utils/auth';
+import { RequestError } from '../../utils/request';
 
 export default function LoginPage() {
-  const navigate = useNavigate()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-
-    if (!username || !password) {
-      setError('请输入用户名和密码')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const result = await authApi.login({ username, password })
-      setToken(result.token)
-      navigate('/dashboard')
-    } catch {
-      setError('登录失败，请检查用户名和密码')
-    } finally {
-      setLoading(false)
-    }
+  if (isAuthenticated()) {
+    return <Navigate to="/dashboard" replace />;
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username || !password) {
+      message.warning('请输入用户名和密码');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await login({ username, password });
+      navigate('/dashboard');
+    } catch (err) {
+      const msg =
+        err instanceof RequestError
+          ? err.message
+          : '登录失败，请检查用户名和密码';
+      message.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: '#0B0B0E',
-        background: 'radial-gradient(ellipse at 50% 50%, #1a1040 0%, #0B0B0E 70%)',
-      }}
-    >
-      <Box
-        sx={{
-          width: 420,
-          bgcolor: '#16161A',
-          borderRadius: '20px',
-          border: '1px solid #2A2A2E',
-          p: 6,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 4,
-        }}
-      >
-        {/* Icon */}
-        <Box
-          sx={{
-            width: 64,
-            height: 64,
-            borderRadius: '32px',
-            background: 'linear-gradient(180deg, #6366F1 0%, #4F46E5 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <LockOutlinedIcon sx={{ color: '#fff', fontSize: 28 }} />
-        </Box>
+    <Flex align="center" justify="center" style={{ minHeight: '100vh', background: '#0a0a0f' }}>
+      <Card style={{ width: 420, padding: 20, background: '#0d0d14', border: '1px solid #27273a', borderRadius: 16 }}>
+        {/* Logo */}
+        <Flex align="center" justify="center" gap={12} style={{ marginBottom: 24 }}>
+          <div style={{ width: 48, height: 48, background: 'var(--primary-color)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography.Title level={4} style={{ margin: 0, color: '#fff' }}>S</Typography.Title>
+          </div>
+          <Typography.Title level={4} style={{ margin: 0, color: '#a1a1aa' }}>Steering Hub</Typography.Title>
+        </Flex>
 
         {/* Title */}
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 24, mb: 1 }}>
-            Steering Hub
-          </Typography>
-          <Typography sx={{ color: '#8E8E93', fontSize: 14 }}>
-            AI Coding Agent 规范管理平台
-          </Typography>
-        </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ width: '100%' }}>
-            {error}
-          </Alert>
-        )}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <Typography.Title level={4} style={{ margin: 0, color: '#a1a1aa' }}>欢迎回来</Typography.Title>
+          <Typography.Text type="secondary">AI Coding Agent 规范管理平台</Typography.Text>
+        </div>
 
         {/* Form */}
-        <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <Box>
-            <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }}>
-              用户名
-            </Typography>
-            <TextField
-              fullWidth
-              placeholder="请输入用户名"
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <Typography.Text style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>用户名</Typography.Text>
+            <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="请输入用户名"
+              size="large"
               disabled={loading}
               autoComplete="username"
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: '#1A1A1E',
-                  borderRadius: '10px',
-                  '& fieldset': { borderColor: '#2A2A2E' },
-                  '&:hover fieldset': { borderColor: '#3A3A40' },
-                  '&.Mui-focused fieldset': { borderColor: '#6366F1' },
-                },
-                '& .MuiInputBase-input': { color: '#FAFAF9', py: 1.5 },
-                '& .MuiInputBase-input::placeholder': { color: '#4A4A50', opacity: 1 },
-              }}
             />
-          </Box>
-          <Box>
-            <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }}>
-              密码
-            </Typography>
-            <TextField
-              fullWidth
-              type="password"
-              placeholder="请输入密码"
+          </div>
+          <div>
+            <Typography.Text style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>密码</Typography.Text>
+            <Input.Password
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入密码"
+              size="large"
               disabled={loading}
               autoComplete="current-password"
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: '#1A1A1E',
-                  borderRadius: '10px',
-                  '& fieldset': { borderColor: '#2A2A2E' },
-                  '&:hover fieldset': { borderColor: '#3A3A40' },
-                  '&.Mui-focused fieldset': { borderColor: '#6366F1' },
-                },
-                '& .MuiInputBase-input': { color: '#FAFAF9', py: 1.5 },
-                '& .MuiInputBase-input::placeholder': { color: '#4A4A50', opacity: 1 },
-              }}
             />
-          </Box>
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            disabled={loading}
-            sx={{
-              mt: 1,
-              py: 1.5,
-              borderRadius: '10px',
-              fontSize: 15,
-              fontWeight: 600,
-            }}
-          >
-            {loading ? '登录中...' : '登 录'}
+          </div>
+
+          <Button type="primary" htmlType="submit" block size="large" loading={loading}>
+            登 录
           </Button>
-        </Box>
-      </Box>
-    </Box>
-  )
+        </form>
+      </Card>
+    </Flex>
+  );
 }

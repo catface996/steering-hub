@@ -1,269 +1,219 @@
-import { useState } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  LinearProgress,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser'
-import SecurityIcon from '@mui/icons-material/Security'
-import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import ContentCopyIcon from '@mui/icons-material/ContentCopy'
-import { useMutation } from '@tanstack/react-query'
-import { complianceApi } from '@/api/compliance'
-import type { ComplianceReport } from '@/types'
+import { useState, useEffect } from 'react';
+import { Typography, Button, Input, Card, Flex, Tag, App } from 'antd';
+import { ShieldCheck, CheckCircle, Copy } from 'lucide-react';
+import { useHeader } from '../../contexts/HeaderContext';
+import { complianceService } from '../../services/complianceService';
+import type { ComplianceReport } from '../../types';
 
-const SEVERITY_CHIP_SX: Record<string, object> = {
-  HIGH: { bgcolor: '#E85A4F20', color: '#E85A4F' },
-  MEDIUM: { bgcolor: '#FFB54720', color: '#FFB547' },
-  LOW: { bgcolor: '#6366F120', color: '#6366F1' },
-}
+const SEVERITY_CLASS: Record<string, string> = {
+  HIGH: 'tag-severity-high',
+  MEDIUM: 'tag-severity-medium',
+  LOW: 'tag-severity-low',
+};
 
 export default function CompliancePage() {
-  const [repoFullName, setRepoFullName] = useState('')
-  const [taskDescription, setTaskDescription] = useState('')
-  const [codeSnippet, setCodeSnippet] = useState('')
-  const [report, setReport] = useState<ComplianceReport | null>(null)
-  const [snackMsg, setSnackMsg] = useState('')
+  const { setBreadcrumbs } = useHeader();
+  const { message } = App.useApp();
+  const [repoFullName, setRepoFullName] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [codeSnippet, setCodeSnippet] = useState('');
+  const [report, setReport] = useState<ComplianceReport | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  const checkMutation = useMutation({
-    mutationFn: complianceApi.check,
-    onSuccess: (data) => {
-      setReport(data)
-      setSnackMsg('检查完成')
-    },
-  })
+  useEffect(() => {
+    setBreadcrumbs(
+      <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>合规审查</Typography.Text>
+    );
+  }, [setBreadcrumbs]);
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    checkMutation.mutate({ repoFullName, taskDescription, codeSnippet })
-  }
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChecking(true);
+    try {
+      const data = await complianceService.check({ repoFullName, taskDescription, codeSnippet });
+      setReport(data);
+      message.success('检查完成');
+    } catch {
+      message.error('检查失败');
+    } finally {
+      setChecking(false);
+    }
+  };
 
-  const score = report ? Number(report.score) : 0
+  const score = report ? Number(report.score) : 0;
 
   const getScoreColor = (s: number) => {
-    if (s >= 80) return '#32D583'
-    if (s >= 60) return '#FFB547'
-    return '#E85A4F'
-  }
+    if (s >= 80) return '#32D583';
+    if (s >= 60) return '#FFB547';
+    return '#E85A4F';
+  };
+
+  const labelStyle = { fontSize: 13, color: '#a1a1aa', display: 'block' as const, marginBottom: 4, fontWeight: 500 };
 
   return (
-    <Box>
-      {/* Header */}
-      <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>合规审查</Typography>
-      <Typography sx={{ color: '#8E8E93', fontSize: 14, mt: 0.5, mb: 4 }}>
-        自动检测代码是否符合已确定的编码规范，确保团队统一遵守代码标准和设计规范
-      </Typography>
-
+    <div style={{ padding: 24 }}>
       {/* Code Submission */}
-      <Box
-        sx={{
-          bgcolor: '#16161A',
-          border: '1px solid #2A2A2E',
-          borderRadius: '16px',
-          p: 3,
-          mb: 3,
-        }}
-      >
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2.5 }}>
-          <SecurityIcon sx={{ color: '#6366F1', fontSize: 20 }} />
-          <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16 }}>代码提交</Typography>
-          <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>- 提交代码片段进行合规检测</Typography>
-        </Stack>
+      <Card style={{ borderRadius: 12, marginBottom: 20 }}>
+        <Flex gap={8} align="center" style={{ marginBottom: 16 }}>
+          <ShieldCheck size={18} color="var(--primary-color)" />
+          <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>代码提交</Typography.Text>
+          <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>- 提交代码片段进行合规检测</Typography.Text>
+        </Flex>
 
-        <Box component="form" onSubmit={onSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2.5 }}>
-            <Box>
-              <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }}>代码仓库</Typography>
-              <TextField
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <Typography.Text style={labelStyle}>代码仓库</Typography.Text>
+              <Input
                 required
                 value={repoFullName}
                 onChange={(e) => setRepoFullName(e.target.value)}
                 placeholder="例如: org/my-service"
-                fullWidth
-                size="small"
               />
-            </Box>
-            <Box>
-              <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }}>任务描述（可选）</Typography>
-              <TextField
+            </div>
+            <div>
+              <Typography.Text style={labelStyle}>任务描述（可选）</Typography.Text>
+              <Input
                 value={taskDescription}
                 onChange={(e) => setTaskDescription(e.target.value)}
                 placeholder="描述本次代码的功能或背景"
-                fullWidth
-                size="small"
               />
-            </Box>
-          </Box>
-          <Box>
-            <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }}>代码片段</Typography>
-            <Box sx={{ position: 'relative' }}>
-              <TextField
+            </div>
+          </div>
+          <div>
+            <Typography.Text style={labelStyle}>代码片段</Typography.Text>
+            <div style={{ position: 'relative' }}>
+              <Input.TextArea
                 required
-                multiline
                 rows={10}
                 value={codeSnippet}
                 onChange={(e) => setCodeSnippet(e.target.value)}
                 placeholder="粘贴需要合规检查的代码..."
-                fullWidth
-                sx={{
-                  '& textarea': { fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 13 },
-                  '& .MuiOutlinedInput-root': { bgcolor: '#1A1A1E' },
-                }}
+                style={{ fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 13 }}
               />
-              <Chip
-                label="Java"
-                size="small"
-                sx={{ position: 'absolute', bottom: 12, left: 12, bgcolor: '#6366F120', color: '#818CF8', fontSize: 11 }}
+              <Tag className="tag-base tag-content" style={{ position: 'absolute', bottom: 12, left: 12 }}>
+                Java
+              </Tag>
+              <Copy
+                size={16}
+                style={{ position: 'absolute', top: 12, right: 12, color: '#71717a', cursor: 'pointer' }}
+                onClick={() => { navigator.clipboard.writeText(codeSnippet); message.success('已复制'); }}
               />
-              <ContentCopyIcon
-                sx={{ position: 'absolute', top: 12, right: 12, color: '#4A4A50', fontSize: 18, cursor: 'pointer', '&:hover': { color: '#8E8E93' } }}
-              />
-            </Box>
-          </Box>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            </div>
+          </div>
+          <Flex justify="flex-end" gap={12}>
+            <Button onClick={() => { setCodeSnippet(''); setRepoFullName(''); setTaskDescription(''); }}>重置</Button>
             <Button
-              variant="outlined"
-              onClick={() => { setCodeSnippet(''); setRepoFullName(''); setTaskDescription('') }}
-              sx={{ borderColor: '#2A2A2E', color: '#8E8E93', px: 3 }}
-            >
-              重置
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={checkMutation.isPending ? <CircularProgress size={16} color="inherit" /> : <VerifiedUserIcon />}
-              disabled={checkMutation.isPending}
-              sx={{ px: 3 }}
+              type="primary"
+              htmlType="submit"
+              icon={checking ? undefined : <ShieldCheck size={14} />}
+              loading={checking}
             >
               开始检查
             </Button>
-          </Stack>
-        </Box>
-      </Box>
+          </Flex>
+        </form>
+      </Card>
 
       {/* Report */}
       {report && (
         <>
-          <Box
-            sx={{
-              bgcolor: '#16161A',
-              border: '1px solid #2A2A2E',
-              borderRadius: '16px',
-              p: 3,
-              mb: 3,
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <CheckCircleIcon sx={{ color: report.compliant ? '#32D583' : '#FFB547', fontSize: 20 }} />
-                <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16 }}>审查报告</Typography>
-                <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>
+          <Card style={{ borderRadius: 12, marginBottom: 20 }}>
+            <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
+              <Flex gap={8} align="center">
+                <CheckCircle size={18} color={report.compliant ? '#32D583' : '#FFB547'} />
+                <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>审查报告</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>
                   - 基于 {report.relatedSpecs?.length || 0} 条规范进行检查分析
-                </Typography>
-              </Stack>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography sx={{ color: '#8E8E93', fontSize: 13 }}>合规评分</Typography>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
+                </Typography.Text>
+              </Flex>
+              <Flex gap={8} align="center">
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>合规评分</Typography.Text>
+                <div
+                  style={{
+                    width: 48, height: 48, borderRadius: '50%',
                     border: `3px solid ${getScoreColor(score)}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <Typography sx={{ color: getScoreColor(score), fontWeight: 700, fontSize: 14 }}>
+                  <Typography.Text style={{ color: getScoreColor(score), fontWeight: 700, fontSize: 14 }}>
                     {score}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Box>
+                  </Typography.Text>
+                </div>
+              </Flex>
+            </Flex>
 
             {/* Score Cards */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 3 }}>
-              <Box sx={{ bgcolor: '#1A1A1E', borderRadius: '10px', p: 2, textAlign: 'center' }}>
-                <Typography sx={{ color: '#E85A4F', fontWeight: 700, fontSize: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+              <div style={{ background: '#1e1e2a', borderRadius: 10, padding: 16, textAlign: 'center' }}>
+                <Typography.Text style={{ color: '#E85A4F', fontWeight: 700, fontSize: 24, display: 'block' }}>
                   {report.violations?.filter(v => v.severity === 'HIGH').length || 0}
-                </Typography>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12 }}>严重问题</Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#1A1A1E', borderRadius: '10px', p: 2, textAlign: 'center' }}>
-                <Typography sx={{ color: '#FFB547', fontWeight: 700, fontSize: 24 }}>
+                </Typography.Text>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>严重问题</Typography.Text>
+              </div>
+              <div style={{ background: '#1e1e2a', borderRadius: 10, padding: 16, textAlign: 'center' }}>
+                <Typography.Text style={{ color: '#FFB547', fontWeight: 700, fontSize: 24, display: 'block' }}>
                   {report.violations?.filter(v => v.severity === 'MEDIUM').length || 0}
-                </Typography>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12 }}>警告</Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#1A1A1E', borderRadius: '10px', p: 2, textAlign: 'center' }}>
-                <Typography sx={{ color: '#32D583', fontWeight: 700, fontSize: 24 }}>
+                </Typography.Text>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>警告</Typography.Text>
+              </div>
+              <div style={{ background: '#1e1e2a', borderRadius: 10, padding: 16, textAlign: 'center' }}>
+                <Typography.Text style={{ color: '#32D583', fontWeight: 700, fontSize: 24, display: 'block' }}>
                   {report.relatedSpecs?.length || 0}
-                </Typography>
-                <Typography sx={{ color: '#4A4A50', fontSize: 12 }}>关联规范</Typography>
-              </Box>
-            </Box>
+                </Typography.Text>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>关联规范</Typography.Text>
+              </div>
+            </div>
 
             {/* Summary */}
-            <Box sx={{ bgcolor: report.compliant ? '#32D58310' : '#FFB54710', borderRadius: '10px', p: 2, border: `1px solid ${report.compliant ? '#32D58330' : '#FFB54730'}` }}>
-              <Typography sx={{ color: report.compliant ? '#32D583' : '#FFB547', fontSize: 13 }}>{report.summary}</Typography>
-            </Box>
-          </Box>
+            <div
+              style={{
+                background: report.compliant ? 'rgba(50, 213, 131, 0.06)' : 'rgba(255, 181, 71, 0.06)',
+                borderRadius: 10, padding: 12,
+                border: `1px solid ${report.compliant ? 'rgba(50, 213, 131, 0.2)' : 'rgba(255, 181, 71, 0.2)'}`,
+              }}
+            >
+              <Typography.Text style={{ color: report.compliant ? '#32D583' : '#FFB547', fontSize: 13 }}>
+                {report.summary}
+              </Typography.Text>
+            </div>
+          </Card>
 
           {/* Violations */}
           {report.violations && report.violations.length > 0 && (
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 16 }}>违规详情</Typography>
-                <Button size="small" sx={{ color: '#6366F1', fontSize: 13 }}>
-                  + 导出报告
-                </Button>
-              </Box>
-              <Stack spacing={2}>
+            <div>
+              <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
+                <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>违规详情</Typography.Text>
+                <Button type="link" style={{ fontSize: 13 }}>+ 导出报告</Button>
+              </Flex>
+              <Flex vertical gap={12}>
                 {report.violations.map((v, idx) => (
-                  <Box
-                    key={idx}
-                    sx={{
-                      bgcolor: '#16161A',
-                      border: '1px solid #2A2A2E',
-                      borderRadius: '16px',
-                      p: 3,
-                    }}
-                  >
-                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
-                      <Chip
-                        label={v.severity}
-                        size="small"
-                        sx={{ ...SEVERITY_CHIP_SX[v.severity], fontSize: 11, height: 22, fontWeight: 700 }}
-                      />
-                      <Typography sx={{ color: '#FAFAF9', fontWeight: 600, fontSize: 15 }}>{v.specTitle}</Typography>
-                    </Stack>
-                    <Typography sx={{ color: '#8E8E93', fontSize: 13, mb: 1 }}>{v.description}</Typography>
+                  <Card key={idx} style={{ borderRadius: 12 }}>
+                    <Flex gap={10} align="center" style={{ marginBottom: 10 }}>
+                      <Tag
+                        className={`tag-base ${SEVERITY_CLASS[v.severity]}`}
+                      >
+                        {v.severity}
+                      </Tag>
+                      <Typography.Text style={{ fontWeight: 600, fontSize: 15 }}>{v.specTitle}</Typography.Text>
+                    </Flex>
+                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, display: 'block', marginBottom: 8 }}>
+                      {v.description}
+                    </Typography.Text>
                     {v.suggestion && (
-                      <Box sx={{ bgcolor: '#6366F108', borderRadius: '8px', p: 1.5, border: '1px solid #6366F120' }}>
-                        <Typography sx={{ color: '#818CF8', fontSize: 12 }}>
+                      <div style={{ background: 'rgba(var(--primary-rgb), 0.05)', borderRadius: 8, padding: 10, border: '1px solid rgba(var(--primary-rgb), 0.12)' }}>
+                        <Typography.Text style={{ color: '#818CF8', fontSize: 12 }}>
                           建议：{v.suggestion}
-                        </Typography>
-                      </Box>
+                        </Typography.Text>
+                      </div>
                     )}
-                  </Box>
+                  </Card>
                 ))}
-              </Stack>
-            </Box>
+              </Flex>
+            </div>
           )}
         </>
       )}
-
-      <Snackbar open={!!snackMsg} autoHideDuration={3000} onClose={() => setSnackMsg('')}>
-        <Alert severity="success" onClose={() => setSnackMsg('')}>{snackMsg}</Alert>
-      </Snackbar>
-    </Box>
-  )
+    </div>
+  );
 }

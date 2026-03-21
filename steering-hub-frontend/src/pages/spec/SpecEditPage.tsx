@@ -1,28 +1,21 @@
-import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { specApi } from '@/api/spec'
-import { categoryApi } from '@/api/category'
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Typography, Button, Input, Select, Flex, Spin, App, Tag } from 'antd';
+import { FileText, Tag as TagIcon, BookOpen, Save, Plus, X } from 'lucide-react';
+import { useHeader } from '../../contexts/HeaderContext';
+import { specService } from '../../services/specService';
+import { categoryService } from '../../services/specService';
+import type { SpecCategory } from '../../types';
 
 export default function SpecEditPage() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const isEdit = !!id
-  const [snackMsg, setSnackMsg] = useState('')
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+  const { setBreadcrumbs, setActions } = useHeader();
+  const isEdit = !!id;
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState<SpecCategory[]>([]);
 
   const [form, setForm] = useState({
     title: '',
@@ -32,197 +25,259 @@ export default function SpecEditPage() {
     author: '',
     content: '',
     changeLog: '',
-  })
+  });
+  const [keywordInput, setKeywordInput] = useState('');
+  const tagsList = form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [];
+  const keywordsList = form.keywords ? form.keywords.split(',').map((k) => k.trim()).filter(Boolean) : [];
 
-  const { data: spec } = useQuery({
-    queryKey: ['spec', id],
-    queryFn: () => specApi.get(Number(id)),
-    enabled: isEdit,
-  })
+  // Predefined tag options — replace with API fetch if backend provides tag list
+  const PREDEFINED_TAGS = [
+    'Java', 'SpringBoot', 'Python', 'Go', 'TypeScript', 'React', 'Vue',
+    '异常处理', 'API设计', 'REST', 'gRPC', '数据库', 'SQL', 'Redis',
+    '安全规范', '日志规范', '命名规范', '代码风格', '单元测试', '集成测试',
+    '微服务', 'Docker', 'Kubernetes', 'CI/CD', 'Git', '文档规范',
+    '性能优化', '并发编程', '设计模式', '架构规范',
+  ];
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['categories'],
-    queryFn: categoryApi.list,
-  })
+  const availableTags = PREDEFINED_TAGS.filter((t) => !tagsList.includes(t));
+
+  const addTag = (tag: string) => {
+    if (!tag || tagsList.includes(tag)) return;
+    const updated = [...tagsList, tag].join(', ');
+    setForm((f) => ({ ...f, tags: updated }));
+  };
+
+  const removeTag = (tag: string) => {
+    const updated = tagsList.filter((t) => t !== tag).join(', ');
+    setForm((f) => ({ ...f, tags: updated }));
+  };
+
+  const addKeyword = () => {
+    const kw = keywordInput.trim();
+    if (!kw || keywordsList.includes(kw)) { setKeywordInput(''); return; }
+    const updated = [...keywordsList, kw].join(', ');
+    setForm((f) => ({ ...f, keywords: updated }));
+    setKeywordInput('');
+  };
+
+  const removeKeyword = (keyword: string) => {
+    const updated = keywordsList.filter((k) => k !== keyword).join(', ');
+    setForm((f) => ({ ...f, keywords: updated }));
+  };
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { message.error('请输入规范标题'); return; }
+    if (!form.content.trim()) { message.error('请输入规范内容'); return; }
+    const tags = form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : [];
+    setSubmitting(true);
+    try {
+      if (isEdit) {
+        await specService.update(Number(id), { ...form, categoryId: form.categoryId ? Number(form.categoryId) : undefined, tags });
+        message.success('更新成功');
+        setTimeout(() => navigate(`/specs/${id}`), 500);
+      } else {
+        const data = await specService.create({ ...form, categoryId: Number(form.categoryId), tags });
+        message.success('创建成功');
+        setTimeout(() => navigate(`/specs/${data.id}`), 500);
+      }
+    } catch {
+      message.error(isEdit ? '更新失败' : '创建失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
-    if (spec) {
-      setForm({
-        title: spec.title ?? '',
-        categoryId: spec.categoryId ? String(spec.categoryId) : '',
-        tags: spec.tags?.join(',') ?? '',
-        keywords: spec.keywords ?? '',
-        author: spec.author ?? '',
-        content: spec.content ?? '',
-        changeLog: '',
-      })
-    }
-  }, [spec])
+    setBreadcrumbs(
+      <Flex align="center" gap={8}>
+        <Typography.Text
+          style={{ color: '#a1a1aa', fontSize: 20, fontWeight: 700, cursor: 'pointer' }}
+          onClick={() => navigate('/specs')}
+        >
+          规范管理
+        </Typography.Text>
+        <Typography.Text style={{ color: '#71717a', fontSize: 20 }}>/</Typography.Text>
+        <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>
+          {isEdit ? '编辑规范' : '新建规范'}
+        </Typography.Text>
+      </Flex>
+    );
+  }, [setBreadcrumbs, navigate, isEdit]);
 
-  const createMutation = useMutation({
-    mutationFn: specApi.create,
-    onSuccess: (data) => {
-      setSnackMsg('创建成功')
-      setTimeout(() => navigate(`/specs/${data.id}`), 500)
-    },
-  })
+  useEffect(() => {
+    setActions(
+      <Flex gap={8}>
+        <Button onClick={() => navigate(isEdit ? `/specs/${id}` : '/specs')}>取消</Button>
+        <Button
+          type="primary"
+          icon={isEdit ? <Save size={14} /> : <Plus size={14} />}
+          loading={submitting}
+          onClick={() => void handleSave()}
+        >
+          {isEdit ? '保存修改' : '保存规范'}
+        </Button>
+      </Flex>
+    );
+  }, [setActions, navigate, isEdit, id, submitting, form]);
 
-  const updateMutation = useMutation({
-    mutationFn: (values: any) => specApi.update(Number(id), values),
-    onSuccess: () => {
-      setSnackMsg('更新成功')
-      setTimeout(() => navigate(`/specs/${id}`), 500)
-    },
-  })
+  useEffect(() => {
+    categoryService.list().then(setCategories).catch(() => {});
+  }, []);
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const tags = form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : []
+  useEffect(() => {
     if (isEdit) {
-      updateMutation.mutate({ ...form, categoryId: form.categoryId ? Number(form.categoryId) : undefined, tags })
-    } else {
-      createMutation.mutate({ ...form, categoryId: Number(form.categoryId), tags })
+      setLoading(true);
+      specService.get(Number(id)).then((spec) => {
+        setForm({
+          title: spec.title ?? '',
+          categoryId: spec.categoryId ? String(spec.categoryId) : '',
+          tags: spec.tags?.join(', ') ?? '',
+          keywords: spec.keywords ?? '',
+          author: spec.author ?? '',
+          content: spec.content ?? '',
+          changeLog: '',
+        });
+      }).finally(() => setLoading(false));
     }
-  }
+  }, [id, isEdit]);
 
-  const isPending = createMutation.isPending || updateMutation.isPending
+  if (loading) return <Flex justify="center" style={{ padding: 64 }}><Spin size="large" /></Flex>;
 
-  const labelSx = { color: '#8E8E93', fontSize: 13, mb: 1, fontWeight: 500 }
+  const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 8, fontSize: 13, color: '#a1a1aa' };
+
+  const sectionHeader = (icon: React.ReactNode, title: string) => (
+    <Flex align="center" gap={10} style={{ marginBottom: 20 }}>
+      {icon}
+      <Typography.Text style={{ fontSize: 16, fontWeight: 600 }}>{title}</Typography.Text>
+    </Flex>
+  );
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto' }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography sx={{ color: '#FAFAF9', fontWeight: 700, fontSize: 28 }}>
-          {isEdit ? '编辑规范' : '编辑规范'}
-        </Typography>
-        <Typography sx={{ color: '#8E8E93', fontSize: 14, mt: 0.5 }}>
-          创建或编辑代码规范文档
-        </Typography>
-      </Box>
-
-      <Box component="form" onSubmit={onSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Title */}
-        <Box>
-          <Typography sx={labelSx}>规范标题</Typography>
-          <TextField
-            required
-            value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            placeholder="Java异常处理规范 v2.0"
-            fullWidth
-            size="small"
-          />
-        </Box>
-
-        {/* Category + Author */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
-          <Box>
-            <Typography sx={labelSx}>规范分类</Typography>
-            <FormControl fullWidth size="small">
-              <Select
-                value={form.categoryId}
-                onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
-                displayEmpty
-              >
-                <MenuItem value="">请选择分类</MenuItem>
-                {categories.map((c) => (
-                  <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box>
-            <Typography sx={labelSx}>作者</Typography>
-            <TextField
-              value={form.author}
-              onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
-              fullWidth
-              size="small"
-            />
-          </Box>
-        </Box>
-
-        {/* Tags */}
-        <Box>
-          <Typography sx={labelSx}>标签（逗号分隔）</Typography>
-          <TextField
-            value={form.tags}
-            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-            placeholder="Java, 异常处理, SpringBoot"
-            fullWidth
-            size="small"
-          />
-        </Box>
-
-        {/* Keywords */}
-        <Box>
-          <Typography sx={labelSx}>关键词（逗号分隔）</Typography>
-          <TextField
-            value={form.keywords}
-            onChange={(e) => setForm((f) => ({ ...f, keywords: e.target.value }))}
-            placeholder="try-catch Exception, 异常处理"
-            fullWidth
-            size="small"
-          />
-        </Box>
+    <div style={{ padding: 24, flex: 1, overflow: 'auto', display: 'flex', gap: 24 }}>
+      {/* Left Column - Main Content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Basic Information */}
+        <div style={{ borderRadius: 12, border: '1px solid #27273a', padding: 24 }}>
+          {sectionHeader(<FileText size={18} color="var(--primary-color)" />, '基本信息')}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>规范标题 *</label>
+              <Input
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="例如：Java 异常处理规范 v2.0"
+              />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={labelStyle}>规范分类</label>
+                <Select
+                  value={form.categoryId || undefined}
+                  onChange={(val) => setForm((f) => ({ ...f, categoryId: val }))}
+                  placeholder="请选择分类"
+                  style={{ width: '100%' }}
+                  options={categories.map((c) => ({ label: c.name, value: String(c.id) }))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>作者</label>
+                <Input
+                  value={form.author}
+                  onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
+                  placeholder="规范作者"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Content */}
-        <Box>
-          <Typography sx={labelSx}>规范内容（Markdown）</Typography>
-          <TextField
-            required
-            multiline
-            rows={18}
+        <div style={{ borderRadius: 12, border: '1px solid #27273a', padding: 24, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {sectionHeader(<BookOpen size={18} color="var(--primary-color)" />, '规范内容')}
+          <Input.TextArea
             value={form.content}
             onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
             placeholder="请输入 Markdown 格式的规范内容..."
-            fullWidth
-            sx={{
-              '& textarea': { fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 13 },
-              '& .MuiOutlinedInput-root': { bgcolor: '#1A1A1E' },
-            }}
+            style={{ fontFamily: '"SF Mono", "Fira Code", monospace', fontSize: 13, flex: 1, minHeight: 360 }}
           />
-        </Box>
+        </div>
+      </div>
 
-        {/* Changelog (edit mode) */}
+      {/* Right Column - Metadata */}
+      <div style={{ width: 360, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Tags & Keywords */}
+        <div style={{ borderRadius: 12, border: '1px solid #27273a', padding: 24 }}>
+          {sectionHeader(<TagIcon size={18} color="var(--primary-color)" />, '标签与关键词')}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>标签</label>
+              <Flex gap={8}>
+                <Select
+                  value={null as unknown as string}
+                  onChange={(val) => { addTag(val); }}
+                  placeholder="选择标签"
+                  style={{ flex: 1 }}
+                  showSearch
+                  options={availableTags.map((t) => ({ label: t, value: t }))}
+                  notFoundContent="无可选标签"
+                />
+              </Flex>
+              {tagsList.length > 0 && (
+                <Flex wrap="wrap" gap={6} style={{ marginTop: 10 }}>
+                  {tagsList.map((tag, i) => (
+                    <Tag key={tag} className={`tag-base tag-editable tag-color-${i % 7}`}>
+                      {tag}
+                      <X size={12} className="tag-close" onClick={() => removeTag(tag)} />
+                    </Tag>
+                  ))}
+                </Flex>
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>关键词</label>
+              <Flex gap={8}>
+                <Input
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onPressEnter={(e) => { e.preventDefault(); addKeyword(); }}
+                  placeholder="输入关键词后点击添加"
+                  style={{ flex: 1 }}
+                />
+                <Button icon={<Plus size={14} />} onClick={addKeyword}>添加</Button>
+              </Flex>
+              {keywordsList.length > 0 && (
+                <Flex wrap="wrap" gap={6} style={{ marginTop: 10 }}>
+                  {keywordsList.map((kw, i) => (
+                    <Tag key={kw} className={`tag-base tag-editable tag-color-${i % 7}`}>
+                      {kw}
+                      <X size={12} className="tag-close" onClick={() => removeKeyword(kw)} />
+                    </Tag>
+                  ))}
+                </Flex>
+              )}
+              <Typography.Text style={{ fontSize: 11, color: '#71717a', marginTop: 6, display: 'block' }}>
+                关键词用于提升规范的检索命中率
+              </Typography.Text>
+            </div>
+          </div>
+        </div>
+
+        {/* Change Log (edit only) */}
         {isEdit && (
-          <Box>
-            <Typography sx={labelSx}>变更说明</Typography>
-            <TextField
-              value={form.changeLog}
-              onChange={(e) => setForm((f) => ({ ...f, changeLog: e.target.value }))}
-              placeholder="简要描述本次修改内容"
-              fullWidth
-              size="small"
-            />
-          </Box>
+          <div style={{ borderRadius: 12, border: '1px solid #27273a', padding: 24 }}>
+            {sectionHeader(<Save size={18} color="var(--primary-color)" />, '变更记录')}
+            <div>
+              <label style={labelStyle}>变更说明</label>
+              <Input.TextArea
+                rows={3}
+                value={form.changeLog}
+                onChange={(e) => setForm((f) => ({ ...f, changeLog: e.target.value }))}
+                placeholder="简要描述本次修改内容"
+              />
+            </div>
+          </div>
         )}
-
-        {/* Actions */}
-        <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={() => navigate(-1)}
-            sx={{ borderColor: '#2A2A2E', color: '#8E8E93', px: 4 }}
-          >
-            取消
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={isPending}
-            startIcon={isPending ? <CircularProgress size={16} color="inherit" /> : undefined}
-            sx={{ px: 4 }}
-          >
-            保存
-          </Button>
-        </Stack>
-      </Box>
-
-      <Snackbar open={!!snackMsg} autoHideDuration={3000} onClose={() => setSnackMsg('')}>
-        <Alert severity="success" onClose={() => setSnackMsg('')}>{snackMsg}</Alert>
-      </Snackbar>
-    </Box>
-  )
+      </div>
+    </div>
+  );
 }
