@@ -229,3 +229,22 @@ async def log_search_query(
             await client.post("/api/v1/search/log", json=payload)
         except Exception:
             pass  # 日志记录失败不影响搜索结果
+
+
+async def report_search_failure(log_id: int, reason: str, expected_topic: str = "") -> None:
+    """上报本次检索无效，帮助改进规范系统"""
+    payload = {"logId": log_id, "reason": reason, "expectedTopic": expected_topic}
+    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=10) as client:
+        try:
+            await client.post("/api/v1/search/report-failure", json=payload)
+        except Exception:
+            pass
+
+
+async def report_search_success(log_id: int) -> None:
+    """上报本次检索有效"""
+    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=10) as client:
+        try:
+            await client.post("/api/v1/search/report-success", json={"logId": log_id})
+        except Exception:
+            pass

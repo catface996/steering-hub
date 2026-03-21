@@ -219,8 +219,8 @@ export default function SearchPage() {
                   {r.content.slice(0, 150)}
                 </Typography.Paragraph>
                 <Flex gap={4} wrap="wrap">
-                  {r.tags?.map((t) => (
-                    <Tag key={t} className="tag-base tag-content">{t}</Tag>
+                  {r.tags?.map((t, index) => (
+                    <Tag key={t} className={`tag-base tag-color-${index % 7}`}>{t}</Tag>
                   ))}
                 </Flex>
               </Card>

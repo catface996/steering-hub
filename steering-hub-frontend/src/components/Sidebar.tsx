@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Compass,
   Filter,
+  BarChart3,
 } from 'lucide-react';
 
 const drawerWidth = 280;
@@ -29,6 +30,7 @@ const mainItems: NavItem[] = [
   { icon: <Search size={20} />, label: '规范检索', path: '/search', iconColor: '#22d3ee' },
   { icon: <ShieldCheck size={20} />, label: '合规审查', path: '/compliance', iconColor: '#f59e0b' },
   { icon: <Tag size={20} />, label: '分类管理', path: '/categories', iconColor: '#4ade80' },
+  { icon: <BarChart3 size={20} />, label: '使用分析', path: '/analytics', iconColor: '#f472b6' },
 ];
 
 const settingsItems: NavItem[] = [

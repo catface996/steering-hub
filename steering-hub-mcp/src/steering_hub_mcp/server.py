@@ -193,6 +193,24 @@ async def list_tools() -> list[Tool]:
                 "required": ["steering_id", "repo", "task_description"],
             },
         ),
+        Tool(
+            name="report_search_failure",
+            description=(
+                "Report that a search_steering call did not return useful results. "
+                "Call this after search_steering when results are empty, irrelevant, "
+                "or the spec you need doesn't exist yet. "
+                "This helps maintainers improve the specification system."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "log_id": {"type": "integer", "description": "Search log ID from the search_steering result footer"},
+                    "reason": {"type": "string", "enum": ["no_results", "irrelevant", "missing_spec", "other"]},
+                    "expected_topic": {"type": "string", "description": "What spec were you looking for?"}
+                },
+                "required": ["log_id", "reason"]
+            }
+        ),
     ]
 
 
@@ -215,6 +233,10 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             return await handle_submit_steering(arguments)
         elif name == "record_usage":
             return await handle_record_usage(arguments)
+        elif name == "report_search_failure":
+            return await handle_report_search_failure(arguments)
+        elif name == "report_search_success":
+            return await handle_report_search_success(arguments)
         else:
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
     except Exception as e:
@@ -404,3 +426,17 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+async def handle_report_search_failure(args: dict) -> list[types.ContentBlock]:
+    log_id = int(args["log_id"])
+    reason = args["reason"]
+    expected_topic = args.get("expected_topic", "")
+    await client.report_search_failure(log_id, reason, expected_topic)
+    return [TextContent(type="text", text=f"Search failure reported (log_id={log_id}, reason={reason}). Thank you for the feedback — this helps improve the system.")]
+
+
+async def handle_report_search_success(args: dict) -> list[types.ContentBlock]:
+    log_id = int(args["log_id"])
+    await client.report_search_success(log_id)
+    return [TextContent(type="text", text=f"Search success reported (log_id={log_id}).")]

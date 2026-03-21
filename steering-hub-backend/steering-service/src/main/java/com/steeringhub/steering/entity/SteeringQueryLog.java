@@ -34,6 +34,12 @@ public class SteeringQueryLog implements Serializable {
 
     private Integer responseTimeMs;
 
+    private Boolean isEffective;
+
+    private String failureReason;
+
+    private String expectedTopic;
+
     @TableField(fill = FieldFill.INSERT)
     private OffsetDateTime createdAt;
 }
