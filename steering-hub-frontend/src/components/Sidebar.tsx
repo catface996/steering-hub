@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   Compass,
+  Filter,
 } from 'lucide-react';
 
 const drawerWidth = 280;
@@ -32,6 +33,7 @@ const mainItems: NavItem[] = [
 
 const settingsItems: NavItem[] = [
   { icon: <Key size={20} />, label: 'API Keys', path: '/settings/api-keys', iconColor: '#fbbf24' },
+  { icon: <Filter size={20} />, label: '停用词', path: '/settings/stop-words', iconColor: '#fb923c' },
 ];
 
 type SectionKey = 'main' | 'settings';

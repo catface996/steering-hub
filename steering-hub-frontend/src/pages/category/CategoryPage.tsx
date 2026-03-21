@@ -71,7 +71,7 @@ export default function CategoryPage() {
         ) : (
           <div style={{ flex: 1, overflow: 'auto' }}>
             {/* Header */}
-            <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a' }}>
+            <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60 }}>ID</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 160 }}>分类名称</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 160 }}>编码</Typography.Text>

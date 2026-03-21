@@ -1,5 +1,6 @@
 package com.steeringhub.search.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
 import com.steeringhub.search.dto.SteeringQualityReport;
@@ -7,8 +8,10 @@ import com.steeringhub.search.service.EmbeddingService;
 import com.steeringhub.search.service.SearchService;
 import com.steeringhub.steering.entity.Steering;
 import com.steeringhub.steering.entity.SteeringCategory;
+import com.steeringhub.steering.entity.StopWord;
 import com.steeringhub.steering.mapper.SteeringCategoryMapper;
 import com.steeringhub.steering.mapper.SteeringMapper;
+import com.steeringhub.steering.mapper.StopWordMapper;
 import com.steeringhub.steering.service.SteeringService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,42 @@ public class SearchServiceImpl implements SearchService {
     private final SteeringCategoryMapper steeringCategoryMapper;
     private final SteeringService steeringService;
     private final EmbeddingService embeddingService;
+    private final StopWordMapper stopWordMapper;
+
+    /**
+     * 从数据库加载启用的停用词
+     */
+    private Set<String> getStopWords() {
+        List<StopWord> stopWords = stopWordMapper.selectList(
+            new LambdaQueryWrapper<StopWord>().eq(StopWord::getEnabled, true)
+        );
+        return stopWords.stream()
+                .map(sw -> sw.getWord().toLowerCase())
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * 过滤停用词，保留有意义的搜索关键词
+     */
+    private String filterStopWords(String query) {
+        if (query == null || query.trim().isEmpty()) return query;
+
+        Set<String> stopWords = getStopWords();
+
+        // 按空格和常见分隔符分词
+        String[] tokens = query.split("[\\s,，、。.]+");
+        StringBuilder filtered = new StringBuilder();
+        for (String token : tokens) {
+            String t = token.trim().toLowerCase();
+            if (!t.isEmpty() && !stopWords.contains(t) && t.length() > 1) {
+                if (filtered.length() > 0) filtered.append(" ");
+                filtered.append(token.trim());
+            }
+        }
+        String result = filtered.toString().trim();
+        // 如果过滤后为空（全是停用词），返回原始查询
+        return result.isEmpty() ? query : result;
+    }
 
     @Override
     public List<SearchResult> hybridSearch(SearchRequest request) {
@@ -70,6 +109,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<SearchResult> semanticSearch(String query, Long categoryId, int limit) {
+        query = filterStopWords(query);
         float[] queryEmbedding = embeddingService.embed(query);
         String embeddingStr = toEmbeddingString(queryEmbedding);
 
@@ -84,6 +124,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<SearchResult> fullTextSearch(String query, Long categoryId, int limit) {
+        query = filterStopWords(query);
         List<Steering> steerings = steeringMapper.fullTextSearch(query, categoryId, limit);
         List<SearchResult> results = new ArrayList<>();
         for (int i = 0; i < steerings.size(); i++) {

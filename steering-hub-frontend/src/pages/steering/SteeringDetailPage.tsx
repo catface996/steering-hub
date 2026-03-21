@@ -120,10 +120,15 @@ export default function SteeringDetailPage() {
               {
                 label: '标签',
                 value: steering.tags && steering.tags.length > 0
-                  ? <Flex wrap="wrap" gap={4}>{steering.tags.map((t) => <Tag key={t} className="tag-base tag-content">{t}</Tag>)}</Flex>
+                  ? <Flex wrap="wrap" gap={4}>{steering.tags.map((t, index) => <Tag key={t} className={`tag-base tag-color-${index % 7}`}>{t}</Tag>)}</Flex>
                   : '-'
               },
-              { label: '关键词', value: steering.keywords || '-' },
+              {
+                label: '关键词',
+                value: steering.keywords
+                  ? <Flex wrap="wrap" gap={4}>{steering.keywords.split(',').filter(k => k.trim()).map((kw, index) => <Tag key={kw} className={`tag-base tag-color-${index % 7}`} style={{ fontSize: 11 }}>{kw.trim()}</Tag>)}</Flex>
+                  : '-'
+              },
               { label: '作者', value: steering.author || '-' },
               { label: '更新时间', value: steering.updatedAt },
               { label: '创建时间', value: steering.createdAt },

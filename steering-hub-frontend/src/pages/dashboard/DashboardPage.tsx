@@ -97,7 +97,7 @@ export default function DashboardPage() {
           style={{ borderRadius: 12 }}
         >
           {/* Header */}
-          <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a' }}>
+          <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
             <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '35%' }}>标题</Typography.Text>
             <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '20%' }}>分类</Typography.Text>
             <Typography.Text style={{ color: '#71717a', fontSize: 12, fontWeight: 600, width: '15%' }}>版本</Typography.Text>

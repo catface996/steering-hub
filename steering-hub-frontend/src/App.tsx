@@ -16,6 +16,7 @@ import SearchPage from './pages/search/SearchPage';
 import CompliancePage from './pages/compliance/CompliancePage';
 import CategoryPage from './pages/category/CategoryPage';
 import ApiKeyPage from './pages/settings/ApiKeyPage';
+import StopWordPage from './pages/settings/StopWordPage';
 
 function ThemedApp() {
   const { primaryColor } = useThemeColor();
@@ -40,6 +41,7 @@ function ThemedApp() {
             <Route path="categories" element={<CategoryPage />} />
             <Route path="analytics" element={<SteeringAnalyticsPage />} />
             <Route path="settings/api-keys" element={<ApiKeyPage />} />
+            <Route path="settings/stop-words" element={<StopWordPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

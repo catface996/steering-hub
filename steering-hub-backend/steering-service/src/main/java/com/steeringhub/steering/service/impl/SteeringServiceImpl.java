@@ -15,10 +15,12 @@ import com.steeringhub.steering.entity.Steering;
 import com.steeringhub.steering.entity.SteeringReview;
 import com.steeringhub.steering.entity.SteeringVersion;
 import com.steeringhub.steering.entity.SteeringCategory;
+import com.steeringhub.steering.entity.StopWord;
 import com.steeringhub.steering.mapper.SteeringCategoryMapper;
 import com.steeringhub.steering.mapper.SteeringMapper;
 import com.steeringhub.steering.mapper.SteeringReviewMapper;
 import com.steeringhub.steering.mapper.SteeringVersionMapper;
+import com.steeringhub.steering.mapper.StopWordMapper;
 import com.steeringhub.steering.service.SteeringService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -26,8 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +41,7 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
     private final SteeringVersionMapper steeringVersionMapper;
     private final SteeringReviewMapper steeringReviewMapper;
     private final SteeringCategoryMapper steeringCategoryMapper;
+    private final StopWordMapper stopWordMapper;
 
     @Override
     @Transactional
@@ -46,7 +52,7 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         steering.setCategoryId(request.getCategoryId());
         steering.setStatus(SteeringStatus.DRAFT);
         steering.setCurrentVersion(1);
-        steering.setKeywords(request.getKeywords());
+        steering.setKeywords(sanitizeKeywords(request.getKeywords()));
         steering.setAuthor(request.getAuthor());
         if (request.getTags() != null) {
             steering.setTags(String.join(",", request.getTags()));
@@ -75,7 +81,7 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         if (request.getCategoryId() != null) {
             steering.setCategoryId(request.getCategoryId());
         }
-        steering.setKeywords(request.getKeywords());
+        steering.setKeywords(sanitizeKeywords(request.getKeywords()));
         if (request.getTags() != null) {
             steering.setTags(String.join(",", request.getTags()));
         }
@@ -185,7 +191,7 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         steering.setTitle(targetVersion.getTitle());
         steering.setContent(targetVersion.getContent());
         steering.setTags(targetVersion.getTags());
-        steering.setKeywords(targetVersion.getKeywords());
+        steering.setKeywords(sanitizeKeywords(targetVersion.getKeywords()));
         steering.setCurrentVersion(steering.getCurrentVersion() + 1);
         steering.setStatus(SteeringStatus.DRAFT);
         updateById(steering);
@@ -217,6 +223,31 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         }
         sb.append("]");
         baseMapper.updateEmbedding(steeringId, sb.toString());
+    }
+
+    /**
+     * 过滤关键词：移除停用词并限制最多15个关键词
+     */
+    private String sanitizeKeywords(String keywords) {
+        if (keywords == null || keywords.trim().isEmpty()) {
+            return keywords;
+        }
+
+        // 加载启用的停用词
+        Set<String> stopWords = stopWordMapper.selectList(
+            new LambdaQueryWrapper<StopWord>().eq(StopWord::getEnabled, true)
+        ).stream().map(sw -> sw.getWord().toLowerCase()).collect(Collectors.toSet());
+
+        // 分词并过滤
+        String[] tokens = keywords.split("[,，]+");
+        List<String> filtered = new ArrayList<>();
+        for (String token : tokens) {
+            String t = token.trim();
+            if (!t.isEmpty() && !stopWords.contains(t.toLowerCase()) && filtered.size() < 15) {
+                filtered.add(t);
+            }
+        }
+        return String.join(",", filtered);
     }
 
     private void saveVersion(Steering steering, String changeLog) {
