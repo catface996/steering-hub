@@ -165,7 +165,7 @@ export default function SteeringListPage() {
                 <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
                   <span
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    style={{ flex: '0 1 auto', minWidth: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={record.title}
                   >
                     {record.title}
