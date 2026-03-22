@@ -165,12 +165,12 @@ export default function SteeringListPage() {
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, paddingRight: 8, overflow: 'hidden' }}>
                   <Typography.Text
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', flex: '0 0 auto', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', flex: '0 0 auto', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
                     title={record.title}
                   >
                     {record.title}
                   </Typography.Text>
-                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, alignItems: 'center', flexShrink: 0, maxWidth: 200, overflow: 'hidden' }}>
                     {record.tags?.slice(0, 3).map((t, i) => (
                       <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
                     ))}
