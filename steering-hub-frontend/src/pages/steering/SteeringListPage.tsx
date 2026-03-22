@@ -176,6 +176,7 @@ export default function SteeringListPage() {
                   key={record.id}
                   onClick={() => navigate(`/steerings/${record.id}`)}
                   style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
+                  styles={{ body: { display: 'flex', flexDirection: 'column', flex: 1, height: '100%' } }}
                   hoverable
                 >
                   <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
