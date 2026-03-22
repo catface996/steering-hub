@@ -25,7 +25,12 @@ public enum ResultCode {
 
     // Compliance module
     COMPLIANCE_CHECK_FAILED(3001, "合规检查失败"),
-    REPO_NOT_FOUND(3002, "代码仓库不存在");
+    REPO_NOT_FOUND(3002, "代码仓库不存在"),
+
+    // Health check module
+    TASK_ALREADY_RUNNING(409, "检测任务正在进行中"),
+    SPEC_COUNT_INSUFFICIENT(400, "active 规范数量不足，无法检测"),
+    TASK_NOT_FOUND(404, "检测任务不存在");
 
     private final Integer code;
     private final String message;

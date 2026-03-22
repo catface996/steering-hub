@@ -50,4 +50,9 @@ public interface SteeringService extends IService<Steering> {
      * 更新规范的 embedding 向量
      */
     void updateEmbedding(Long steeringId, float[] embedding);
+
+    /**
+     * 对规范 content 字段生成 content_embedding 并写入数据库
+     */
+    void generateContentEmbedding(Long id);
 }

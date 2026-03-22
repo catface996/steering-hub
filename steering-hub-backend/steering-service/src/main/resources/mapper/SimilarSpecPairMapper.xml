@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SimilarSpecPairMapper">
+
+    <resultMap id="similarPairVOMap" type="com.steeringhub.steering.dto.response.SimilarPairVO">
+        <id property="id" column="id"/>
+        <result property="overallScore" column="overall_score"/>
+        <result property="vectorScore" column="vector_score"/>
+        <result property="titleScore" column="title_score"/>
+        <result property="tagsScore" column="tags_score"/>
+        <result property="keywordsScore" column="keywords_score"/>
+        <result property="reasonTags" column="reason_tags"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <association property="specA" javaType="com.steeringhub.steering.dto.response.SimilarSpecInfoVO">
+            <result property="id" column="spec_a_id"/>
+            <result property="title" column="spec_a_title"/>
+            <result property="tags" column="spec_a_tags"/>
+            <result property="status" column="spec_a_status"/>
+            <result property="categoryId" column="spec_a_category_id"/>
+            <result property="categoryName" column="spec_a_category_name"/>
+        </association>
+        <association property="specB" javaType="com.steeringhub.steering.dto.response.SimilarSpecInfoVO">
+            <result property="id" column="spec_b_id"/>
+            <result property="title" column="spec_b_title"/>
+            <result property="tags" column="spec_b_tags"/>
+            <result property="status" column="spec_b_status"/>
+            <result property="categoryId" column="spec_b_category_id"/>
+            <result property="categoryName" column="spec_b_category_name"/>
+        </association>
+    </resultMap>
+
+    <insert id="batchInsert">
+        INSERT INTO similar_spec_pair
+            (task_id, spec_a_id, spec_b_id, overall_score, vector_score, title_score, tags_score, keywords_score, reason_tags)
+        VALUES
+        <foreach collection="list" item="p" separator=",">
+            (#{p.taskId}, #{p.specAId}, #{p.specBId}, #{p.overallScore}, #{p.vectorScore},
+             #{p.titleScore}, #{p.tagsScore}, #{p.keywordsScore}, #{p.reasonTags})
+        </foreach>
+    </insert>
+
+    <sql id="filterConditions">
+        <if test="specTitle != null and specTitle != ''">
+            AND (sa.title LIKE CONCAT('%', #{specTitle}, '%') OR sb.title LIKE CONCAT('%', #{specTitle}, '%'))
+        </if>
+        <if test="categoryId != null">
+            AND sa.category_id = #{categoryId}
+        </if>
+    </sql>
+
+    <select id="findByTaskIdPaged" resultMap="similarPairVOMap">
+        SELECT
+            ssp.id,
+            ssp.spec_a_id,
+            ssp.spec_b_id,
+            ssp.overall_score,
+            ssp.vector_score,
+            ssp.title_score,
+            ssp.tags_score,
+            ssp.keywords_score,
+            ssp.reason_tags,
+            sa.title        AS spec_a_title,
+            sa.tags         AS spec_a_tags,
+            sa.status       AS spec_a_status,
+            sa.category_id  AS spec_a_category_id,
+            ca.name         AS spec_a_category_name,
+            sb.title        AS spec_b_title,
+            sb.tags         AS spec_b_tags,
+            sb.status       AS spec_b_status,
+            sb.category_id  AS spec_b_category_id,
+            cb.name         AS spec_b_category_name
+        FROM similar_spec_pair ssp
+        JOIN steering sa ON sa.id = ssp.spec_a_id
+        JOIN steering sb ON sb.id = ssp.spec_b_id
+        LEFT JOIN steering_category ca ON ca.id = sa.category_id
+        LEFT JOIN steering_category cb ON cb.id = sb.category_id
+        WHERE ssp.task_id = #{taskId}
+        <include refid="filterConditions"/>
+        ORDER BY ssp.overall_score DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByTaskIdFiltered" resultType="long">
+        SELECT COUNT(*)
+        FROM similar_spec_pair ssp
+        JOIN steering sa ON sa.id = ssp.spec_a_id
+        JOIN steering sb ON sb.id = ssp.spec_b_id
+        WHERE ssp.task_id = #{taskId}
+        <include refid="filterConditions"/>
+    </select>
+
+</mapper>

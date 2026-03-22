@@ -22,18 +22,29 @@ import com.steeringhub.steering.mapper.SteeringReviewMapper;
 import com.steeringhub.steering.mapper.SteeringVersionMapper;
 import com.steeringhub.steering.mapper.StopWordMapper;
 import com.steeringhub.steering.service.SteeringService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest;
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> implements SteeringService {
@@ -42,6 +53,13 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
     private final SteeringReviewMapper steeringReviewMapper;
     private final SteeringCategoryMapper steeringCategoryMapper;
     private final StopWordMapper stopWordMapper;
+    private final BedrockRuntimeClient bedrockRuntimeClient;
+
+    private static final String TITAN_EMBEDDING_MODEL_ID = "amazon.titan-embed-text-v2:0";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${embedding.dimensions:512}")
+    private int dimensions;
 
     @Override
     @Transactional
@@ -223,6 +241,69 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         }
         sb.append("]");
         baseMapper.updateEmbedding(steeringId, sb.toString());
+    }
+
+    @Override
+    public void generateContentEmbedding(Long id) {
+        Steering steering = getById(id);
+        if (steering == null) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
+        }
+        String plainText = stripMarkdown(steering.getContent());
+        float[] vec = embedText(plainText);
+        String vecStr = toVecStr(vec);
+        baseMapper.updateContentEmbedding(id, vecStr);
+    }
+
+    private String stripMarkdown(String content) {
+        if (content == null) return "";
+        return content
+                .replaceAll("```[\\s\\S]*?```", " ")
+                .replaceAll("`[^`]*`", " ")
+                .replaceAll("#{1,6}\\s+", " ")
+                .replaceAll("\\*{1,3}([^*]+)\\*{1,3}", "$1")
+                .replaceAll("_{1,3}([^_]+)_{1,3}", "$1")
+                .replaceAll("!?\\[[^\\]]*\\]\\([^)]*\\)", " ")
+                .replaceAll("[>\\-*+]\\s+", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private float[] embedText(String text) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("inputText", text);
+            body.put("dimensions", dimensions);
+            body.put("normalize", true);
+            String requestBody = objectMapper.writeValueAsString(body);
+            InvokeModelRequest request = InvokeModelRequest.builder()
+                    .modelId(TITAN_EMBEDDING_MODEL_ID)
+                    .contentType("application/json")
+                    .accept("application/json")
+                    .body(SdkBytes.fromUtf8String(requestBody))
+                    .build();
+            InvokeModelResponse response = bedrockRuntimeClient.invokeModel(request);
+            JsonNode root = objectMapper.readTree(response.body().asUtf8String());
+            JsonNode embeddingNode = root.get("embedding");
+            float[] embedding = new float[embeddingNode.size()];
+            for (int i = 0; i < embeddingNode.size(); i++) {
+                embedding[i] = (float) embeddingNode.get(i).asDouble();
+            }
+            return embedding;
+        } catch (Exception e) {
+            log.error("Failed to generate content embedding for spec", e);
+            throw new BusinessException(ResultCode.EMBEDDING_FAILED);
+        }
+    }
+
+    private String toVecStr(float[] vec) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < vec.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(vec[i]);
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     /**

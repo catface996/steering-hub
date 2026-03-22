@@ -6,7 +6,11 @@ import com.steeringhub.common.response.Result;
 import com.steeringhub.steering.dto.request.CreateSteeringRequest;
 import com.steeringhub.steering.dto.request.ReviewSteeringRequest;
 import com.steeringhub.steering.dto.request.UpdateSteeringRequest;
+import com.steeringhub.steering.dto.response.CompareVO;
+import com.steeringhub.steering.dto.response.SpecDetailVO;
 import com.steeringhub.steering.dto.response.SteeringDetailResponse;
+import com.steeringhub.common.exception.BusinessException;
+import com.steeringhub.common.response.ResultCode;
 import com.steeringhub.steering.entity.Steering;
 import com.steeringhub.steering.service.SteeringService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,5 +78,41 @@ public class SteeringController {
     public Result<Void> deleteSteering(@PathVariable Long id) {
         steeringService.deleteSteering(id);
         return Result.ok();
+    }
+
+    @Operation(summary = "为规范生成 content_embedding 向量")
+    @PostMapping("/{id}/content-embedding")
+    public Result<Void> generateContentEmbedding(@PathVariable Long id) {
+        steeringService.generateContentEmbedding(id);
+        return Result.ok();
+    }
+
+    @Operation(summary = "左右分屏对比两条规范内容")
+    @GetMapping("/compare")
+    public Result<CompareVO> compare(@RequestParam Long idA, @RequestParam Long idB) {
+        Steering specA = steeringService.getById(idA);
+        Steering specB = steeringService.getById(idB);
+        if (specA == null || specA.getDeleted()) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
+        }
+        if (specB == null || specB.getDeleted()) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
+        }
+        CompareVO vo = new CompareVO();
+        vo.setSpecA(toSpecDetailVO(specA));
+        vo.setSpecB(toSpecDetailVO(specB));
+        return Result.ok(vo);
+    }
+
+    private SpecDetailVO toSpecDetailVO(Steering s) {
+        SpecDetailVO vo = new SpecDetailVO();
+        vo.setId(s.getId());
+        vo.setTitle(s.getTitle());
+        vo.setTags(s.getTags());
+        vo.setKeywords(s.getKeywords());
+        vo.setContent(s.getContent());
+        vo.setStatus(s.getStatus() != null ? s.getStatus().getCode() : null);
+        vo.setUpdatedAt(s.getUpdatedAt());
+        return vo;
     }
 }
