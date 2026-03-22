@@ -162,10 +162,10 @@ export default function SteeringListPage() {
             {data?.records?.map((record) => (
               <div key={record.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                 <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50, flexShrink: 0 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
                   <span
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ flex: '0 0 auto', maxWidth: 300, minWidth: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={record.title}
                   >
                     {record.title}
