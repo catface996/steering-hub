@@ -160,27 +160,20 @@ export default function SteeringListPage() {
             </div>
             {/* Rows */}
             {data?.records?.map((record) => (
-              <div key={record.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
+              <div key={record.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                 <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50, flexShrink: 0 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, paddingRight: 8, overflow: 'hidden' }}>
-                  <Typography.Text
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', flex: '0 0 auto', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={record.title}
                   >
                     {record.title}
-                  </Typography.Text>
-                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, alignItems: 'center', maxWidth: 240, overflow: 'hidden', flexShrink: 1 }}>
-                    {record.tags?.slice(0, 5).map((t, i) => (
-                      <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
+                  </span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {record.tags?.map((t, i) => (
+                      <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
                     ))}
-                    {(record.tags?.length ?? 0) > 5 && (
-                      <Tooltip title={record.tags?.slice(5).join('、')}>
-                        <Tag className="tag-base" style={{ flexShrink: 0, color: '#a1a1aa', borderColor: '#3f3f52', cursor: 'pointer' }}>
-                          +{(record.tags?.length ?? 0) - 5}
-                        </Tag>
-                      </Tooltip>
-                    )}
                   </div>
                 </div>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{record.categoryName}</Typography.Text>
