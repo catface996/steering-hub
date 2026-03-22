@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Button, Tag, Input, Select, Flex, Spin, Modal, App, Progress, Tooltip, Card } from 'antd';
-import { Plus } from 'lucide-react';
+import { Plus, LayoutList, LayoutGrid } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService, categoryService } from '../../services/steeringService';
 import { qualityService, type SteeringQuality } from '../../services/searchService';
@@ -33,6 +33,7 @@ export default function SteeringListPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [categories, setCategories] = useState<SteeringCategory[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
 
   useEffect(() => {
     categoryService.list().then(setCategories).catch(() => {});
@@ -120,34 +121,98 @@ export default function SteeringListPage() {
   return (
     <div className="list-page">
       {/* Filters */}
-      <Flex gap={12}>
-        <Input
-          placeholder="搜索规范标题..."
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          style={{ width: 280 }}
-        />
-        <Select
-          value={status}
-          onChange={(val) => setStatus(val)}
-          style={{ width: 140 }}
-          options={[
-            { label: '全部', value: '' },
-            ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ label, value })),
-          ]}
-        />
-        <Select
-          value={categoryId}
-          onChange={(val) => setCategoryId(val)}
-          allowClear
-          placeholder="全部分类"
-          style={{ width: 140 }}
-          options={categories.map((c) => ({ label: c.name, value: c.id }))}
-        />
+      <Flex gap={12} justify="space-between" align="center">
+        <Flex gap={12}>
+          <Input
+            placeholder="搜索规范标题..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            style={{ width: 280 }}
+          />
+          <Select
+            value={status}
+            onChange={(val) => setStatus(val)}
+            style={{ width: 140 }}
+            options={[
+              { label: '全部', value: '' },
+              ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ label, value })),
+            ]}
+          />
+          <Select
+            value={categoryId}
+            onChange={(val) => setCategoryId(val)}
+            allowClear
+            placeholder="全部分类"
+            style={{ width: 140 }}
+            options={categories.map((c) => ({ label: c.name, value: c.id }))}
+          />
+        </Flex>
+        <Flex gap={4}>
+          <Button
+            type={viewMode === 'list' ? 'primary' : 'default'}
+            icon={<LayoutList size={16} />}
+            onClick={() => setViewMode('list')}
+          />
+          <Button
+            type={viewMode === 'card' ? 'primary' : 'default'}
+            icon={<LayoutGrid size={16} />}
+            onClick={() => setViewMode('card')}
+          />
+        </Flex>
       </Flex>
 
       {/* Table Card */}
-      <Card
+      {viewMode === 'card' && (
+        <>
+          {loading ? (
+            <Flex justify="center" align="center" style={{ flex: 1, padding: 48 }}>
+              <Spin size="large" />
+            </Flex>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              {data?.records?.map((record) => (
+                <Card
+                  key={record.id}
+                  onClick={() => navigate(`/steerings/${record.id}`)}
+                  style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
+                  hoverable
+                >
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
+                    <Typography.Text style={{ fontWeight: 600, fontSize: 16 }} ellipsis>{record.title}</Typography.Text>
+                    <Flex gap={8} align="center" style={{ flexShrink: 0 }}>
+                      <Tag className={`tag-base ${STATUS_CLASS[record.status]}`}>{STATUS_LABEL[record.status]}</Tag>
+                      <Typography.Text style={{ color: '#a1a1aa', fontSize: 12 }}>v{record.currentVersion}</Typography.Text>
+                    </Flex>
+                  </Flex>
+                  <Typography.Paragraph
+                    style={{ color: '#a1a1aa', fontSize: 13, lineHeight: 1.6, flex: 1 }}
+                    ellipsis={{ rows: 4 }}
+                  >
+                    {record.content?.slice(0, 150)}
+                  </Typography.Paragraph>
+                  <Flex gap={4} wrap="wrap">
+                    {record.tags?.map((t, index) => (
+                      <Tag key={t} className={`tag-base tag-color-${index % 7}`}>{t}</Tag>
+                    ))}
+                  </Flex>
+                </Card>
+              ))}
+            </div>
+          )}
+          <Card
+            style={{ marginTop: 0 }}
+            styles={{ body: { padding: 0 } }}
+          >
+            <Pagination
+              count={data?.total ?? 0}
+              page={page}
+              rowsPerPage={10}
+              onPageChange={setPage}
+            />
+          </Card>
+        </>
+      )}
+      {viewMode === 'list' && <Card
         style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
       >
@@ -256,7 +321,7 @@ export default function SteeringListPage() {
           rowsPerPage={10}
           onPageChange={setPage}
         />
-      </Card>
+      </Card>}
 
       {/* Delete Modal */}
       <Modal
