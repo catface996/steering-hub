@@ -30,6 +30,7 @@ export default function SteeringListPage() {
   const [qualityData, setQualityData] = useState<Record<number, SteeringQuality | null>>({});
   const [qualityDetail, setQualityDetail] = useState<SteeringQuality | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [categories, setCategories] = useState<SteeringCategory[]>([]);
 
@@ -75,7 +76,7 @@ export default function SteeringListPage() {
       }
     };
     load();
-  }, [page, status, keyword, categoryId]);
+  }, [page, status, keyword, categoryId, refreshKey]);
 
   const handleDelete = async () => {
     if (deleteId === null) return;
@@ -84,6 +85,7 @@ export default function SteeringListPage() {
       message.success('删除成功');
       setDeleteId(null);
       setPage(0);
+      setRefreshKey(k => k + 1);
     } catch (e: any) {
       message.error(e?.message || '删除失败');
     }
@@ -93,9 +95,7 @@ export default function SteeringListPage() {
     try {
       await steeringService.review(id, action);
       message.success('操作成功');
-      // Reload
-      const result = await steeringService.page({ current: page + 1, size: 10, status: status || undefined, keyword });
-      setData(result);
+      setRefreshKey(k => k + 1);
     } catch {
       message.error('操作失败');
     }
@@ -105,8 +105,7 @@ export default function SteeringListPage() {
     try {
       await steeringService.review(id, 'deprecate', '废弃');
       message.success('已废弃');
-      const result = await steeringService.page({ current: page + 1, size: 10, status: status || undefined, keyword, categoryId });
-      setData(result);
+      setRefreshKey(k => k + 1);
     } catch {
       // request.ts 已全局处理错误 toast，这里不需要再处理
     }
