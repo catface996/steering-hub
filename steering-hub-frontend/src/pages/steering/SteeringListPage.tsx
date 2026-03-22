@@ -195,7 +195,7 @@ export default function SteeringListPage() {
                   </Tag>
                 </div>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 60, flexShrink: 0 }}>v{record.currentVersion}</Typography.Text>
-                <div style={{ width: 120, flexShrink: 0 }}>
+                <div style={{ width: 120, flexShrink: 0, alignSelf: 'center' }}>
                   {(() => {
                     const q = qualityData[record.id];
                     if (!q) return <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>-</Typography.Text>;
@@ -230,7 +230,7 @@ export default function SteeringListPage() {
                     );
                   })()}
                 </div>
-                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0 }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0, alignSelf: 'center' }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
                 <Flex gap={4} style={{ width: 100, flexShrink: 0 }}>
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (
