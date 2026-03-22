@@ -151,7 +151,6 @@ export default function SteeringListPage() {
             <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50 }}>ID</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>标题</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, minWidth: 150, maxWidth: 280 }}>标签</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100 }}>分类</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80 }}>状态</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60 }}>版本</Typography.Text>
@@ -163,26 +162,26 @@ export default function SteeringListPage() {
             {data?.records?.map((record) => (
               <Flex key={record.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                 <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, paddingRight: 8 }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, paddingRight: 8 }}>
                   <Typography.Text
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', minWidth: 0, flex: 1 }}
                     ellipsis
                   >
                     {record.title}
                   </Typography.Text>
-                </div>
-                <div style={{ minWidth: 150, maxWidth: 280, display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', alignItems: 'center' }}>
-                  {record.tags?.slice(0, 3).map((t, i) => (
-                    <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
-                  ))}
-                  {(record.tags?.length ?? 0) > 3 && (
-                    <Tooltip title={record.tags?.slice(3).join('、')}>
-                      <Tag className="tag-base" style={{ flexShrink: 0, color: '#a1a1aa', borderColor: '#3f3f52', cursor: 'pointer' }}>
-                        +{(record.tags?.length ?? 0) - 3}
-                      </Tag>
-                    </Tooltip>
-                  )}
+                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', alignItems: 'center', flexShrink: 0 }}>
+                    {record.tags?.slice(0, 3).map((t, i) => (
+                      <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
+                    ))}
+                    {(record.tags?.length ?? 0) > 3 && (
+                      <Tooltip title={record.tags?.slice(3).join('、')}>
+                        <Tag className="tag-base" style={{ flexShrink: 0, color: '#a1a1aa', borderColor: '#3f3f52', cursor: 'pointer' }}>
+                          +{(record.tags?.length ?? 0) - 3}
+                        </Tag>
+                      </Tooltip>
+                    )}
+                  </div>
                 </div>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100 }} ellipsis>{record.categoryName}</Typography.Text>
                 <div style={{ width: 80 }}>
