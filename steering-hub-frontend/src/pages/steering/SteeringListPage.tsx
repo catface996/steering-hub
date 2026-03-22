@@ -148,29 +148,29 @@ export default function SteeringListPage() {
         ) : (
           <div style={{ flex: 1, overflow: 'auto' }}>
             {/* Header */}
-            <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50 }}>ID</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>标题</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100 }}>分类</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80 }}>状态</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60 }}>版本</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 120 }}>可检索性</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100 }}>更新时间</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200 }}>操作</Typography.Text>
-            </Flex>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50, flexShrink: 0 }}>ID</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1, minWidth: 0 }}>标题</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>分类</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80, flexShrink: 0 }}>状态</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60, flexShrink: 0 }}>版本</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 120, flexShrink: 0 }}>可检索性</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>更新时间</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200, flexShrink: 0 }}>操作</Typography.Text>
+            </div>
             {/* Rows */}
             {data?.records?.map((record) => (
-              <Flex key={record.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, paddingRight: 8 }}>
+              <div key={record.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
+                <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50, flexShrink: 0 }}>{record.id}</Typography.Text>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, paddingRight: 8, overflow: 'hidden' }}>
                   <Typography.Text
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', minWidth: 0 }}
-                    ellipsis
+                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', flex: '0 0 auto', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                    title={record.title}
                   >
                     {record.title}
                   </Typography.Text>
-                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', alignItems: 'center', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, alignItems: 'center', flexShrink: 0 }}>
                     {record.tags?.slice(0, 3).map((t, i) => (
                       <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
                     ))}
@@ -183,14 +183,14 @@ export default function SteeringListPage() {
                     )}
                   </div>
                 </div>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100 }} ellipsis>{record.categoryName}</Typography.Text>
-                <div style={{ width: 80 }}>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{record.categoryName}</Typography.Text>
+                <div style={{ width: 80, flexShrink: 0 }}>
                   <Tag className={`tag-base ${STATUS_CLASS[record.status]}`}>
                     {STATUS_LABEL[record.status]}
                   </Tag>
                 </div>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 60 }}>v{record.currentVersion}</Typography.Text>
-                <div style={{ width: 120 }}>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 60, flexShrink: 0 }}>v{record.currentVersion}</Typography.Text>
+                <div style={{ width: 120, flexShrink: 0 }}>
                   {(() => {
                     const q = qualityData[record.id];
                     if (!q) return <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>-</Typography.Text>;
@@ -225,8 +225,8 @@ export default function SteeringListPage() {
                     );
                   })()}
                 </div>
-                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100 }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
-                <Flex gap={4} style={{ width: 200 }}>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0 }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
+                <Flex gap={4} style={{ width: 200, flexShrink: 0 }}>
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (
                     <Button type="link" size="small" onClick={() => handleReview(record.id, 'submit')} style={{ fontSize: 12 }}>提交审核</Button>
@@ -236,7 +236,7 @@ export default function SteeringListPage() {
                   )}
                   <Button type="link" size="small" danger onClick={() => setDeleteId(record.id)} style={{ fontSize: 12 }}>删除</Button>
                 </Flex>
-              </Flex>
+              </div>
             ))}
           </div>
         )}
