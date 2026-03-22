@@ -49,3 +49,4 @@ generate_*.py
 enrich_*.py
 update_*.py
 verify_*.py
+.claude/
