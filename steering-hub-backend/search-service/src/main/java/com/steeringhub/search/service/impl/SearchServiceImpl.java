@@ -87,22 +87,17 @@ public class SearchServiceImpl implements SearchService {
                 SearchResult existing = merged.get(r.getSteeringId());
                 existing.setScore(Math.min(1.0, existing.getScore() + r.getScore() * 0.5));
                 existing.setMatchType("hybrid");
+                // Recalculate matchLevel after score boost
+                existing.setMatchLevel(existing.getScore() >= 0.7 ? "high" : existing.getScore() >= 0.5 ? "good" : "fair");
             } else {
                 r.setMatchType("fulltext");
                 merged.put(r.getSteeringId(), r);
             }
         }
 
-        // Sort: hybrid > fulltext > semantic (by matchType priority, then by score)
+        // Sort: by score descending (matchType is metadata only, not sort key)
         return merged.values().stream()
-                .sorted(Comparator
-                        .comparing((SearchResult sr) -> {
-                            if ("hybrid".equals(sr.getMatchType())) return 0;
-                            if ("fulltext".equals(sr.getMatchType())) return 1;
-                            return 2; // semantic
-                        })
-                        .thenComparing(Comparator.comparingDouble(SearchResult::getScore).reversed())
-                )
+                .sorted(Comparator.comparingDouble(SearchResult::getScore).reversed())
                 .limit(request.getLimit())
                 .collect(Collectors.toList());
     }
