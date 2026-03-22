@@ -186,6 +186,7 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
             case ACTIVATE -> handleActivate(id, steering, comment, reviewerId, reviewerName);
             case DEPRECATE -> handleDeprecate(id, steering, comment, reviewerId, reviewerName);
             case WITHDRAW -> handleWithdraw(id, steering, comment, reviewerId, reviewerName);
+            case ROLLBACK -> throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "ROLLBACK 操作暂不支持");
             default -> throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "不支持的审核动作: " + action);
         }
     }
