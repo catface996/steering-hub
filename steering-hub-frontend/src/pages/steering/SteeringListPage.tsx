@@ -151,7 +151,7 @@ export default function SteeringListPage() {
             <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50 }}>ID</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>标题</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200 }}>标签</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, minWidth: 150, maxWidth: 280 }}>标签</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100 }}>分类</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80 }}>状态</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60 }}>版本</Typography.Text>
@@ -172,7 +172,7 @@ export default function SteeringListPage() {
                     {record.title}
                   </Typography.Text>
                 </div>
-                <div style={{ width: 200, display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', alignItems: 'center' }}>
+                <div style={{ minWidth: 150, maxWidth: 280, display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', alignItems: 'center' }}>
                   {record.tags?.slice(0, 3).map((t, i) => (
                     <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
                   ))}
