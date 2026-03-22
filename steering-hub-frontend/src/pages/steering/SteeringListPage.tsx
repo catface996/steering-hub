@@ -33,7 +33,8 @@ export default function SteeringListPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [categories, setCategories] = useState<SteeringCategory[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'card'>('card');
+  const pageSize = viewMode === 'card' ? 9 : 10;
 
   useEffect(() => {
     categoryService.list().then(setCategories).catch(() => {});
@@ -54,7 +55,7 @@ export default function SteeringListPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const result = await steeringService.page({ current: page + 1, size: 10, status: status || undefined, keyword, categoryId });
+        const result = await steeringService.page({ current: page + 1, size: pageSize, status: status || undefined, keyword, categoryId });
         setData(result);
         // Load quality data
         if (result.records.length > 0) {
@@ -77,7 +78,7 @@ export default function SteeringListPage() {
       }
     };
     load();
-  }, [page, status, keyword, categoryId, refreshKey]);
+  }, [page, status, keyword, categoryId, refreshKey, pageSize]);
 
   const handleDelete = async () => {
     if (deleteId === null) return;
@@ -151,12 +152,12 @@ export default function SteeringListPage() {
           <Button
             type={viewMode === 'list' ? 'primary' : 'default'}
             icon={<LayoutList size={16} />}
-            onClick={() => setViewMode('list')}
+            onClick={() => { setViewMode('list'); setPage(0); }}
           />
           <Button
             type={viewMode === 'card' ? 'primary' : 'default'}
             icon={<LayoutGrid size={16} />}
-            onClick={() => setViewMode('card')}
+            onClick={() => { setViewMode('card'); setPage(0); }}
           />
         </Flex>
       </Flex>
@@ -206,7 +207,7 @@ export default function SteeringListPage() {
             <Pagination
               count={data?.total ?? 0}
               page={page}
-              rowsPerPage={10}
+              rowsPerPage={pageSize}
               onPageChange={setPage}
             />
           </Card>
