@@ -151,6 +151,7 @@ export default function SteeringListPage() {
             <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50 }}>ID</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>标题</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200 }}>标签</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100 }}>分类</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80 }}>状态</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60 }}>版本</Typography.Text>
@@ -162,7 +163,7 @@ export default function SteeringListPage() {
             {data?.records?.map((record) => (
               <Flex key={record.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                 <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, paddingRight: 8 }}>
+                <div style={{ flex: 1, paddingRight: 8 }}>
                   <Typography.Text
                     onClick={() => navigate(`/steerings/${record.id}`)}
                     style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
@@ -170,7 +171,9 @@ export default function SteeringListPage() {
                   >
                     {record.title}
                   </Typography.Text>
-                  {record.tags?.slice(0, 2).map((t, i) => (
+                </div>
+                <div style={{ width: 200, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {record.tags?.map((t, i) => (
                     <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
                   ))}
                 </div>
