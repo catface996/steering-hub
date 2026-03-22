@@ -146,7 +146,7 @@ export default function SteeringListPage() {
             <Spin size="large" />
           </Flex>
         ) : (
-          <div style={{ flex: 1, overflow: 'auto' }}>
+          <div style={{ flex: 1, overflow: 'auto', minWidth: 900 }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50, flexShrink: 0 }}>ID</Typography.Text>
