@@ -170,14 +170,14 @@ export default function SteeringListPage() {
                   >
                     {record.title}
                   </Typography.Text>
-                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, alignItems: 'center', flex: 1, overflow: 'hidden' }}>
-                    {record.tags?.slice(0, 6).map((t, i) => (
+                  <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, alignItems: 'center', maxWidth: 240, overflow: 'hidden', flexShrink: 1 }}>
+                    {record.tags?.slice(0, 5).map((t, i) => (
                       <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
                     ))}
-                    {(record.tags?.length ?? 0) > 6 && (
-                      <Tooltip title={record.tags?.slice(6).join('、')}>
+                    {(record.tags?.length ?? 0) > 5 && (
+                      <Tooltip title={record.tags?.slice(5).join('、')}>
                         <Tag className="tag-base" style={{ flexShrink: 0, color: '#a1a1aa', borderColor: '#3f3f52', cursor: 'pointer' }}>
-                          +{(record.tags?.length ?? 0) - 6}
+                          +{(record.tags?.length ?? 0) - 5}
                         </Tag>
                       </Tooltip>
                     )}
