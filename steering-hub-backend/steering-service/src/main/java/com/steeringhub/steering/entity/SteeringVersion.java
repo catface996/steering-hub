@@ -27,8 +27,13 @@ public class SteeringVersion implements Serializable {
 
     private String changeLog;
 
+    private String status;
+
     private Long createdBy;
 
     @TableField(fill = FieldFill.INSERT)
     private OffsetDateTime createdAt;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private OffsetDateTime updatedAt;
 }

@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-03-22
 
 ## Active Technologies
+- Java 17 / TypeScript 5 + Spring Boot 3.2, MyBatis Plus 3.x, React 18, Ant Design 5, Vite, Amazon Bedrock (Titan Embeddings v2) (002-version-history-search)
+- PostgreSQL 15 with pgvector, `steering` + `steering_version` tables (002-version-history-search)
 
 - Java 17 / TypeScript 5 + Spring Boot 3.2, MyBatis Plus 3.x, React 18, Ant Design 5, Vite (001-similarity-conflict-detection)
 
@@ -41,6 +43,7 @@ cd steering-hub-frontend && npm run dev
 - 前端分页：统一使用 src/components/Pagination.tsx，禁止自行实现
 
 ## Recent Changes
+- 002-version-history-search: Added Java 17 / TypeScript 5 + Spring Boot 3.2, MyBatis Plus 3.x, React 18, Ant Design 5, Vite, Amazon Bedrock (Titan Embeddings v2)
 
 - 001-similarity-conflict-detection: Added Java 17 / TypeScript 5 + Spring Boot 3.2, MyBatis Plus 3.x, React 18, Ant Design 5, Vite
 

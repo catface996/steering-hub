@@ -1,5 +1,5 @@
 import { get, post, put, del } from '../utils/request';
-import type { Steering, SteeringVersion, PageResult, ReviewAction, SteeringCategory } from '../types';
+import type { Steering, SteeringVersion, SteeringVersionVO, SteeringVersionDetailVO, PageResult, ReviewAction, SteeringCategory } from '../types';
 
 export interface CreateSteeringParams {
   title: string;
@@ -53,6 +53,15 @@ export const steeringService = {
 
   getVersions: (id: number) =>
     get<SteeringVersion[]>(`/api/v1/web/steerings/${id}/versions`).then((r) => r.data),
+
+  listVersions: (id: number, current = 1, size = 20): Promise<PageResult<SteeringVersionVO>> =>
+    get<PageResult<SteeringVersionVO>>(`/api/v1/web/steerings/${id}/versions?current=${current}&size=${size}`).then((r) => r.data),
+
+  getVersionDetail: (id: number, versionNumber: number): Promise<SteeringVersionDetailVO> =>
+    get<SteeringVersionDetailVO>(`/api/v1/web/steerings/${id}/versions/${versionNumber}`).then((r) => r.data),
+
+  withdraw: (id: number, comment?: string): Promise<void> =>
+    post(`/api/v1/web/steerings/${id}/review`, { action: 'withdraw', comment }).then(() => undefined),
 };
 
 export const categoryService = {

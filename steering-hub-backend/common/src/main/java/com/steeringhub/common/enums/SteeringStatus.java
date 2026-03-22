@@ -12,6 +12,7 @@ public enum SteeringStatus {
     APPROVED("approved", "已通过"),
     REJECTED("rejected", "已驳回"),
     ACTIVE("active", "已生效"),
+    SUPERSEDED("superseded", "已被取代"),
     DEPRECATED("deprecated", "已废弃");
 
     @EnumValue

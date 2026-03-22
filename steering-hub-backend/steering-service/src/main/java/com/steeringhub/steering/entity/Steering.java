@@ -47,6 +47,8 @@ public class Steering implements Serializable {
     @TableField(exist = false)
     private Double similarityScore;
 
+    private Integer lockVersion;
+
     private Long createdBy;
 
     private Long updatedBy;

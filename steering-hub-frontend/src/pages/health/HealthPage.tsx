@@ -6,13 +6,11 @@ import {
   Col,
   Drawer,
   Flex,
-  Form,
   Input,
   Progress,
   Row,
   Select,
   Spin,
-  Space,
   Table,
   Tag,
   Typography,
@@ -20,6 +18,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useHeader } from '../../contexts/HeaderContext';
 import {
   healthService,
   type CompareVO,
@@ -37,6 +36,7 @@ interface Category {
 }
 
 export default function HealthPage() {
+  const { setBreadcrumbs, setActions } = useHeader();
   const [task, setTask] = useState<HealthCheckTaskVO | null>(null);
   const [pairs, setPairs] = useState<SimilarPairVO[]>([]);
   const [total, setTotal] = useState(0);
@@ -97,13 +97,6 @@ export default function HealthPage() {
     }
   };
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    if (task) {
-      loadPairs(task.taskId, newPage, specTitle, categoryId);
-    }
-  };
-
   const openEventSource = () => {
     esRef.current?.close();
     const token = localStorage.getItem(TOKEN_KEY) ?? '';
@@ -157,6 +150,49 @@ export default function HealthPage() {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    if (task) {
+      loadPairs(task.taskId, newPage, specTitle, categoryId);
+    }
+  };
+
+  useEffect(() => {
+    setBreadcrumbs(
+      <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>规范健康度</Typography.Text>
+    );
+    setActions(
+      <Flex gap={8} align="center">
+        <Input
+          placeholder="规范标题关键词"
+          value={specTitle}
+          onChange={(e) => setSpecTitle(e.target.value)}
+          onPressEnter={handleSearch}
+          style={{ width: 200 }}
+          allowClear
+        />
+        <Select
+          placeholder="请选择分类"
+          value={categoryId}
+          onChange={(v) => setCategoryId(v ?? null)}
+          allowClear
+          style={{ width: 160 }}
+          options={categories.map((c) => ({ label: c.name, value: c.id }))}
+        />
+        <Button type="primary" onClick={handleSearch}>查询</Button>
+        <Button onClick={handleReset}>重置</Button>
+        <Button
+          type="primary"
+          onClick={handleRunCheck}
+          disabled={running}
+          icon={running ? <Spin size="small" /> : undefined}
+        >
+          {running ? '检测进行中...' : '运行检测'}
+        </Button>
+      </Flex>
+    );
+  }, [specTitle, categoryId, categories, running, task, setBreadcrumbs, setActions]);
+
   const handleCompare = async (specAId: number, specBId: number) => {
     setDrawerOpen(true);
     setCompareData(null);
@@ -173,31 +209,21 @@ export default function HealthPage() {
     {
       title: '规范 A',
       dataIndex: 'specA',
-      ellipsis: true,
       render: (specA: SimilarPairVO['specA']) => (
-        <div>
+        <Flex align="center" gap={8}>
           <Typography.Text style={{ color: '#e4e4e7' }}>{specA.title}</Typography.Text>
-          {specA.categoryName && (
-            <div>
-              <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>{specA.categoryName}</Typography.Text>
-            </div>
-          )}
-        </div>
+          {specA.categoryName && <Tag color="default" style={{ fontSize: 12, margin: 0 }}>{specA.categoryName}</Tag>}
+        </Flex>
       ),
     },
     {
       title: '规范 B',
       dataIndex: 'specB',
-      ellipsis: true,
       render: (specB: SimilarPairVO['specB']) => (
-        <div>
+        <Flex align="center" gap={8}>
           <Typography.Text style={{ color: '#e4e4e7' }}>{specB.title}</Typography.Text>
-          {specB.categoryName && (
-            <div>
-              <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>{specB.categoryName}</Typography.Text>
-            </div>
-          )}
-        </div>
+          {specB.categoryName && <Tag color="default" style={{ fontSize: 12, margin: 0 }}>{specB.categoryName}</Tag>}
+        </Flex>
       ),
     },
     {
@@ -251,21 +277,6 @@ export default function HealthPage() {
 
   return (
     <div style={{ padding: '24px', minHeight: '100%', background: '#09090f' }}>
-      {/* Header */}
-      <Flex align="center" justify="space-between" style={{ marginBottom: 24 }}>
-        <Typography.Title level={3} style={{ margin: 0, color: '#e4e4e7' }}>
-          规范健康度
-        </Typography.Title>
-        <Button
-          type="primary"
-          onClick={handleRunCheck}
-          disabled={running}
-          icon={running ? <Spin size="small" /> : undefined}
-        >
-          {running ? '检测进行中...' : '运行检测'}
-        </Button>
-      </Flex>
-
       {errorMsg && (
         <Alert
           type="error"
@@ -331,42 +342,6 @@ export default function HealthPage() {
           )}
         </div>
       )}
-
-      {/* Search bar */}
-      <div
-        style={{
-          background: '#13131f',
-          border: '1px solid #1e1e2a',
-          borderRadius: 8,
-          padding: '16px 20px',
-          marginBottom: 16,
-        }}
-      >
-        <Space wrap>
-          <Form.Item label={<span style={{ color: '#a1a1aa' }}>规范标题</span>} style={{ margin: 0 }}>
-            <Input
-              placeholder="规范标题关键词"
-              value={specTitle}
-              onChange={(e) => setSpecTitle(e.target.value)}
-              onPressEnter={handleSearch}
-              style={{ width: 200 }}
-              allowClear
-            />
-          </Form.Item>
-          <Form.Item label={<span style={{ color: '#a1a1aa' }}>分类</span>} style={{ margin: 0 }}>
-            <Select
-              placeholder="请选择分类"
-              value={categoryId}
-              onChange={(v) => setCategoryId(v ?? null)}
-              allowClear
-              style={{ width: 180 }}
-              options={categories.map((c) => ({ label: c.name, value: c.id }))}
-            />
-          </Form.Item>
-          <Button type="primary" onClick={handleSearch}>查询</Button>
-          <Button onClick={handleReset}>重置</Button>
-        </Space>
-      </div>
 
       {/* Similar pairs table */}
       <div

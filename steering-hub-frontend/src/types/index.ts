@@ -4,6 +4,7 @@ export type SteeringStatus =
   | 'approved'
   | 'rejected'
   | 'active'
+  | 'superseded'
   | 'deprecated'
 
 export type ReviewAction =
@@ -49,6 +50,29 @@ export interface SteeringVersion {
   content: string
   changeLog?: string
   createdAt: string
+}
+
+export interface SteeringVersionVO {
+  id: number
+  versionNumber: number
+  status: SteeringStatus
+  changeSummary?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SteeringVersionDetailVO {
+  id: number
+  steeringId: number
+  versionNumber: number
+  title: string
+  content: string
+  tags?: string
+  keywords?: string
+  status: SteeringStatus
+  changeSummary?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface SearchResult {

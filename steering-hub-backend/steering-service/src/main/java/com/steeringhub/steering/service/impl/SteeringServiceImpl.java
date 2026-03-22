@@ -11,6 +11,8 @@ import com.steeringhub.common.response.ResultCode;
 import com.steeringhub.steering.dto.request.CreateSteeringRequest;
 import com.steeringhub.steering.dto.request.UpdateSteeringRequest;
 import com.steeringhub.steering.dto.response.SteeringDetailResponse;
+import com.steeringhub.steering.dto.response.SteeringVersionDetailVO;
+import com.steeringhub.steering.dto.response.SteeringVersionVO;
 import com.steeringhub.steering.entity.Steering;
 import com.steeringhub.steering.entity.SteeringReview;
 import com.steeringhub.steering.entity.SteeringVersion;
@@ -43,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.steeringhub.common.enums.SteeringStatus.*;
 
 @Slf4j
 @Service
@@ -90,10 +94,40 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         if (steering == null) {
             throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
         }
-        if (steering.getStatus() == SteeringStatus.PENDING_REVIEW) {
+        if (steering.getStatus() == PENDING_REVIEW) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "审核中的规范不能修改");
         }
 
+        // FR-006: 若已存在 pending_review 版本，不允许再次编辑（要求先撤回）
+        SteeringVersion existingPendingReview = steeringVersionMapper.findVersionBySteeringIdAndStatus(id, "pending_review");
+        if (existingPendingReview != null) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "存在待审核版本，请先撤回后再修改");
+        }
+
+        if (steering.getStatus() == ACTIVE) {
+            // T010: When ACTIVE, do NOT overwrite main table content — insert new draft version only
+            Integer maxVersion = steeringVersionMapper.selectMaxVersionBySteeringId(id);
+            int newVersionNumber = (maxVersion == null ? 0 : maxVersion) + 1;
+
+            SteeringVersion newDraftVersion = new SteeringVersion();
+            newDraftVersion.setSteeringId(id);
+            newDraftVersion.setVersion(newVersionNumber);
+            newDraftVersion.setTitle(request.getTitle());
+            newDraftVersion.setContent(request.getContent());
+            if (request.getTags() != null) {
+                newDraftVersion.setTags(String.join(",", request.getTags()));
+            }
+            newDraftVersion.setKeywords(sanitizeKeywords(request.getKeywords()));
+            newDraftVersion.setChangeLog(request.getChangeLog());
+            newDraftVersion.setStatus("draft");
+            newDraftVersion.setCreatedBy(steering.getCreatedBy());
+            steeringVersionMapper.insert(newDraftVersion);
+
+            // Return unchanged steering detail (hot-cache stays as active)
+            return toDetailResponse(steering);
+        }
+
+        // For DRAFT / REJECTED / DEPRECATED: normal update of main table
         steering.setTitle(request.getTitle());
         steering.setContent(request.getContent());
         if (request.getCategoryId() != null) {
@@ -105,9 +139,8 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         }
         steering.setAgentQueries(request.getAgentQueries());
         steering.setCurrentVersion(steering.getCurrentVersion() + 1);
-        // Reset to DRAFT after edit if it was ACTIVE/REJECTED
-        if (steering.getStatus() == SteeringStatus.REJECTED || steering.getStatus() == SteeringStatus.DEPRECATED) {
-            steering.setStatus(SteeringStatus.DRAFT);
+        if (steering.getStatus() == REJECTED || steering.getStatus() == DEPRECATED) {
+            steering.setStatus(DRAFT);
         }
         updateById(steering);
 
@@ -146,47 +179,120 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
             throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
         }
 
-        SteeringStatus newStatus = switch (action) {
-            case SUBMIT -> {
-                if (steering.getStatus() != SteeringStatus.DRAFT && steering.getStatus() != SteeringStatus.REJECTED) {
-                    throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不允许提交审核");
-                }
-                yield SteeringStatus.PENDING_REVIEW;
-            }
-            case APPROVE -> {
-                if (steering.getStatus() != SteeringStatus.PENDING_REVIEW) {
-                    throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不是待审核");
-                }
-                yield SteeringStatus.APPROVED;
-            }
-            case REJECT -> {
-                if (steering.getStatus() != SteeringStatus.PENDING_REVIEW) {
-                    throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不是待审核");
-                }
-                yield SteeringStatus.REJECTED;
-            }
-            case ACTIVATE -> {
-                if (steering.getStatus() != SteeringStatus.APPROVED) {
-                    throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只有审核通过的规范才能生效");
-                }
-                yield SteeringStatus.ACTIVE;
-            }
-            case DEPRECATE -> {
-                if (steering.getStatus() != SteeringStatus.ACTIVE) {
-                    throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只有已生效的规范才能废弃");
-                }
-                yield SteeringStatus.DEPRECATED;
-            }
+        switch (action) {
+            case SUBMIT -> handleSubmit(id, steering, comment, reviewerId, reviewerName);
+            case APPROVE -> handleApprove(id, steering, comment, reviewerId, reviewerName);
+            case REJECT -> handleReject(id, steering, comment, reviewerId, reviewerName);
+            case ACTIVATE -> handleActivate(id, steering, comment, reviewerId, reviewerName);
+            case DEPRECATE -> handleDeprecate(id, steering, comment, reviewerId, reviewerName);
+            case WITHDRAW -> handleWithdraw(id, steering, comment, reviewerId, reviewerName);
             default -> throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "不支持的审核动作: " + action);
-        };
+        }
+    }
 
-        steering.setStatus(newStatus);
+    private void handleSubmit(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+        if (steering.getStatus() != DRAFT && steering.getStatus() != REJECTED && steering.getStatus() != ACTIVE) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不允许提交审核");
+        }
+        // Update latest draft version to pending_review
+        steeringVersionMapper.updateVersionStatus(id, "draft", "pending_review");
+        // Only update main table status if not ACTIVE (ACTIVE keeps its hot-cache status)
+        if (steering.getStatus() != ACTIVE) {
+            steering.setStatus(PENDING_REVIEW);
+            updateById(steering);
+        }
+        insertReview(id, steering.getCurrentVersion(), ReviewAction.SUBMIT, comment, reviewerId, reviewerName);
+    }
+
+    private void handleApprove(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+        if (steering.getStatus() != PENDING_REVIEW && steering.getStatus() != ACTIVE) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不是待审核");
+        }
+        steeringVersionMapper.updateVersionStatus(id, "pending_review", "approved");
+        if (steering.getStatus() != ACTIVE) {
+            steering.setStatus(APPROVED);
+            updateById(steering);
+        }
+        insertReview(id, steering.getCurrentVersion(), ReviewAction.APPROVE, comment, reviewerId, reviewerName);
+    }
+
+    private void handleReject(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+        if (steering.getStatus() != PENDING_REVIEW && steering.getStatus() != ACTIVE) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不是待审核");
+        }
+        steeringVersionMapper.updateVersionStatus(id, "pending_review", "rejected");
+        if (steering.getStatus() != ACTIVE) {
+            steering.setStatus(REJECTED);
+            updateById(steering);
+        }
+        insertReview(id, steering.getCurrentVersion(), ReviewAction.REJECT, comment, reviewerId, reviewerName);
+    }
+
+    private void handleActivate(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+        // Step 1: Optimistic lock CAS
+        int affected = baseMapper.claimActivateLock(id, steering.getLockVersion());
+        if (affected == 0) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "并发冲突，请刷新后重试");
+        }
+
+        // Step 2: Find approved version
+        SteeringVersion approvedVersion = steeringVersionMapper.findVersionBySteeringIdAndStatus(id, "approved");
+        if (approvedVersion == null) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "找不到已通过的版本");
+        }
+
+        // Step 3: Generate embedding (failure rolls back entire transaction)
+        String plainText = stripMarkdown(approvedVersion.getContent());
+        float[] embeddingVec = embedText(plainText);
+        String embeddingStr = toVecStr(embeddingVec);
+
+        // Step 4: Mark old active version as superseded
+        steeringVersionMapper.updateVersionStatus(id, "active", "superseded");
+
+        // Step 5: Mark approved version as active
+        steeringVersionMapper.updateVersionStatus(id, "approved", "active");
+
+        // Step 6: Update main table hot-cache
+        baseMapper.commitActivate(
+                id,
+                approvedVersion.getTitle(),
+                approvedVersion.getContent(),
+                approvedVersion.getTags(),
+                approvedVersion.getVersion(),
+                embeddingStr,
+                embeddingStr
+        );
+
+        // Step 7: Insert review record
+        insertReview(id, approvedVersion.getVersion(), ReviewAction.ACTIVATE, comment, reviewerId, reviewerName);
+    }
+
+    private void handleDeprecate(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+        if (steering.getStatus() != ACTIVE) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只有已生效的规范才能废弃");
+        }
+        steeringVersionMapper.updateVersionStatus(id, "active", "deprecated");
+        steering.setStatus(DEPRECATED);
         updateById(steering);
+        insertReview(id, steering.getCurrentVersion(), ReviewAction.DEPRECATE, comment, reviewerId, reviewerName);
+    }
 
-        // Record review history
+    private void handleWithdraw(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+        // Move pending_review version back to draft
+        steeringVersionMapper.updateVersionStatus(id, "pending_review", "draft");
+        // If main table status is PENDING_REVIEW (no active version), reset to draft
+        if (steering.getStatus() == PENDING_REVIEW) {
+            steering.setStatus(DRAFT);
+            updateById(steering);
+        }
+        // Do NOT touch steering.embedding/content_embedding
+        insertReview(id, steering.getCurrentVersion(), ReviewAction.WITHDRAW, comment, reviewerId, reviewerName);
+    }
+
+    private void insertReview(Long steeringId, Integer version, ReviewAction action, String comment, Long reviewerId, String reviewerName) {
         SteeringReview review = new SteeringReview();
-        review.setSteeringId(id);
-        review.setSteeringVersion(steering.getCurrentVersion());
+        review.setSteeringId(steeringId);
+        review.setSteeringVersion(version);
         review.setAction(action);
         review.setComment(comment);
         review.setReviewerId(reviewerId);
@@ -331,6 +437,57 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         return String.join(",", filtered);
     }
 
+    @Override
+    public IPage<SteeringVersionVO> listVersions(Long id, long current, long size) {
+        Steering steering = getById(id);
+        if (steering == null) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
+        }
+        long offset = (current - 1) * size;
+        int total = steeringVersionMapper.countVersionsBySteeringId(id);
+        List<SteeringVersion> rows = steeringVersionMapper.listVersionsBySteeringId(id, offset, size);
+        List<SteeringVersionVO> voList = rows.stream().map(v -> {
+            SteeringVersionVO vo = new SteeringVersionVO();
+            vo.setId(v.getId());
+            vo.setVersionNumber(v.getVersion());
+            vo.setStatus(v.getStatus());
+            vo.setChangeSummary(v.getChangeLog());
+            vo.setCreatedAt(v.getCreatedAt());
+            vo.setUpdatedAt(v.getUpdatedAt());
+            return vo;
+        }).collect(Collectors.toList());
+
+        Page<SteeringVersionVO> page = new Page<>(current, size);
+        page.setTotal(total);
+        page.setRecords(voList);
+        return page;
+    }
+
+    @Override
+    public SteeringVersionDetailVO getVersionDetail(Long id, int versionNumber) {
+        Steering steering = getById(id);
+        if (steering == null) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
+        }
+        SteeringVersion v = steeringVersionMapper.findVersionByNumber(id, versionNumber);
+        if (v == null) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND.getCode(), "版本不存在: " + versionNumber);
+        }
+        SteeringVersionDetailVO vo = new SteeringVersionDetailVO();
+        vo.setId(v.getId());
+        vo.setSteeringId(v.getSteeringId());
+        vo.setVersionNumber(v.getVersion());
+        vo.setTitle(v.getTitle());
+        vo.setContent(v.getContent());
+        vo.setTags(v.getTags());
+        vo.setKeywords(v.getKeywords());
+        vo.setStatus(v.getStatus());
+        vo.setChangeSummary(v.getChangeLog());
+        vo.setCreatedAt(v.getCreatedAt());
+        vo.setUpdatedAt(v.getUpdatedAt());
+        return vo;
+    }
+
     private void saveVersion(Steering steering, String changeLog) {
         SteeringVersion version = new SteeringVersion();
         version.setSteeringId(steering.getId());
@@ -340,6 +497,7 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         version.setTags(steering.getTags());
         version.setKeywords(steering.getKeywords());
         version.setChangeLog(changeLog);
+        version.setStatus("draft");
         version.setCreatedBy(steering.getCreatedBy());
         steeringVersionMapper.insert(version);
     }

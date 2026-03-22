@@ -12,7 +12,8 @@ public enum ReviewAction {
     REJECT("reject", "驳回"),
     ACTIVATE("activate", "生效"),
     DEPRECATE("deprecate", "废弃"),
-    ROLLBACK("rollback", "回滚");
+    ROLLBACK("rollback", "回滚"),
+    WITHDRAW("withdraw", "撤回");
 
     @EnumValue
     @JsonValue

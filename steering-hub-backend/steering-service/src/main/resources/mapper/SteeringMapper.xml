@@ -100,4 +100,41 @@
           AND content_embedding IS NOT NULL
     </select>
 
+    <!-- 统计 active 且未删除的规范数量 -->
+    <select id="countActiveSpecs" resultType="int">
+        SELECT COUNT(*) FROM steering
+        WHERE status = 'active'
+          AND deleted = false
+    </select>
+
+    <!-- 查询所有 active、未删除、且 content_embedding 不为 NULL 的规范列表 -->
+    <select id="findAllActiveWithEmbedding" resultMap="steeringResultMap">
+        SELECT id, category_id, title, content, keywords, tags, status, current_version,
+               author, created_by, updated_by, created_at, updated_at, deleted
+        FROM steering
+        WHERE status = 'active'
+          AND deleted = false
+          AND content_embedding IS NOT NULL
+    </select>
+
+    <!-- 乐观锁 CAS：仅递增 lock_version，不触碰热缓存字段 -->
+    <update id="claimActivateLock">
+        UPDATE steering SET lock_version = lock_version + 1
+        WHERE id = #{id} AND lock_version = #{lockVersion}
+    </update>
+
+    <!-- 在 embedding 生成后更新主表热缓存 -->
+    <update id="commitActivate">
+        UPDATE steering
+        SET title = #{title},
+            content = #{content},
+            tags = #{tags},
+            current_version = #{currentVersion},
+            status = 'active',
+            embedding = #{embeddingStr}::vector,
+            content_embedding = #{contentEmbeddingStr}::vector,
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
 </mapper>
