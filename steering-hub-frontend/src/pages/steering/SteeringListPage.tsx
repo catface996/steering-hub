@@ -84,8 +84,8 @@ export default function SteeringListPage() {
       message.success('删除成功');
       setDeleteId(null);
       setPage(0);
-    } catch {
-      message.error('删除失败');
+    } catch (e: any) {
+      message.error(e?.message || '删除失败');
     }
   };
 
