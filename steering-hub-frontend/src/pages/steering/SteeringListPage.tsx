@@ -200,17 +200,13 @@ export default function SteeringListPage() {
               ))}
             </div>
           )}
-          <Card
-            style={{ marginTop: 0 }}
-            styles={{ body: { padding: 0 } }}
-          >
-            <Pagination
-              count={data?.total ?? 0}
-              page={page}
-              rowsPerPage={pageSize}
-              onPageChange={setPage}
-            />
-          </Card>
+          <Pagination
+            count={data?.total ?? 0}
+            page={page}
+            rowsPerPage={pageSize}
+            onPageChange={setPage}
+            label="条规范"
+          />
         </>
       )}
       {viewMode === 'list' && <Card
@@ -319,8 +315,9 @@ export default function SteeringListPage() {
         <Pagination
           count={data?.total ?? 0}
           page={page}
-          rowsPerPage={10}
+          rowsPerPage={pageSize}
           onPageChange={setPage}
+          label="条规范"
         />
       </Card>}
 
