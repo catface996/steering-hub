@@ -62,6 +62,7 @@ export interface SearchResult {
   tags?: string[]
   keywords?: string
   score: number
+  matchLevel: 'high' | 'good' | 'fair'
   matchType: 'semantic' | 'fulltext' | 'hybrid'
   updatedAt: string
 }

@@ -166,6 +166,13 @@ public class SearchServiceImpl implements SearchService {
         result.setUpdatedAt(steering.getUpdatedAt());
         result.setScore(score);
         result.setMatchType(matchType);
+        if (score >= 0.7) {
+            result.setMatchLevel("high");
+        } else if (score >= 0.5) {
+            result.setMatchLevel("good");
+        } else {
+            result.setMatchLevel("fair");
+        }
         if (StringUtils.hasText(steering.getTags())) {
             result.setTags(Arrays.asList(steering.getTags().split(",")));
         }

@@ -22,6 +22,9 @@ public class SearchResult {
     /** 相关度分数 0-1 */
     private Double score;
 
+    /** 匹配档位：high / good / fair */
+    private String matchLevel;
+
     /** 检索命中原因：semantic / fulltext / hybrid */
     private String matchType;
 

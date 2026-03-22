@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Button, Input, Select, Tag, Flex, Card } from 'antd';
-import { Search, TrendingUp } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { searchService } from '../../services/searchService';
 import { categoryService } from '../../services/steeringService';
@@ -119,10 +119,10 @@ export default function SearchPage() {
   const pageSize = 6;
   const pagedResults = results.slice(page * pageSize, (page + 1) * pageSize);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 0.7) return '#32D583';
-    if (score >= 0.4) return '#FFB547';
-    return '#E85A4F';
+  const matchLevelConfig = {
+    high: { label: '高度匹配', color: '#32D583' },
+    good: { label: '较好匹配', color: '#FFB547' },
+    fair: { label: '一般匹配', color: '#a1a1aa' },
   };
 
   return (
@@ -204,12 +204,14 @@ export default function SearchPage() {
                     <Tag className="tag-base tag-content">
                       {r.matchType === 'semantic' ? '语义匹配' : r.matchType === 'fulltext' ? '全文匹配' : '混合匹配'}
                     </Tag>
-                    <Flex align="center" gap={4}>
-                      <TrendingUp size={14} color={getScoreColor(r.score)} />
-                      <Typography.Text style={{ color: getScoreColor(r.score), fontSize: 14, fontWeight: 700 }}>
-                        {(r.score * 100).toFixed(0)}%
-                      </Typography.Text>
-                    </Flex>
+                    <Tag style={{
+                      color: matchLevelConfig[r.matchLevel ?? 'fair'].color,
+                      borderColor: matchLevelConfig[r.matchLevel ?? 'fair'].color,
+                      background: 'transparent',
+                      fontWeight: 600,
+                    }}>
+                      {matchLevelConfig[r.matchLevel ?? 'fair'].label}
+                    </Tag>
                   </Flex>
                 </Flex>
                 <Typography.Paragraph
