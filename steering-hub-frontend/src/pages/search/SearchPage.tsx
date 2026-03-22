@@ -120,9 +120,9 @@ export default function SearchPage() {
   const pagedResults = results.slice(page * pageSize, (page + 1) * pageSize);
 
   const matchLevelConfig = {
-    high: { label: '高度匹配', color: '#32D583' },
-    good: { label: '较好匹配', color: '#FFB547' },
-    fair: { label: '一般匹配', color: '#a1a1aa' },
+    high: { color: '#32D583' },
+    good: { color: '#FFB547' },
+    fair: { color: '#a1a1aa' },
   };
 
   return (
@@ -210,7 +210,7 @@ export default function SearchPage() {
                       background: 'transparent',
                       fontWeight: 600,
                     }}>
-                      {matchLevelConfig[r.matchLevel ?? 'fair'].label}
+                      {Math.round((r.score ?? 0) * 100)}分
                     </Tag>
                   </Flex>
                 </Flex>
