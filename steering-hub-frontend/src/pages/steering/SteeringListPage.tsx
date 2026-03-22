@@ -172,10 +172,17 @@ export default function SteeringListPage() {
                     {record.title}
                   </Typography.Text>
                 </div>
-                <div style={{ width: 200, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {record.tags?.map((t, i) => (
-                    <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
+                <div style={{ width: 200, display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden', alignItems: 'center' }}>
+                  {record.tags?.slice(0, 3).map((t, i) => (
+                    <Tag key={t} className={`tag-base tag-color-${i % 7}`} style={{ flexShrink: 0 }}>{t}</Tag>
                   ))}
+                  {(record.tags?.length ?? 0) > 3 && (
+                    <Tooltip title={record.tags?.slice(3).join('、')}>
+                      <Tag className="tag-base" style={{ flexShrink: 0, color: '#a1a1aa', borderColor: '#3f3f52', cursor: 'pointer' }}>
+                        +{(record.tags?.length ?? 0) - 3}
+                      </Tag>
+                    </Tooltip>
+                  )}
                 </div>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100 }} ellipsis>{record.categoryName}</Typography.Text>
                 <div style={{ width: 80 }}>
