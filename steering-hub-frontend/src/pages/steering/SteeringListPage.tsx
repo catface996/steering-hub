@@ -165,7 +165,7 @@ export default function SteeringListPage() {
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, paddingRight: 8 }}>
                   <Typography.Text
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', minWidth: 0, flex: 1 }}
+                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', minWidth: 0 }}
                     ellipsis
                   >
                     {record.title}
