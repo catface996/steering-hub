@@ -156,25 +156,32 @@ export default function SteeringListPage() {
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60, flexShrink: 0 }}>版本</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 120, flexShrink: 0 }}>可检索性</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>更新时间</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200, flexShrink: 0 }}>操作</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 160, flexShrink: 0 }}>操作</Typography.Text>
             </div>
             {/* Rows */}
             {data?.records?.map((record) => (
               <div key={record.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                 <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50, flexShrink: 0 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <span
                     onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+                    style={{ flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     title={record.title}
                   >
                     {record.title}
                   </span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {record.tags?.map((t, i) => (
-                      <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
-                    ))}
-                  </div>
+                  {record.tags && record.tags.length > 0 && (
+                    <div style={{ flexShrink: 0, display: 'flex', flexWrap: 'nowrap', gap: 4 }}>
+                      {record.tags.slice(0, 3).map((t, i) => (
+                        <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
+                      ))}
+                      {record.tags.length > 3 && (
+                        <Tooltip title={record.tags.slice(3).join(', ')}>
+                          <Tag className="tag-base tag-color-6">+{record.tags.length - 3}</Tag>
+                        </Tooltip>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{record.categoryName}</Typography.Text>
                 <div style={{ width: 80, flexShrink: 0 }}>
@@ -219,7 +226,7 @@ export default function SteeringListPage() {
                   })()}
                 </div>
                 <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0 }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
-                <Flex gap={4} style={{ width: 200, flexShrink: 0 }}>
+                <Flex gap={4} style={{ width: 160, flexShrink: 0 }}>
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (
                     <Button type="link" size="small" onClick={() => handleReview(record.id, 'submit')} style={{ fontSize: 12 }}>提交审核</Button>
