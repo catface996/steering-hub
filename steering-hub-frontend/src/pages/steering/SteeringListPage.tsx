@@ -101,6 +101,17 @@ export default function SteeringListPage() {
     }
   };
 
+  const handleDeprecate = async (id: number) => {
+    try {
+      await steeringService.review(id, 'deprecate', '废弃');
+      message.success('已废弃');
+      const result = await steeringService.page({ current: page + 1, size: 10, status: status || undefined, keyword, categoryId });
+      setData(result);
+    } catch {
+      // request.ts 已全局处理错误 toast，这里不需要再处理
+    }
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 0.7) return '#32D583';
     if (score >= 0.4) return '#FFB547';
@@ -229,7 +240,12 @@ export default function SteeringListPage() {
                   {record.status === 'approved' && (
                     <Button type="link" size="small" onClick={() => handleReview(record.id, 'activate')} style={{ color: '#32D583', fontSize: 12 }}>生效</Button>
                   )}
-                  <Button type="link" size="small" danger onClick={() => setDeleteId(record.id)} style={{ fontSize: 12 }}>删除</Button>
+                  {record.status === 'active' && (
+                    <Button type="link" size="small" danger onClick={() => handleDeprecate(record.id)} style={{ fontSize: 12 }}>废弃</Button>
+                  )}
+                  {record.status === 'deprecated' && (
+                    <Button type="link" size="small" danger onClick={() => setDeleteId(record.id)} style={{ fontSize: 12 }}>删除</Button>
+                  )}
                 </Flex>
               </div>
             ))}
