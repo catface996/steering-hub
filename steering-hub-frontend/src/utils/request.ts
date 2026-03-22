@@ -2,6 +2,8 @@
  * Unified API request layer built on native fetch.
  */
 
+import { message as antdMessage } from 'antd';
+
 export interface ApiResponse<T = unknown> {
   code: number | string;
   message: string;
@@ -11,6 +13,7 @@ export interface ApiResponse<T = unknown> {
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   skipAuth?: boolean;
+  skipErrorToast?: boolean;
 }
 
 export class RequestError extends Error {
@@ -44,6 +47,7 @@ async function request<T = unknown>(
   const {
     body,
     skipAuth = false,
+    skipErrorToast = false,
     headers: customHeaders,
     ...restInit
   } = options;
@@ -71,10 +75,9 @@ async function request<T = unknown>(
   try {
     response = await fetch(fullUrl, config);
   } catch (err) {
-    throw new RequestError(
-      err instanceof Error ? err.message : 'Network error',
-      'NETWORK_ERROR',
-    );
+    const errorMsg = '网络异常，请检查连接';
+    if (!skipErrorToast) antdMessage.error(errorMsg);
+    throw new RequestError(errorMsg, 'NETWORK_ERROR');
   }
 
   const requestId = response.headers.get('X-Request-Id') ?? undefined;
@@ -100,11 +103,9 @@ async function request<T = unknown>(
       );
     }
 
-    throw new RequestError(
-      (errorBody?.message as string) ?? `HTTP ${response.status}`,
-      errorCode as string | number,
-      requestId,
-    );
+    const errorMsg = (errorBody?.message as string) ?? `HTTP ${response.status}`;
+    if (!skipErrorToast) antdMessage.error(errorMsg);
+    throw new RequestError(errorMsg, errorCode as string | number, requestId);
   }
 
   const data: ApiResponse<T> = await response.json();
@@ -114,8 +115,10 @@ async function request<T = unknown>(
     if (String(data.code).startsWith('401')) {
       clearToken();
       window.location.href = '/login';
+      throw new RequestError(data.message, data.code, requestId);
     }
 
+    if (!skipErrorToast) antdMessage.error(data.message);
     throw new RequestError(data.message, data.code, requestId);
   }
 
