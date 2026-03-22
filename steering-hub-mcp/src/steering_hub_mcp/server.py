@@ -24,10 +24,18 @@ from . import client
 
 load_dotenv()
 
-# Configure structured logging
+# Configure structured logging - CRITICAL: MCP uses stdio, all logs MUST go to stderr
 import logging
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, log_level), stream=sys.stderr)
+
+# Explicitly configure structlog to output to stderr only
+structlog.configure(
+    processors=[
+        structlog.dev.ConsoleRenderer()
+    ],
+    logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
+)
 logger = structlog.get_logger()
 
 app = Server("steering-hub-mcp")
@@ -296,8 +304,6 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     agent_id = args.get("agent_id", "mcp-agent")
     repo = args.get("repo", "")
     task_description = args.get("task_description", "")
-    import time
-    start_time = time.time()
 
     # Resolve category_id if category_code provided
     category_id = None
@@ -333,14 +339,6 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
 
     # Take top N
     filtered_results = filtered_results[:limit]
-
-    # 异步记录查询日志
-    response_time_ms = int((time.time() - start_time) * 1000)
-    asyncio.create_task(client.log_search_query(
-        query=query, mode="hybrid", results=filtered_results,
-        agent_id=agent_id, repo=repo, task_description=task_description,
-        response_time_ms=response_time_ms
-    ))
 
     lines = [f"Found {len(filtered_results)} steering(s):\n"]
     for r in filtered_results:
@@ -417,6 +415,9 @@ async def handle_record_usage(args: dict) -> list[types.ContentBlock]:
 # ============================================================
 
 def main():
+    # Prevent stdout buffering issues in MCP stdio communication
+    sys.stdout.reconfigure(line_buffering=True)
+
     async def run():
         async with stdio_server() as (read_stream, write_stream):
             await app.run(read_stream, write_stream, app.create_initialization_options())
@@ -429,14 +430,14 @@ if __name__ == "__main__":
 
 
 async def handle_report_search_failure(args: dict) -> list[types.ContentBlock]:
-    log_id = int(args["log_id"])
+    query_id = int(args["log_id"])  # External API still uses log_id, but internally it's query_id
     reason = args["reason"]
     expected_topic = args.get("expected_topic", "")
-    await client.report_search_failure(log_id, reason, expected_topic)
-    return [TextContent(type="text", text=f"Search failure reported (log_id={log_id}, reason={reason}). Thank you for the feedback — this helps improve the system.")]
+    await client.report_search_failure(query_id, reason, expected_topic)
+    return [TextContent(type="text", text=f"Search failure reported (query_id={query_id}, reason={reason}). Thank you for the feedback — this helps improve the system.")]
 
 
 async def handle_report_search_success(args: dict) -> list[types.ContentBlock]:
-    log_id = int(args["log_id"])
-    await client.report_search_success(log_id)
-    return [TextContent(type="text", text=f"Search success reported (log_id={log_id}).")]
+    query_id = int(args["log_id"])  # External API still uses log_id, but internally it's query_id
+    await client.report_search_success(query_id)
+    return [TextContent(type="text", text=f"Search success reported (query_id={query_id}).")]
