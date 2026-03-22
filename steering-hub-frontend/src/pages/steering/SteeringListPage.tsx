@@ -166,7 +166,7 @@ export default function SteeringListPage() {
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60, flexShrink: 0 }}>版本</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 120, flexShrink: 0 }}>可检索性</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>更新时间</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 160, flexShrink: 0 }}>操作</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>操作</Typography.Text>
             </div>
             {/* Rows */}
             {data?.records?.map((record) => (
@@ -231,7 +231,7 @@ export default function SteeringListPage() {
                   })()}
                 </div>
                 <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0 }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
-                <Flex gap={4} style={{ width: 160, flexShrink: 0 }}>
+                <Flex gap={4} style={{ width: 100, flexShrink: 0 }}>
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (
                     <Button type="link" size="small" onClick={() => handleReview(record.id, 'submit')} style={{ fontSize: 12 }}>提交审核</Button>
