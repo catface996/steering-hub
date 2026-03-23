@@ -64,16 +64,38 @@ export default function RepoListPage() {
       <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>仓库管理</Typography.Text>
     );
     setActions(
-      <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
-        注册仓库
-      </Button>
+      <Flex gap={12} align="center">
+        <Input
+          placeholder="搜索仓库名称"
+          value={filterName}
+          onChange={(e) => { setFilterName(e.target.value); setPage(0); }}
+          style={{ width: 200 }}
+          allowClear
+        />
+        <Input
+          placeholder="所属团队"
+          value={filterTeam}
+          onChange={(e) => { setFilterTeam(e.target.value); setPage(0); }}
+          style={{ width: 180 }}
+          allowClear
+        />
+        <Select
+          placeholder="启用状态"
+          value={filterEnabled}
+          onChange={(v) => { setFilterEnabled(v); setPage(0); }}
+          style={{ width: 130 }}
+          allowClear
+          options={[
+            { label: '已启用', value: true },
+            { label: '已停用', value: false },
+          ]}
+        />
+        <Button type="primary" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
+          新建仓库
+        </Button>
+      </Flex>
     );
-  }, [setBreadcrumbs, setActions]);
-
-  const handleSearch = () => {
-    setPage(0);
-    load(0);
-  };
+  }, [setBreadcrumbs, setActions, filterName, filterTeam, filterEnabled]);
 
   const handleCreate = async () => {
     try {
@@ -151,38 +173,6 @@ export default function RepoListPage() {
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Filter bar */}
-      <Flex gap={12} style={{ marginBottom: 16 }} wrap="wrap">
-        <Input
-          placeholder="搜索仓库名称"
-          value={filterName}
-          onChange={(e) => setFilterName(e.target.value)}
-          onPressEnter={handleSearch}
-          style={{ width: 200 }}
-          allowClear
-        />
-        <Input
-          placeholder="团队精确匹配"
-          value={filterTeam}
-          onChange={(e) => setFilterTeam(e.target.value)}
-          onPressEnter={handleSearch}
-          style={{ width: 180 }}
-          allowClear
-        />
-        <Select
-          placeholder="启用状态"
-          value={filterEnabled}
-          onChange={(v) => setFilterEnabled(v)}
-          style={{ width: 130 }}
-          allowClear
-          options={[
-            { label: '已启用', value: true },
-            { label: '已停用', value: false },
-          ]}
-        />
-        <Button type="primary" onClick={handleSearch}>搜索</Button>
-      </Flex>
-
       {/* Table */}
       <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: '#0d0d14' }}>
         {loading ? (
