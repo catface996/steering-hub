@@ -218,7 +218,7 @@ export default function RepoListPage() {
                     </Tag>
                   </td>
                   <td style={tdStyle} onClick={(e) => e.stopPropagation()}>
-                    <Flex gap={8}>
+                    <Flex gap={8} align="center">
                       <Switch
                         checked={repo.enabled}
                         size="small"
