@@ -1,4 +1,4 @@
-import { get, post, put, patch, del } from '../utils/request';
+import { get, post, put, del } from '../utils/request';
 import type { Repo, RepoSteeringBinding, RepoBindingItem, PageResult } from '../types';
 
 export interface CreateRepoParams {
@@ -57,7 +57,7 @@ export const repoService = {
     put<Repo>(`/api/v1/web/repos/${id}`, params).then((r) => r.data),
 
   toggle: (id: number) =>
-    patch<Repo>(`/api/v1/web/repos/${id}/toggle`).then((r) => r.data),
+    post<Repo>(`/api/v1/web/repos/${id}/toggle`).then((r) => r.data),
 
   delete: (id: number) =>
     del(`/api/v1/web/repos/${id}`),

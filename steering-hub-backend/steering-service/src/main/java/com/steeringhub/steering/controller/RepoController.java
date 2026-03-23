@@ -73,7 +73,7 @@ public class RepoController {
     }
 
     @Operation(summary = "切换仓库启用/停用状态")
-    @PatchMapping("/{id}/toggle")
+    @PostMapping("/{id}/toggle")
     public Result<Repo> toggleRepo(@PathVariable Long id) {
         return Result.ok(repoService.toggleRepo(id));
     }
