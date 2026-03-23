@@ -28,6 +28,8 @@ public class SteeringQueryLog implements Serializable {
 
     private String agentId;
 
+    private String source;
+
     private String repo;
 
     private String taskDescription;

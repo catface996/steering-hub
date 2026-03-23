@@ -200,6 +200,16 @@ public class WebSearchController {
         return Result.ok(PageResult.of(records, total, page, size));
     }
 
+    @Operation(summary = "获取检索日志详情")
+    @GetMapping("/logs/{id}")
+    public Result<SteeringQueryLog> getQueryLogById(@PathVariable Long id) {
+        SteeringQueryLog log = steeringQueryLogMapper.selectById(id);
+        if (log == null) {
+            return Result.fail("日志不存在");
+        }
+        return Result.ok(log);
+    }
+
     @Operation(summary = "获取无效查询记录")
     @GetMapping("/log/failures")
     public Result<List<SteeringQueryLog>> getFailureLogs(

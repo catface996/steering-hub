@@ -64,6 +64,7 @@ public class McpSearchController {
             queryLog.setRepo(request.getRepo());
             queryLog.setTaskDescription(taskDescription);
             queryLog.setResponseTimeMs((int) responseTimeMs);
+            queryLog.setSource("MCP");
 
             steeringQueryLogMapper.insert(queryLog);
             response.setLogId(queryLog.getId());

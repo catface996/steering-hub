@@ -17,4 +17,6 @@ export const queryLogService = {
     });
     return get<PageResult<QueryLog>>(`/api/v1/web/search/logs?${query}`).then((r) => r.data);
   },
+  getById: (id: number) =>
+    get<QueryLog>(`/api/v1/web/search/logs/${id}`).then((r) => r.data),
 };

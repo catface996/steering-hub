@@ -147,6 +147,7 @@ export interface QueryLog {
   resultCount?: number
   resultSteeringIds?: string
   agentId?: string
+  source?: string | null
   repo?: string
   taskDescription?: string
   responseTimeMs?: number
