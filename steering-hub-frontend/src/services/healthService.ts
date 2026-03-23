@@ -77,5 +77,5 @@ export const healthService = {
   },
 
   compareSpecs: (idA: number, idB: number) =>
-    get<CompareVO>(`/api/v1/steerings/compare?idA=${idA}&idB=${idB}`).then((r) => r.data),
+    get<CompareVO>(`/api/v1/web/steerings/compare?idA=${idA}&idB=${idB}`).then((r) => r.data),
 };
