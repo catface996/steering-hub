@@ -157,6 +157,19 @@ export interface QueryLog {
   createdAt: string
 }
 
+export interface HitSteering {
+  id: number
+  title: string
+  contentSummary?: string
+  status?: string
+  currentVersion?: number
+  tags?: string
+}
+
+export interface QueryLogDetail extends QueryLog {
+  hitSteerings: HitSteering[]
+}
+
 export interface ApiKeyItem {
   id: number
   name: string

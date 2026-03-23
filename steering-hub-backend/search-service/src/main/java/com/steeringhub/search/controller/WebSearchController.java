@@ -1,11 +1,17 @@
 package com.steeringhub.search.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.steeringhub.common.response.Result;
+import com.steeringhub.search.dto.HitSteeringVO;
+import com.steeringhub.search.dto.QueryLogDetailVO;
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
 import com.steeringhub.search.dto.SteeringQualityReport;
 import com.steeringhub.search.service.SearchService;
+import com.steeringhub.steering.entity.Steering;
 import com.steeringhub.steering.entity.SteeringQueryLog;
+import com.steeringhub.steering.mapper.SteeringMapper;
 import com.steeringhub.steering.mapper.SteeringQueryLogMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +37,8 @@ public class WebSearchController {
 
     private final SearchService searchService;
     private final SteeringQueryLogMapper steeringQueryLogMapper;
+    private final SteeringMapper steeringMapper;
+    private final ObjectMapper objectMapper;
 
     @Operation(summary = "混合检索规范（语义 + 全文），供 Web 前端用户调用，使用 JWT 鉴权")
     @GetMapping
@@ -200,14 +210,60 @@ public class WebSearchController {
         return Result.ok(PageResult.of(records, total, page, size));
     }
 
-    @Operation(summary = "获取检索日志详情")
+    @Operation(summary = "获取检索日志详情（含命中规范列表）")
     @GetMapping("/logs/{id}")
-    public Result<SteeringQueryLog> getQueryLogById(@PathVariable Long id) {
+    public Result<QueryLogDetailVO> getQueryLogById(@PathVariable Long id) {
         SteeringQueryLog log = steeringQueryLogMapper.selectById(id);
         if (log == null) {
             return Result.fail("日志不存在");
         }
-        return Result.ok(log);
+        QueryLogDetailVO vo = new QueryLogDetailVO();
+        // copy all fields
+        vo.setId(log.getId());
+        vo.setQueryText(log.getQueryText());
+        vo.setSearchMode(log.getSearchMode());
+        vo.setResultCount(log.getResultCount());
+        vo.setResultSteeringIds(log.getResultSteeringIds());
+        vo.setAgentId(log.getAgentId());
+        vo.setSource(log.getSource());
+        vo.setRepo(log.getRepo());
+        vo.setTaskDescription(log.getTaskDescription());
+        vo.setResponseTimeMs(log.getResponseTimeMs());
+        vo.setIsEffective(log.getIsEffective());
+        vo.setFailureReason(log.getFailureReason());
+        vo.setExpectedTopic(log.getExpectedTopic());
+        vo.setCreatedAt(log.getCreatedAt());
+
+        // parse resultSteeringIds and fetch steering details
+        List<HitSteeringVO> hitSteerings = new ArrayList<>();
+        String idsJson = log.getResultSteeringIds();
+        if (idsJson != null && !idsJson.isBlank()) {
+            try {
+                List<Long> ids = objectMapper.readValue(idsJson, new TypeReference<List<Long>>() {});
+                if (!ids.isEmpty()) {
+                    List<Steering> steerings = steeringMapper.selectBatchIds(ids);
+                    for (Long sid : ids) {
+                        steerings.stream()
+                            .filter(s -> s.getId().equals(sid))
+                            .findFirst()
+                            .ifPresent(s -> {
+                                HitSteeringVO h = new HitSteeringVO();
+                                h.setId(s.getId());
+                                h.setTitle(s.getTitle());
+                                String c = s.getContent();
+                                h.setContentSummary(c != null && c.length() > 200 ? c.substring(0, 200) + "…" : c);
+                                h.setStatus(s.getStatus() != null ? s.getStatus().name() : null);
+                                h.setCurrentVersion(s.getCurrentVersion());
+                                h.setTags(s.getTags());
+                                hitSteerings.add(h);
+                            });
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        vo.setHitSteerings(hitSteerings);
+        return Result.ok(vo);
     }
 
     @Operation(summary = "获取无效查询记录")

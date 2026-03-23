@@ -1,5 +1,5 @@
 import { get } from '../utils/request';
-import type { QueryLog, PageResult } from '../types';
+import type { QueryLog, QueryLogDetail, PageResult } from '../types';
 
 export interface QueryLogParams {
   query?: string;
@@ -18,5 +18,5 @@ export const queryLogService = {
     return get<PageResult<QueryLog>>(`/api/v1/web/search/logs?${query}`).then((r) => r.data);
   },
   getById: (id: number) =>
-    get<QueryLog>(`/api/v1/web/search/logs/${id}`).then((r) => r.data),
+    get<QueryLogDetail>(`/api/v1/web/search/logs/${id}`).then((r) => r.data),
 };

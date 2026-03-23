@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Input, Button, Tag, Flex, Spin, DatePicker, Drawer, Descriptions } from 'antd';
+import { Typography, Input, Button, Tag, Flex, Spin, DatePicker } from 'antd';
 import { Search } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useHeader } from '../../contexts/HeaderContext';
@@ -28,12 +28,6 @@ function highlight(text: string, keyword: string) {
   );
 }
 
-function SourceTag({ source }: { source?: string | null }) {
-  if (source === 'MCP') return <Tag color="blue" style={{ borderRadius: 100, fontSize: 12 }}>MCP</Tag>;
-  if (source === 'WEB' || source === 'Web') return <Tag color="green" style={{ borderRadius: 100, fontSize: 12 }}>Web</Tag>;
-  return <Tag color="default" style={{ borderRadius: 100, fontSize: 12 }}>未知</Tag>;
-}
-
 export default function QueryLogPage() {
   const { setBreadcrumbs, setActions } = useHeader();
   const navigate = useNavigate();
@@ -50,28 +44,11 @@ export default function QueryLogPage() {
   const [filterDates, setFilterDates] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
   const [searchTrigger, setSearchTrigger] = useState(0);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [detailLog, setDetailLog] = useState<QueryLog | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-
   const handleSearch = () => {
     setFilterKeyword(inputKeyword);
     setFilterDates(inputDates);
     setPage(0);
     setSearchTrigger(t => t + 1);
-  };
-
-  const handleRowClick = (log: QueryLog) => {
-    setDrawerOpen(true);
-    setDetailLog(log);
-    setDetailLoading(true);
-    queryLogService.getById(log.id).then((data) => {
-      setDetailLog(data);
-    }).catch(() => {
-      // keep whatever we already have from the list
-    }).finally(() => {
-      setDetailLoading(false);
-    });
   };
 
   useEffect(() => {
@@ -137,11 +114,6 @@ export default function QueryLogPage() {
     borderBottom: '1px solid #1e1e2a',
   };
 
-  const resultSteeringIds: number[] = (() => {
-    if (!detailLog?.resultSteeringIds) return [];
-    try { return JSON.parse(detailLog.resultSteeringIds); } catch { return []; }
-  })();
-
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: '#0d0d14' }}>
@@ -166,7 +138,7 @@ export default function QueryLogPage() {
               ) : logs.map((log) => (
                 <tr
                   key={log.id}
-                  onClick={() => handleRowClick(log)}
+                  onClick={() => navigate(`/query-logs/${log.id}`)}
                   style={{ cursor: 'pointer' }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = '#13131f')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = '')}
@@ -189,7 +161,13 @@ export default function QueryLogPage() {
                     {log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN', { hour12: false }) : '-'}
                   </td>
                   <td style={tdStyle}>
-                    <SourceTag source={log.source} />
+                    {log.source === 'MCP' ? (
+                      <Tag color="blue" style={{ borderRadius: 100, fontSize: 12 }}>MCP</Tag>
+                    ) : log.source === 'WEB' || log.source === 'Web' ? (
+                      <Tag color="green" style={{ borderRadius: 100, fontSize: 12 }}>Web</Tag>
+                    ) : (
+                      <Tag color="default" style={{ borderRadius: 100, fontSize: 12 }}>未知</Tag>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -205,108 +183,6 @@ export default function QueryLogPage() {
         onPageChange={setPage}
         label="条日志"
       />
-
-      <Drawer
-        title={<span style={{ color: '#f4f4f5' }}>检索日志详情</span>}
-        placement="right"
-        width={640}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        styles={{
-          header: { background: '#0d0d14', borderBottom: '1px solid #1e1e2a' },
-          body: { background: '#0d0d14', padding: 24 },
-          mask: { background: 'rgba(0,0,0,0.6)' },
-        }}
-      >
-        {detailLoading ? (
-          <Flex justify="center" style={{ padding: 48 }}><Spin /></Flex>
-        ) : detailLog ? (
-          <Flex vertical gap={24}>
-            <Descriptions
-              column={1}
-              size="small"
-              labelStyle={{ color: '#71717a', width: 120 }}
-              contentStyle={{ color: '#e4e4e7' }}
-            >
-              <Descriptions.Item label="ID">{detailLog.id}</Descriptions.Item>
-              <Descriptions.Item label="来源"><SourceTag source={detailLog.source} /></Descriptions.Item>
-              <Descriptions.Item label="查询时间">
-                {detailLog.createdAt ? new Date(detailLog.createdAt).toLocaleString('zh-CN', { hour12: false }) : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="命中数量">
-                <Tag color={detailLog.resultCount === 0 ? 'error' : 'success'} style={{ borderRadius: 100 }}>
-                  {detailLog.resultCount ?? '-'}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="响应时间">
-                {detailLog.responseTimeMs != null ? `${detailLog.responseTimeMs} ms` : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="检索模式">{detailLog.searchMode || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Agent ID">{detailLog.agentId || '-'}</Descriptions.Item>
-              <Descriptions.Item label="仓库">{detailLog.repo || '-'}</Descriptions.Item>
-              <Descriptions.Item label="是否有效">
-                {detailLog.isEffective == null ? (
-                  <Tag color="default" style={{ borderRadius: 100 }}>待评估</Tag>
-                ) : detailLog.isEffective ? (
-                  <Tag color="success" style={{ borderRadius: 100 }}>有效</Tag>
-                ) : (
-                  <Tag color="error" style={{ borderRadius: 100 }}>无效</Tag>
-                )}
-              </Descriptions.Item>
-              {detailLog.failureReason && (
-                <Descriptions.Item label="失败原因">
-                  <span style={{ color: '#f87171' }}>{detailLog.failureReason}</span>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-
-            <div>
-              <div style={{ color: '#71717a', fontSize: 12, marginBottom: 8 }}>查询内容</div>
-              <div style={{ background: '#12121c', border: '1px solid #1e1e2a', borderRadius: 8, padding: '10px 14px', color: '#e4e4e7', fontSize: 14, lineHeight: 1.6, wordBreak: 'break-all' }}>
-                {detailLog.queryText}
-              </div>
-            </div>
-
-            {detailLog.taskDescription && (
-              <div>
-                <div style={{ color: '#71717a', fontSize: 12, marginBottom: 8 }}>任务描述</div>
-                <div style={{ background: '#12121c', border: '1px solid #1e1e2a', borderRadius: 8, padding: '10px 14px', color: '#a1a1aa', fontSize: 13, lineHeight: 1.6 }}>
-                  {detailLog.taskDescription}
-                </div>
-              </div>
-            )}
-
-            {detailLog.expectedTopic && (
-              <div>
-                <div style={{ color: '#71717a', fontSize: 12, marginBottom: 8 }}>期望话题</div>
-                <div style={{ background: '#12121c', border: '1px solid #1e1e2a', borderRadius: 8, padding: '10px 14px', color: '#a1a1aa', fontSize: 13 }}>
-                  {detailLog.expectedTopic}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <div style={{ color: '#71717a', fontSize: 12, marginBottom: 8 }}>检索结果</div>
-              {resultSteeringIds.length > 0 ? (
-                <Flex wrap gap={8}>
-                  {resultSteeringIds.map((sid) => (
-                    <Tag
-                      key={sid}
-                      color="purple"
-                      style={{ borderRadius: 100, fontSize: 12, cursor: 'pointer' }}
-                      onClick={() => { setDrawerOpen(false); navigate(`/steerings/${sid}`); }}
-                    >
-                      ID: {sid}
-                    </Tag>
-                  ))}
-                </Flex>
-              ) : (
-                <span style={{ color: '#52525b', fontSize: 13 }}>结果未持久化，仅记录元数据</span>
-              )}
-            </div>
-          </Flex>
-        ) : null}
-      </Drawer>
     </div>
   );
 }
