@@ -321,10 +321,11 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     if tags:
         enhanced_query = f"{query} {' '.join(tags)}"
 
-    results = await client.search_steerings(enhanced_query, category_id, limit * 2)  # Fetch more for filtering
+    results, log_id = await client.search_steerings(enhanced_query, category_id, limit * 2, repo=repo if repo else None)  # Fetch more for filtering
 
     if not results:
-        return [TextContent(type="text", text="No active steerings found matching your query.")]
+        footer = f"\n\n---\n*Search log ID: {log_id} — Call report_search_failure(log_id={log_id}, reason=...) if needed.*" if log_id else ""
+        return [TextContent(type="text", text=f"No active steerings found matching your query.{footer}")]
 
     # Post-filter and boost results matching tags
     filtered_results = []
@@ -353,6 +354,8 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
             f"{r.get('content', '')[:500]}{'...' if len(r.get('content','')) > 500 else ''}\n"
             f"---\n"
         )
+    if log_id:
+        lines.append(f"\n---\n*Search log ID: {log_id} — Call report_search_failure(log_id={log_id}, reason=...) if results are not helpful.*")
     return [TextContent(type="text", text="\n".join(lines))]
 
 

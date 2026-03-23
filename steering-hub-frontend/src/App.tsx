@@ -18,6 +18,8 @@ import CompliancePage from './pages/compliance/CompliancePage';
 import CategoryPage from './pages/category/CategoryPage';
 import ApiKeyPage from './pages/settings/ApiKeyPage';
 import StopWordPage from './pages/settings/StopWordPage';
+import RepoListPage from './pages/repo/RepoListPage';
+import RepoDetailPage from './pages/repo/RepoDetailPage';
 
 function ThemedApp() {
   const { primaryColor } = useThemeColor();
@@ -44,6 +46,8 @@ function ThemedApp() {
             <Route path="analytics/failures" element={<FailureListPage />} />
             <Route path="settings/api-keys" element={<ApiKeyPage />} />
             <Route path="settings/stop-words" element={<StopWordPage />} />
+            <Route path="repos" element={<RepoListPage />} />
+            <Route path="repos/:id" element={<RepoDetailPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

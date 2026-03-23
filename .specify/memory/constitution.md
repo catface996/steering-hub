@@ -81,4 +81,37 @@
 2. 代码符合规范中的强制要求（无 ❌ 违规）
 3. 分层依赖正确，无跨层调用
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-22
+### 实现后合规自查（Mandatory Post-Implementation Check）
+
+**每个 Feature 实现完成后，必须执行以下自查，发现违规立即修复：**
+
+#### 后端自查清单
+```bash
+# 1. QueryWrapper 违规检测（不应有任何结果）
+grep -rn "QueryWrapper\|LambdaQueryWrapper" \
+  steering-hub-backend/*/src/main/java/ | grep -v "//.*QueryWrapper"
+
+# 2. @Transactional 位置检测（不应出现在 Controller/Mapper 层）
+grep -rn "@Transactional" \
+  steering-hub-backend/*/src/main/java/*/controller/ \
+  steering-hub-backend/*/src/main/java/*/mapper/ 2>/dev/null
+
+# 3. Controller 注入实现类检测（应注入接口而非 Impl）
+grep -rn "private.*ServiceImpl\|private.*RepositoryImpl" \
+  steering-hub-backend/*/src/main/java/*/controller/ 2>/dev/null
+```
+
+#### 前端自查清单
+```bash
+# 1. 分页组件违规检测（不应自行实现分页，必须用 Pagination.tsx）
+grep -rn "Pagination\b" steering-hub-frontend/src/pages/ | grep -v "import.*Pagination"
+
+# 2. API 路径规范检测（Web 接口必须含 /web/，MCP 接口含 /mcp/）
+grep -rn "api/v1/[^w]" steering-hub-frontend/src/services/ | grep -v "/web/\|/mcp/"
+
+# 3. 直接 fetch/axios 调用检测（应统一使用 request.ts 封装）
+grep -rn "axios\.\|fetch(" steering-hub-frontend/src/pages/ \
+  steering-hub-frontend/src/services/ 2>/dev/null
+```
+
+**Version**: 1.1.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-23

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.RepoSteeringMapper">
+
+    <resultMap id="repoSteeringItemMap" type="com.steeringhub.steering.dto.response.RepoSteeringItem">
+        <result property="bindingId" column="binding_id"/>
+        <result property="steeringId" column="steering_id"/>
+        <result property="steeringTitle" column="steering_title"/>
+        <result property="steeringStatus" column="steering_status"/>
+        <result property="mandatory" column="mandatory"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="repoItemMap" type="com.steeringhub.steering.dto.response.RepoItem">
+        <result property="bindingId" column="binding_id"/>
+        <result property="repoId" column="repo_id"/>
+        <result property="repoName" column="repo_name"/>
+        <result property="repoFullName" column="repo_full_name"/>
+        <result property="repoEnabled" column="repo_enabled"/>
+        <result property="mandatory" column="mandatory"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 幂等 upsert：同一 (repo_id, steering_id) 重复时更新 mandatory -->
+    <insert id="upsertBinding">
+        INSERT INTO repo_steering (repo_id, steering_id, mandatory, created_at, updated_at)
+        VALUES (#{repoId}, #{steeringId}, #{mandatory}, NOW(), NOW())
+        ON CONFLICT (repo_id, steering_id)
+        DO UPDATE SET mandatory = #{mandatory}, updated_at = NOW()
+    </insert>
+
+    <!-- 物理删除单条绑定 -->
+    <delete id="deleteByPair">
+        DELETE FROM repo_steering
+        WHERE repo_id = #{repoId} AND steering_id = #{steeringId}
+    </delete>
+
+    <!-- 仓库软删除时：物理删除该仓库所有绑定 -->
+    <delete id="deleteByRepoId">
+        DELETE FROM repo_steering WHERE repo_id = #{repoId}
+    </delete>
+
+    <!-- 按仓库分页查询绑定规范列表 -->
+    <select id="listByRepoIdPaged" resultMap="repoSteeringItemMap">
+        SELECT rs.id AS binding_id,
+               rs.steering_id,
+               s.title AS steering_title,
+               s.status AS steering_status,
+               rs.mandatory,
+               rs.created_at
+        FROM repo_steering rs
+        JOIN steering s ON s.id = rs.steering_id
+        WHERE rs.repo_id = #{repoId}
+        ORDER BY rs.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countByRepoId" resultType="long">
+        SELECT COUNT(*) FROM repo_steering WHERE repo_id = #{repoId}
+    </select>
+
+    <!-- 按规范反向分页查询绑定仓库列表 -->
+    <select id="listBySteeringIdPaged" resultMap="repoItemMap">
+        SELECT rs.id AS binding_id,
+               rs.repo_id,
+               r.name AS repo_name,
+               r.full_name AS repo_full_name,
+               r.enabled AS repo_enabled,
+               rs.mandatory,
+               rs.created_at
+        FROM repo_steering rs
+        JOIN repo r ON r.id = rs.repo_id
+        WHERE rs.steering_id = #{steeringId}
+        ORDER BY rs.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countBySteeringId" resultType="long">
+        SELECT COUNT(*) FROM repo_steering WHERE steering_id = #{steeringId}
+    </select>
+
+    <!-- 查询单条绑定关系 -->
+    <select id="findByPair" resultType="com.steeringhub.steering.entity.RepoSteering">
+        SELECT id, repo_id, steering_id, mandatory, created_at, updated_at
+        FROM repo_steering
+        WHERE repo_id = #{repoId} AND steering_id = #{steeringId}
+        LIMIT 1
+    </select>
+
+    <!-- 查询仓库所有绑定（不分页，用于 boost 逻辑） -->
+    <select id="listAllByRepoId" resultType="com.steeringhub.steering.entity.RepoSteering">
+        SELECT id, repo_id, steering_id, mandatory, created_at, updated_at
+        FROM repo_steering
+        WHERE repo_id = #{repoId}
+    </select>
+
+</mapper>

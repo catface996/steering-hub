@@ -15,4 +15,7 @@ public class SearchRequest {
 
     /** semantic | fulltext | hybrid */
     private String mode = "hybrid";
+
+    /** 仓库 full_name，可选，如 "org/my-service"，传入后对绑定规范进行 boost 排序 */
+    private String repo;
 }

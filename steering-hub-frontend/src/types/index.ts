@@ -75,6 +75,29 @@ export interface Repo {
   url?: string
   language?: string
   team?: string
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RepoSteeringBinding {
+  steeringId: number
+  steeringTitle: string
+  steeringStatus: string
+  mandatory: boolean
+  bindingId: number
+  createdAt: string
+  warning?: string
+}
+
+export interface RepoBindingItem {
+  bindingId: number
+  repoId: number
+  repoName: string
+  repoFullName: string
+  repoEnabled: boolean
+  mandatory: boolean
+  createdAt: string
 }
 
 export interface ComplianceReport {

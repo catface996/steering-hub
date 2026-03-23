@@ -20,8 +20,10 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
         // 自动填充 createdAt
         this.strictInsertFill(metaObject, "createdAt", OffsetDateTime.class, now);
 
-        // 自动填充 updatedAt
-        this.strictInsertFill(metaObject, "updatedAt", OffsetDateTime.class, now);
+        // 自动填充 updatedAt（仅当实体含该字段时）
+        if (metaObject.hasSetter("updatedAt")) {
+            this.strictInsertFill(metaObject, "updatedAt", OffsetDateTime.class, now);
+        }
 
         // 自动填充 usedAt (用于 SteeringUsage 实体)
         this.strictInsertFill(metaObject, "usedAt", OffsetDateTime.class, now);
@@ -29,7 +31,9 @@ public class MybatisMetaObjectHandler implements MetaObjectHandler {
 
     @Override
     public void updateFill(MetaObject metaObject) {
-        // 自动填充 updatedAt
-        this.strictUpdateFill(metaObject, "updatedAt", OffsetDateTime.class, OffsetDateTime.now());
+        // 自动填充 updatedAt（仅当实体含该字段时）
+        if (metaObject.hasSetter("updatedAt")) {
+            this.strictUpdateFill(metaObject, "updatedAt", OffsetDateTime.class, OffsetDateTime.now());
+        }
     }
 }

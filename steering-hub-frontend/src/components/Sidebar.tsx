@@ -13,6 +13,7 @@ import {
   Compass,
   Filter,
   BarChart3,
+  Database,
 } from 'lucide-react';
 
 const drawerWidth = 280;
@@ -31,6 +32,7 @@ const mainItems: NavItem[] = [
   { icon: <ShieldCheck size={20} />, label: '合规审查', path: '/compliance', iconColor: '#f59e0b' },
   { icon: <Tag size={20} />, label: '分类管理', path: '/categories', iconColor: '#4ade80' },
   { icon: <BarChart3 size={20} />, label: '使用分析', path: '/analytics', iconColor: '#f472b6' },
+  { icon: <Database size={20} />, label: '仓库管理', path: '/repos', iconColor: '#38bdf8' },
 ];
 
 const settingsItems: NavItem[] = [

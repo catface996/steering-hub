@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Button, Tag, Card, Flex, Spin, Modal, App, Progress } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
-import type { Steering, SteeringStatus } from '../../types';
+import { repoService } from '../../services/repoService';
+import type { Steering, SteeringStatus, RepoBindingItem } from '../../types';
+import Pagination from '../../components/Pagination';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
@@ -26,6 +28,25 @@ export default function SteeringDetailPage() {
   const [loading, setLoading] = useState(true);
   const [deprecateOpen, setDeprecateOpen] = useState(false);
 
+  const [repoBindings, setRepoBindings] = useState<RepoBindingItem[]>([]);
+  const [repoTotal, setRepoTotal] = useState(0);
+  const [repoPage, setRepoPage] = useState(0);
+  const [repoBindingsLoading, setRepoBindingsLoading] = useState(false);
+  const REPO_PAGE_SIZE = 20;
+
+  const loadRepoBindings = useCallback(async (p = repoPage) => {
+    setRepoBindingsLoading(true);
+    try {
+      const data = await repoService.listReposBySteering(Number(id), p + 1, REPO_PAGE_SIZE);
+      setRepoBindings(data.records);
+      setRepoTotal(Number(data.total));
+    } catch {
+      // toasted
+    } finally {
+      setRepoBindingsLoading(false);
+    }
+  }, [id, repoPage]);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -39,6 +60,8 @@ export default function SteeringDetailPage() {
     };
     load();
   }, [id]);
+
+  useEffect(() => { loadRepoBindings(repoPage); }, [repoPage]);
 
   useEffect(() => {
     if (!steering) return;
@@ -182,6 +205,64 @@ export default function SteeringDetailPage() {
           )}
         </div>
       </Flex>
+
+      {/* Repos binding list */}
+      <Card style={{ borderRadius: 12, marginTop: 20, padding: 0, overflow: 'hidden' }} bodyStyle={{ padding: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e1e2a' }}>
+          <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>引用仓库</Typography.Text>
+          <Typography.Text style={{ color: '#71717a', fontSize: 13, marginLeft: 8 }}>绑定了此规范的仓库列表</Typography.Text>
+        </div>
+        {repoBindingsLoading ? (
+          <Flex justify="center" style={{ padding: 40 }}><Spin /></Flex>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                {['仓库名称', 'full_name', '强制', '状态', '绑定时间'].map((h) => (
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, color: '#a1a1aa', fontWeight: 500, background: '#12121c', borderBottom: '1px solid #1e1e2a' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {repoBindings.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: '24px 16px', textAlign: 'center', color: '#71717a', fontSize: 14 }}>暂无引用仓库</td>
+                </tr>
+              ) : repoBindings.map((b) => (
+                <tr key={b.bindingId}>
+                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a', fontSize: 14, color: '#e4e4e7' }}>
+                    <Typography.Text
+                      style={{ color: '#818cf8', cursor: 'pointer' }}
+                      onClick={() => navigate(`/repos/${b.repoId}`)}
+                    >
+                      {b.repoName}
+                    </Typography.Text>
+                  </td>
+                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a', fontSize: 13, color: '#a1a1aa' }}>{b.repoFullName}</td>
+                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a' }}>
+                    {b.mandatory
+                      ? <Tag color="blue" style={{ borderRadius: 100 }}>强制</Tag>
+                      : <Typography.Text style={{ color: '#71717a' }}>-</Typography.Text>}
+                  </td>
+                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a' }}>
+                    <Tag color={b.repoEnabled ? 'success' : 'default'} style={{ borderRadius: 100 }}>
+                      {b.repoEnabled ? '启用' : '停用'}
+                    </Tag>
+                  </td>
+                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a', fontSize: 12, color: '#71717a' }}>{b.createdAt}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <Pagination
+          count={repoTotal}
+          page={repoPage}
+          rowsPerPage={REPO_PAGE_SIZE}
+          onPageChange={setRepoPage}
+          label="个仓库"
+        />
+      </Card>
 
       {/* Deprecate Modal */}
       <Modal

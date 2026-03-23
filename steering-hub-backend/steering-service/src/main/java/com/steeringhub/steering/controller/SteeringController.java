@@ -2,12 +2,15 @@ package com.steeringhub.steering.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.steeringhub.common.response.PageResult;
 import com.steeringhub.common.response.Result;
 import com.steeringhub.steering.dto.request.CreateSteeringRequest;
 import com.steeringhub.steering.dto.request.ReviewSteeringRequest;
 import com.steeringhub.steering.dto.request.UpdateSteeringRequest;
+import com.steeringhub.steering.dto.response.RepoItem;
 import com.steeringhub.steering.dto.response.SteeringDetailResponse;
 import com.steeringhub.steering.entity.Steering;
+import com.steeringhub.steering.service.RepoService;
 import com.steeringhub.steering.service.SteeringService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class SteeringController {
 
     private final SteeringService steeringService;
+    private final RepoService repoService;
 
     @Operation(summary = "创建规范")
     @PostMapping
@@ -74,5 +78,14 @@ public class SteeringController {
     public Result<Void> deleteSteering(@PathVariable Long id) {
         steeringService.deleteSteering(id);
         return Result.ok();
+    }
+
+    @Operation(summary = "反向查询：查看某规范被哪些仓库绑定（分页）")
+    @GetMapping("/{steeringId}/repos")
+    public Result<PageResult<RepoItem>> listReposBySteering(
+            @PathVariable Long steeringId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return Result.ok(repoService.listReposBySteering(steeringId, page, size));
     }
 }
