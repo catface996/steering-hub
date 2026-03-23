@@ -140,6 +140,22 @@ export interface ApiResult<T> {
   data: T
 }
 
+export interface QueryLog {
+  id: number
+  queryText: string
+  searchMode?: string
+  resultCount?: number
+  resultSteeringIds?: string
+  agentId?: string
+  repo?: string
+  taskDescription?: string
+  responseTimeMs?: number
+  isEffective?: boolean
+  failureReason?: string
+  expectedTopic?: string
+  createdAt: string
+}
+
 export interface ApiKeyItem {
   id: number
   name: string

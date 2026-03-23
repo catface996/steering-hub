@@ -13,10 +13,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.steeringhub.common.response.PageResult;
 
 @Tag(name = "Web 检索管理")
 @RestController
@@ -155,6 +158,46 @@ public class WebSearchController {
         analytics.put("avgResponseTimeMs", avgResponseTime.get("avg_ms"));
 
         return Result.ok(analytics);
+    }
+
+    @Operation(summary = "分页查询检索日志")
+    @GetMapping("/logs")
+    public Result<PageResult<SteeringQueryLog>> getQueryLogs(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        var countWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SteeringQueryLog>();
+        if (query != null && !query.isBlank()) {
+            countWrapper.like(SteeringQueryLog::getQueryText, query);
+        }
+        if (startDate != null && !startDate.isBlank()) {
+            countWrapper.ge(SteeringQueryLog::getCreatedAt,
+                    LocalDate.parse(startDate).atStartOfDay().atOffset(ZoneOffset.UTC));
+        }
+        if (endDate != null && !endDate.isBlank()) {
+            countWrapper.le(SteeringQueryLog::getCreatedAt,
+                    LocalDate.parse(endDate).plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC));
+        }
+        long total = steeringQueryLogMapper.selectCount(countWrapper);
+
+        var listWrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SteeringQueryLog>();
+        if (query != null && !query.isBlank()) {
+            listWrapper.like(SteeringQueryLog::getQueryText, query);
+        }
+        if (startDate != null && !startDate.isBlank()) {
+            listWrapper.ge(SteeringQueryLog::getCreatedAt,
+                    LocalDate.parse(startDate).atStartOfDay().atOffset(ZoneOffset.UTC));
+        }
+        if (endDate != null && !endDate.isBlank()) {
+            listWrapper.le(SteeringQueryLog::getCreatedAt,
+                    LocalDate.parse(endDate).plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC));
+        }
+        listWrapper.orderByDesc(SteeringQueryLog::getCreatedAt)
+                   .last("LIMIT " + size + " OFFSET " + (long)(page - 1) * size);
+        List<SteeringQueryLog> records = steeringQueryLogMapper.selectList(listWrapper);
+        return Result.ok(PageResult.of(records, total, page, size));
     }
 
     @Operation(summary = "获取无效查询记录")
