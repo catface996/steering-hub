@@ -48,6 +48,7 @@ export default function QueryLogPage() {
 
   const [filterKeyword, setFilterKeyword] = useState('');
   const [filterDates, setFilterDates] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([null, null]);
+  const [searchTrigger, setSearchTrigger] = useState(0);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailLog, setDetailLog] = useState<QueryLog | null>(null);
@@ -57,6 +58,7 @@ export default function QueryLogPage() {
     setFilterKeyword(inputKeyword);
     setFilterDates(inputDates);
     setPage(0);
+    setSearchTrigger(t => t + 1);
   };
 
   const handleRowClick = (log: QueryLog) => {
@@ -88,7 +90,7 @@ export default function QueryLogPage() {
     }).finally(() => {
       setLoading(false);
     });
-  }, [page, filterKeyword, filterDates]);
+  }, [page, filterKeyword, filterDates, searchTrigger]);
 
   useEffect(() => {
     setBreadcrumbs(
