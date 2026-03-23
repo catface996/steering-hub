@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Typography, Input, Button, Tag, Flex, Spin, DatePicker, Drawer, Descriptions } from 'antd';
 import { Search } from 'lucide-react';
 import dayjs from 'dayjs';
@@ -35,6 +36,7 @@ function SourceTag({ source }: { source?: string | null }) {
 
 export default function QueryLogPage() {
   const { setBreadcrumbs, setActions } = useHeader();
+  const navigate = useNavigate();
 
   const [logs, setLogs] = useState<QueryLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -286,7 +288,14 @@ export default function QueryLogPage() {
               {resultSteeringIds.length > 0 ? (
                 <Flex wrap gap={8}>
                   {resultSteeringIds.map((sid) => (
-                    <Tag key={sid} color="purple" style={{ borderRadius: 100, fontSize: 12 }}>ID: {sid}</Tag>
+                    <Tag
+                      key={sid}
+                      color="purple"
+                      style={{ borderRadius: 100, fontSize: 12, cursor: 'pointer' }}
+                      onClick={() => { setDrawerOpen(false); navigate(`/steerings/${sid}`); }}
+                    >
+                      ID: {sid}
+                    </Tag>
                   ))}
                 </Flex>
               ) : (

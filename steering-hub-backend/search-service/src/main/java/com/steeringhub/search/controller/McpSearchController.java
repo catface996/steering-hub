@@ -51,9 +51,9 @@ public class McpSearchController {
         response.setResults(results);
 
         try {
-            String resultIds = results.stream()
+            String resultIds = "[" + results.stream()
                     .map(r -> String.valueOf(r.getSteeringId()))
-                    .collect(Collectors.joining(","));
+                    .collect(Collectors.joining(",")) + "]";
 
             SteeringQueryLog queryLog = new SteeringQueryLog();
             queryLog.setQueryText(request.getQuery());
