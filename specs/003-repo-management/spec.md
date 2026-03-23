@@ -75,7 +75,7 @@
 **仓库管理**
 
 - **FR-001**: 系统必须支持仓库的新增、查看、编辑、软删除操作。
-- **FR-002**: 仓库必须记录以下信息：名称（name）、唯一全名（full_name）、描述（description）、Git URL（url）、编程语言（language）、所属团队（team）、启用状态（active/inactive）。
+- **FR-002**: 仓库必须记录以下信息：名称（name）、唯一全名（full_name）、描述（description）、Git URL（url）、编程语言（language）、所属团队（team）、启用状态（enabled: true=active / false=inactive）。
 - **FR-003**: 系统必须支持按名称、团队、状态对仓库列表进行筛选，并支持分页。
 - **FR-004**: 系统必须支持对仓库进行启用 / 停用操作，切换后立即对 MCP 搜索生效。
 - **FR-005**: full_name 字段在系统范围内唯一，重复提交时返回明确错误。
