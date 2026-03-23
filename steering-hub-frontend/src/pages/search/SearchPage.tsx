@@ -194,6 +194,7 @@ export default function SearchPage() {
             {pagedResults.map((r) => (
               <Card
                 key={r.steeringId}
+                className="glow-card"
                 onClick={() => navigate(`/steerings/${r.steeringId}`)}
                 style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
                 hoverable

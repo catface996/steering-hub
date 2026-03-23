@@ -174,6 +174,7 @@ export default function SteeringListPage() {
               {data?.records?.map((record) => (
                 <Card
                   key={record.id}
+                  className="glow-card"
                   onClick={() => navigate(`/steerings/${record.id}`)}
                   style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
                   styles={{ body: { display: 'flex', flexDirection: 'column', flex: 1, height: '100%' } }}

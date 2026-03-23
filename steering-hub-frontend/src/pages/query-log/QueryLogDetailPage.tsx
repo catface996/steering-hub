@@ -37,7 +37,8 @@ function SteeringCard({ s }: { s: HitSteering }) {
 
   return (
     <Card
-      style={{ borderRadius: 10, cursor: 'pointer', transition: 'border-color 0.15s' }}
+      className="glow-card"
+      style={{ borderRadius: 10, cursor: 'pointer' }}
       hoverable
       onClick={() => navigate(`/steerings/${s.id}`)}
     >
