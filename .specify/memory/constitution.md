@@ -114,4 +114,30 @@ grep -rn "axios\.\|fetch(" steering-hub-frontend/src/pages/ \
   steering-hub-frontend/src/services/ 2>/dev/null
 ```
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-23
+### VI. Claude Code Session 管理（持续任务必须复用 Session）
+
+**对于持续性任务（同一项目的多轮 review、修复、迭代），必须使用命名 Session，禁止每次新建无状态调用。**
+
+#### 规则
+1. **首次启动**：使用 `--name <task-name>` 创建命名 Session，记录 Session ID
+2. **后续调用**：使用 `-r <session-name>` resume 同一 Session，CC 自行维护上下文
+3. **禁止行为**：对同一任务反复用 `--print` 无状态调用，导致 CC 遗失规范查询结果和历史决策
+4. **Session 命名规范**：`steering-hub-<task>-<date>`，如 `steering-hub-review-20260323`
+
+#### 原因
+- CC 每次无状态调用都是全新进程，不记得上次查了哪些规范、做了哪些判断
+- Review 结果无法被下一次调用继承，导致重复工作或规范遗漏
+- Session 模式让 CC 自己维护上下文，无需水滴每次手动摘要
+
+#### 调用模板
+```bash
+# 创建（首次）
+claude --name steering-hub-review-$(date +%Y%m%d) \
+  --permission-mode bypassPermissions --print "任务描述..."
+
+# 续接（后续）
+claude -r steering-hub-review-$(date +%Y%m%d) \
+  --permission-mode bypassPermissions --print "继续..."
+```
+
+**Version**: 1.2.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-23
