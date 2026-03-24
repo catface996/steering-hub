@@ -42,6 +42,10 @@ public class SteeringQueryLog implements Serializable {
 
     private String expectedTopic;
 
+    private String modelName;
+
+    private String agentName;
+
     @TableField(fill = FieldFill.INSERT)
     private OffsetDateTime createdAt;
 }

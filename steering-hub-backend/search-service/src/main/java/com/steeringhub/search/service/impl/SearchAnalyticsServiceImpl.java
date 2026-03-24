@@ -147,6 +147,8 @@ public class SearchAnalyticsServiceImpl implements SearchAnalyticsService {
         vo.setIsEffective(log.getIsEffective());
         vo.setFailureReason(log.getFailureReason());
         vo.setExpectedTopic(log.getExpectedTopic());
+        vo.setModelName(log.getModelName());
+        vo.setAgentName(log.getAgentName());
         vo.setCreatedAt(log.getCreatedAt());
 
         List<HitSteeringVO> hitSteerings = new ArrayList<>();

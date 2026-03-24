@@ -17,7 +17,7 @@ def _get_headers() -> dict:
     return headers
 
 
-async def search_steerings(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid", repo: Optional[str] = None) -> tuple[list[dict], Optional[int]]:
+async def search_steerings(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid", repo: Optional[str] = None, model_name: Optional[str] = None, agent_name: Optional[str] = None) -> tuple[list[dict], Optional[int]]:
     """Call /api/v1/mcp/search with hybrid mode, only returns 'active' steerings.
 
     Returns:
@@ -32,6 +32,10 @@ async def search_steerings(query: str, category_id: Optional[int] = None, limit:
         params["categoryId"] = category_id
     if repo:
         params["repo"] = repo
+    if model_name:
+        params["modelName"] = model_name
+    if agent_name:
+        params["agentName"] = agent_name
 
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
         resp = await client.get("/api/v1/mcp/search", params=params)

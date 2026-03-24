@@ -154,6 +154,8 @@ export interface QueryLog {
   isEffective?: boolean
   failureReason?: string
   expectedTopic?: string
+  modelName?: string
+  agentName?: string
   createdAt: string
 }
 

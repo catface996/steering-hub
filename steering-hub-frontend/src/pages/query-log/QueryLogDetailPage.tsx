@@ -158,6 +158,16 @@ export default function QueryLogDetailPage() {
               <Descriptions.Item label="Agent ID">
                 <span style={{ wordBreak: 'break-all', fontSize: 12 }}>{detail.agentId || '-'}</span>
               </Descriptions.Item>
+              {detail.agentName && (
+                <Descriptions.Item label="Agent 名称">
+                  <Tag style={{ borderRadius: 100, fontSize: 11 }}>{detail.agentName}</Tag>
+                </Descriptions.Item>
+              )}
+              {detail.modelName && (
+                <Descriptions.Item label="模型名称">
+                  <Tag color="purple" style={{ borderRadius: 100, fontSize: 11 }}>{detail.modelName}</Tag>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="仓库">
                 <span style={{ wordBreak: 'break-all', fontSize: 12 }}>{detail.repo || '-'}</span>
               </Descriptions.Item>

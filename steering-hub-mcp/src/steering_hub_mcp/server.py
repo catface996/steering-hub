@@ -124,6 +124,14 @@ async def list_tools() -> list[Tool]:
                         "type": "string",
                         "description": "Current coding task description for context",
                     },
+                    "model_name": {
+                        "type": "string",
+                        "description": "Model name used by the calling agent (e.g. claude-sonnet-4-6, gpt-4o)",
+                    },
+                    "agent_name": {
+                        "type": "string",
+                        "description": "Agent type/name (e.g. claude-code, codex, cursor)",
+                    },
                 },
                 "required": ["query"],
             },
@@ -304,6 +312,8 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     agent_id = args.get("agent_id", "mcp-agent")
     repo = args.get("repo", "")
     task_description = args.get("task_description", "")
+    model_name = args.get("model_name", "")
+    agent_name = args.get("agent_name", "")
 
     # Resolve category_id if category_code provided
     category_id = None
@@ -321,7 +331,7 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     if tags:
         enhanced_query = f"{query} {' '.join(tags)}"
 
-    results, log_id = await client.search_steerings(enhanced_query, category_id, limit * 2, repo=repo if repo else None)  # Fetch more for filtering
+    results, log_id = await client.search_steerings(enhanced_query, category_id, limit * 2, repo=repo if repo else None, model_name=model_name if model_name else None, agent_name=agent_name if agent_name else None)  # Fetch more for filtering
 
     if not results:
         footer = f"\n\n---\n*Search log ID: {log_id} — Call report_search_failure(log_id={log_id}, reason=...) if needed.*" if log_id else ""
