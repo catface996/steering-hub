@@ -32,7 +32,6 @@ public class McpSearchController {
     @GetMapping
     public Result<SearchResponse> search(
             @Valid @ModelAttribute SearchRequest request,
-            @RequestHeader(value = "X-Agent-Id", required = false) String agentId,
             @RequestHeader(value = "X-Task-Description", required = false) String taskDescription) {
 
         long start = System.currentTimeMillis();
@@ -60,7 +59,6 @@ public class McpSearchController {
             queryLog.setSearchMode(request.getMode());
             queryLog.setResultCount(results.size());
             queryLog.setResultSteeringIds(resultIds);
-            queryLog.setAgentId(agentId);
             queryLog.setRepo(request.getRepo());
             queryLog.setTaskDescription(taskDescription);
             queryLog.setResponseTimeMs((int) responseTimeMs);

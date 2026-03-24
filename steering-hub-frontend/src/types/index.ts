@@ -146,7 +146,6 @@ export interface QueryLog {
   searchMode?: string
   resultCount?: number
   resultSteeringIds?: string
-  agentId?: string
   source?: string | null
   repo?: string
   taskDescription?: string

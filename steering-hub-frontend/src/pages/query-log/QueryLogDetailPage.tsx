@@ -155,14 +155,11 @@ export default function QueryLogDetailPage() {
                 {detail.responseTimeMs != null ? `${detail.responseTimeMs} ms` : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="检索模式">{detail.searchMode || '-'}</Descriptions.Item>
-              <Descriptions.Item label="Agent ID">
-                <span style={{ wordBreak: 'break-all', fontSize: 12 }}>{detail.agentId || '-'}</span>
+              <Descriptions.Item label="Agent 名称">
+                {detail.agentName
+                  ? <Tag style={{ borderRadius: 100, fontSize: 11 }}>{detail.agentName}</Tag>
+                  : <span style={{ color: '#52525b' }}>-</span>}
               </Descriptions.Item>
-              {detail.agentName && (
-                <Descriptions.Item label="Agent 名称">
-                  <Tag style={{ borderRadius: 100, fontSize: 11 }}>{detail.agentName}</Tag>
-                </Descriptions.Item>
-              )}
               {detail.modelName && (
                 <Descriptions.Item label="模型名称">
                   <Tag color="purple" style={{ borderRadius: 100, fontSize: 11 }}>{detail.modelName}</Tag>

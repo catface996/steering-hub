@@ -76,10 +76,10 @@ public class SearchAnalyticsServiceImpl implements SearchAnalyticsService {
 
         analytics.put("activeAgents", steeringQueryLogMapper.selectMaps(
             new QueryWrapper<SteeringQueryLog>()
-                .select("agent_id", "COUNT(*) as count")
+                .select("agent_name", "COUNT(*) as count")
                 .ge("created_at", since)
-                .isNotNull("agent_id")
-                .groupBy("agent_id")
+                .isNotNull("agent_name")
+                .groupBy("agent_name")
                 .orderByDesc("COUNT(*)")
                 .last("LIMIT 10")));
 
@@ -139,7 +139,6 @@ public class SearchAnalyticsServiceImpl implements SearchAnalyticsService {
         vo.setSearchMode(log.getSearchMode());
         vo.setResultCount(log.getResultCount());
         vo.setResultSteeringIds(log.getResultSteeringIds());
-        vo.setAgentId(log.getAgentId());
         vo.setSource(log.getSource());
         vo.setRepo(log.getRepo());
         vo.setTaskDescription(log.getTaskDescription());

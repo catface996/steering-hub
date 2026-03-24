@@ -112,10 +112,6 @@ async def list_tools() -> list[Tool]:
                         "description": "Maximum number of results to return (default: 5, max: 20)",
                         "default": 5,
                     },
-                    "agent_id": {
-                        "type": "string",
-                        "description": "Calling agent identifier for usage tracking",
-                    },
                     "repo": {
                         "type": "string",
                         "description": "Source repository name for context",
@@ -309,7 +305,6 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     tags = args.get("tags", [])
     category_code = args.get("category_code")
     limit = min(int(args.get("limit", 5)), 20)
-    agent_id = args.get("agent_id", "mcp-agent")
     repo = args.get("repo", "")
     task_description = args.get("task_description", "")
     model_name = args.get("model_name", "")

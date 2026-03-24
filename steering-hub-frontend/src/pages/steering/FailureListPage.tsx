@@ -10,7 +10,7 @@ interface FailureLog {
   queryText: string;
   failureReason: string;
   expectedTopic: string;
-  agentId: string;
+  agentName: string;
   createdAt: string;
 }
 
@@ -122,7 +122,7 @@ export default function FailureListPage() {
                       ellipsis
                       style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180 }}
                     >
-                      {item.agentId || '--'}
+                      {item.agentName || '--'}
                     </Typography.Text>
                     <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 130 }}>
                       {item.createdAt

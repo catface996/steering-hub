@@ -21,7 +21,7 @@ interface FailureLog {
   queryText: string;
   failureReason: string;
   expectedTopic: string;
-  agentId: string;
+  agentName: string;
   createdAt: string;
 }
 
@@ -85,7 +85,7 @@ export default function SteeringAnalyticsPage() {
       }
     },
     { title: '期望找到的规范', dataIndex: 'expectedTopic', key: 'expectedTopic', ellipsis: true },
-    { title: 'Agent', dataIndex: 'agentId', key: 'agentId', width: 140, ellipsis: true },
+    { title: 'Agent', dataIndex: 'agentName', key: 'agentName', width: 140, ellipsis: true },
     {
       title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 140,
       render: (t: string) => t ? new Date(t).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--'

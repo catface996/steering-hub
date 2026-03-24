@@ -26,8 +26,6 @@ public class SteeringQueryLog implements Serializable {
 
     private String resultSteeringIds;  // JSON字符串
 
-    private String agentId;
-
     private String source;
 
     private String repo;
