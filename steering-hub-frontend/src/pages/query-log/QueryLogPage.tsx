@@ -124,7 +124,9 @@ export default function QueryLogPage() {
             <thead>
               <tr>
                 <th style={{ ...thStyle, width: 72 }}>ID</th>
-                <th style={thStyle}>查询内容</th>
+                <th style={{ ...thStyle, maxWidth: 200 }}>查询内容</th>
+                <th style={{ ...thStyle, width: 120 }}>Agent 名称</th>
+                <th style={{ ...thStyle, width: 160 }}>模型名称</th>
                 <th style={{ ...thStyle, width: 90 }}>命中数量</th>
                 <th style={{ ...thStyle, width: 180 }}>查询时间</th>
                 <th style={{ ...thStyle, width: 90 }}>来源</th>
@@ -133,7 +135,7 @@ export default function QueryLogPage() {
             <tbody>
               {logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ ...tdStyle, textAlign: 'center', color: '#71717a' }}>暂无数据</td>
+                  <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#71717a' }}>暂无数据</td>
                 </tr>
               ) : logs.map((log) => (
                 <tr
@@ -144,10 +146,24 @@ export default function QueryLogPage() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                 >
                   <td style={{ ...tdStyle, color: '#71717a', fontSize: 13 }}>{log.id}</td>
-                  <td style={tdStyle}>
-                    <Typography.Text style={{ color: '#e4e4e7' }}>
+                  <td style={{ ...tdStyle, maxWidth: 200 }}>
+                    <Typography.Text
+                      ellipsis
+                      style={{ color: '#e4e4e7', display: 'block', maxWidth: 200 }}
+                      title={log.queryText}
+                    >
                       {highlight(log.queryText, filterKeyword)}
                     </Typography.Text>
+                  </td>
+                  <td style={{ ...tdStyle, fontSize: 13 }}>
+                    {log.agentName
+                      ? <Tag style={{ borderRadius: 100, fontSize: 11 }}>{log.agentName}</Tag>
+                      : <span style={{ color: '#52525b' }}>-</span>}
+                  </td>
+                  <td style={{ ...tdStyle, fontSize: 13 }}>
+                    {log.modelName
+                      ? <Tag color="purple" style={{ borderRadius: 100, fontSize: 11 }}>{log.modelName}</Tag>
+                      : <span style={{ color: '#52525b' }}>-</span>}
                   </td>
                   <td style={tdStyle}>
                     <Tag
