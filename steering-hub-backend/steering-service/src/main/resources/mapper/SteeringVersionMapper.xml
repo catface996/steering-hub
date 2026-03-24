@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SteeringVersionMapper">
+
+    <select id="selectBySteeringId" resultType="com.steeringhub.steering.entity.SteeringVersion">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, created_by, created_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+        ORDER BY version DESC
+    </select>
+
+    <select id="selectBySteeringIdAndVersion" resultType="com.steeringhub.steering.entity.SteeringVersion">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, created_by, created_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+          AND version = #{version}
+        LIMIT 1
+    </select>
+
+</mapper>

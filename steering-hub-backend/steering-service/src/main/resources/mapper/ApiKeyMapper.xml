@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.ApiKeyMapper">
+
+    <select id="findEnabledByKeyValue" resultType="com.steeringhub.steering.entity.ApiKey">
+        SELECT id, name, key_value, description, enabled, last_used_at, created_at, created_by
+        FROM api_key
+        WHERE key_value = #{keyValue}
+          AND enabled = true
+        LIMIT 1
+    </select>
+
+    <select id="findAllOrderByCreatedAtDesc" resultType="com.steeringhub.steering.entity.ApiKey">
+        SELECT id, name, key_value, description, enabled, last_used_at, created_at, created_by
+        FROM api_key
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>

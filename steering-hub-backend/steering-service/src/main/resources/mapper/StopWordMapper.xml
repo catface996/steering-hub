@@ -9,4 +9,10 @@
         WHERE enabled = true
     </select>
 
+    <select id="findAllOrderByWord" resultType="com.steeringhub.steering.entity.StopWord">
+        SELECT id, word, language, enabled, created_at
+        FROM stop_word
+        ORDER BY word ASC
+    </select>
+
 </mapper>

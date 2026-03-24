@@ -13,4 +13,6 @@ import java.util.List;
 public interface StopWordMapper extends BaseMapper<StopWord> {
 
     List<StopWord> findAllEnabled();
+
+    List<StopWord> findAllOrderByWord();
 }

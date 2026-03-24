@@ -1,6 +1,5 @@
 package com.steeringhub.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.common.response.Result;
 import com.steeringhub.steering.entity.ApiKey;
 import com.steeringhub.steering.mapper.ApiKeyMapper;
@@ -49,9 +48,7 @@ public class ApiKeyController {
     @GetMapping
     @Operation(summary = "获取 API Key 列表", description = "获取所有 API Key（key 值已脱敏）")
     public Result<List<ApiKey>> list() {
-        List<ApiKey> keys = apiKeyMapper.selectList(
-            new LambdaQueryWrapper<ApiKey>().orderByDesc(ApiKey::getCreatedAt)
-        );
+        List<ApiKey> keys = apiKeyMapper.findAllOrderByCreatedAtDesc();
 
         // 管理后台：返回完整 key 供复制使用（接口受 JWT 保护，仅管理员可访问）
 

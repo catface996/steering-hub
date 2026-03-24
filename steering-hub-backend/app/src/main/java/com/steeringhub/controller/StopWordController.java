@@ -1,6 +1,5 @@
 package com.steeringhub.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.common.response.Result;
 import com.steeringhub.steering.entity.StopWord;
 import com.steeringhub.steering.mapper.StopWordMapper;
@@ -25,9 +24,7 @@ public class StopWordController {
      */
     @GetMapping
     public Result<List<StopWord>> list() {
-        List<StopWord> list = stopWordMapper.selectList(
-            new LambdaQueryWrapper<StopWord>().orderByAsc(StopWord::getWord)
-        );
+        List<StopWord> list = stopWordMapper.findAllOrderByWord();
         return Result.ok(list);
     }
 

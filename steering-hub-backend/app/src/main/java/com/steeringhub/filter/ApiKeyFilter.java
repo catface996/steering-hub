@@ -1,6 +1,5 @@
 package com.steeringhub.filter;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.steering.entity.ApiKey;
 import com.steeringhub.steering.mapper.ApiKeyMapper;
 import jakarta.servlet.FilterChain;
@@ -50,11 +49,7 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 
             if (token.startsWith("sh_")) {
                 // API Key 认证
-                ApiKey key = apiKeyMapper.selectOne(
-                    new LambdaQueryWrapper<ApiKey>()
-                        .eq(ApiKey::getKeyValue, token)
-                        .eq(ApiKey::getEnabled, true)
-                );
+                ApiKey key = apiKeyMapper.findEnabledByKeyValue(token);
 
                 if (key == null) {
                     if (requiresApiKey) {
