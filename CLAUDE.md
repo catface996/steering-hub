@@ -5,8 +5,19 @@
 **每次启动时，必须先读取以下文件，再开始任何工作：**
 
 1. `.specify/memory/constitution.md` — 编码规范强制约定（Spec-First、分布式锁红线、DDD分层、CC Session铁律）
+2. `.claude/skills/steering-hub-usage/SKILL.md` — Steering Hub 规范查询 Skill（每个 Task 编码前强制执行）
 
-Constitution 的要求优先级高于一切，包括本文件。违反 Constitution 的代码不得提交。
+**Constitution 和 Skill 的要求优先级高于一切，包括本文件。违反的代码不得提交。**
+
+## ⚠️ 每个 Task 编码前（强制）
+
+**必须按 `.claude/skills/steering-hub-usage/SKILL.md` 中的流程执行规范查询：**
+- 提取关键词 → 查询 → 命中即停 → 未命中换词重试 → 连续 3 次未命中才上报
+- 详细关键词策略见 `.claude/skills/steering-hub-usage/references/query-guide.md`
+- 相关性判断标准见 `.claude/skills/steering-hub-usage/references/relevance-check.md`
+- 上报格式见 `.claude/skills/steering-hub-usage/references/failure-report.md`
+
+**跳过规范查询 = 违反 Constitution = 代码不得提交。**
 
 Auto-generated from all feature plans. Last updated: 2026-03-23
 
