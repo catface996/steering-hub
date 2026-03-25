@@ -117,9 +117,37 @@ Task T014 开始 → search("Redis 缓存 Key 命名") → 未命中 → report_
 | Domain 层 | Domain 聚合根 值对象 |
 | Feign 调用 | Feign 外部HTTP 超时降级 |
 
+### 持续查询规则（连续 3 次未命中才可停止）
+
+**一次查询未命中或不适用，不能停止查询，必须更换关键词再查，连续三次均未命中才可停止并上报。**
+
+1. 每个 Task 开始前，至少执行 1 次 MCP 查询
+2. 若查询结果不适用（相关性 < 0.5 或规范不覆盖当前场景），**必须更换关键词再查**，不得直接放弃
+3. **连续 3 次查询均未命中**，才允许停止查询，并调用 `report_search_failure` 上报（附带 3 次查询关键词）
+4. 每次查询必须使用不同的关键词（禁止重复相同 query 的无效重试）
+5. 3 次查询内任意一次命中适用规范，则立即停止查询，按规范编码
+
+示例：
+```
+Task T012 开始
+→ 查询 1: search("Controller HTTP 接口") → 命中 ID:7 → 按规范编码（停止查询）
+
+Task T013 开始
+→ 查询 1: search("WebSocket 规范") → 未命中/不适用
+→ 查询 2: search("实时通信 SSE 流式接口") → 未命中/不适用
+→ 查询 3: search("HTTP 长连接 服务端推送") → 未命中/不适用
+→ 连续 3 次未命中 → report_search_failure(queries=["WebSocket规范","实时通信SSE","HTTP长连接"]) → 按最佳实践编码
+```
+
+#### 明确禁止的行为（红线）
+
+- 禁止第 1 次查询未命中就直接放弃查询
+- 禁止用相同关键词重复查询（无效重试）
+- 禁止未达 3 次就调用 report_search_failure
+
 ### 上报失败条件
 
-当搜索结果满足以下任一条件时，使用 `report_search_failure` 上报：
+当连续 3 次查询均满足以下任一条件时，使用 `report_search_failure` 上报：
 
 - 搜索结果与当前编码场景完全无关（相关性 < 0.5）
 - 搜索到的规范已废弃（status = deprecated）
@@ -194,4 +222,4 @@ claude -r steering-hub-review-$(date +%Y%m%d) \
   --permission-mode bypassPermissions --print "继续..."
 ```
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-23
+**Version**: 1.3.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-25
