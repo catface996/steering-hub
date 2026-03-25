@@ -167,7 +167,7 @@ export default function QueryLogPage() {
                       ? <Tag color="purple" style={{ borderRadius: 100, fontSize: 11 }}>{log.modelName}</Tag>
                       : <span style={{ color: '#52525b' }}>-</span>}
                   </td>
-                  <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13 }}>
+                  <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13, whiteSpace: 'nowrap' }}>
                     {log.repo || '-'}
                   </td>
                   <td style={tdStyle}>
