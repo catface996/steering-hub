@@ -16,13 +16,13 @@ const STATUS_LABEL: Record<string, string> = {
   DEPRECATED: '已废弃',
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  DRAFT: '#71717a',
-  PENDING_REVIEW: '#f59e0b',
-  APPROVED: '#818cf8',
-  REJECTED: '#ef4444',
-  ACTIVE: '#32D583',
-  DEPRECATED: '#f97316',
+const STATUS_ANT_COLOR: Record<string, string> = {
+  DRAFT: 'default',
+  PENDING_REVIEW: 'warning',
+  APPROVED: 'geekblue',
+  REJECTED: 'error',
+  ACTIVE: 'success',
+  DEPRECATED: 'orange',
 };
 
 function SourceTag({ source }: { source?: string | null }) {
@@ -50,12 +50,8 @@ function SteeringCard({ s }: { s: HitSteering }) {
               {s.title}
             </Typography.Text>
             <Tag
-              style={{
-                borderRadius: 100, fontSize: 11, flexShrink: 0,
-                color: STATUS_COLOR[statusKey] || '#a1a1aa',
-                borderColor: STATUS_COLOR[statusKey] || '#a1a1aa',
-                background: 'transparent',
-              }}
+              color={STATUS_ANT_COLOR[statusKey] || 'default'}
+              style={{ borderRadius: 100, fontSize: 11, flexShrink: 0 }}
             >
               {STATUS_LABEL[statusKey] || s.status || '-'}
             </Tag>

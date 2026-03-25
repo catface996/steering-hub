@@ -9,6 +9,7 @@ import { repoService } from '../../services/repoService';
 import { steeringService } from '../../services/steeringService';
 import type { Repo, RepoSteeringBinding, Steering } from '../../types';
 import Pagination from '../../components/Pagination';
+import { formatDateTime } from '../../utils/formatTime';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '草稿',
@@ -19,13 +20,13 @@ const STATUS_LABEL: Record<string, string> = {
   deprecated: '已废弃',
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: '#71717a',
-  pending_review: '#f59e0b',
-  approved: '#818cf8',
-  rejected: '#ef4444',
-  active: '#32D583',
-  deprecated: '#f97316',
+const STATUS_ANT_COLOR: Record<string, string> = {
+  draft: 'default',
+  pending_review: 'warning',
+  approved: 'geekblue',
+  rejected: 'error',
+  active: 'success',
+  deprecated: 'orange',
 };
 
 const PAGE_SIZE = 20;
@@ -306,7 +307,7 @@ export default function RepoDetailPage() {
                     )}
                   </td>
                   <td style={tdStyle}>
-                    <Tag style={{ borderRadius: 100, color: STATUS_COLOR[b.steeringStatus] || '#a1a1aa', borderColor: STATUS_COLOR[b.steeringStatus] || '#a1a1aa', background: 'transparent' }}>
+                    <Tag color={STATUS_ANT_COLOR[b.steeringStatus] || 'default'} style={{ borderRadius: 100 }}>
                       {STATUS_LABEL[b.steeringStatus] || b.steeringStatus}
                     </Tag>
                   </td>
@@ -316,7 +317,7 @@ export default function RepoDetailPage() {
                       : <Typography.Text style={{ color: '#71717a' }}>-</Typography.Text>}
                   </td>
                   <td style={tdStyle}>
-                    <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>{b.createdAt}</Typography.Text>
+                    <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>{formatDateTime(b.createdAt)}</Typography.Text>
                   </td>
                   <td style={tdStyle}>
                     <Button size="small" danger onClick={() => setUnbindTarget(b)}>解绑</Button>

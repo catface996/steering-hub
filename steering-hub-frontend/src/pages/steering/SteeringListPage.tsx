@@ -182,7 +182,7 @@ export default function SteeringListPage() {
                   hoverable
                 >
                   <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
-                    <Typography.Text style={{ fontWeight: 600, fontSize: 16 }} ellipsis>{record.title}</Typography.Text>
+                    <Typography.Text style={{ fontWeight: 600, fontSize: 16 }} ellipsis={{ tooltip: true }}>{record.title}</Typography.Text>
                     <Flex gap={8} align="center" style={{ flexShrink: 0 }}>
                       <Tag className={`tag-base ${STATUS_CLASS[record.status]}`}>{STATUS_LABEL[record.status]}</Tag>
                       <Typography.Text style={{ color: '#a1a1aa', fontSize: 12 }}>v{record.currentVersion}</Typography.Text>

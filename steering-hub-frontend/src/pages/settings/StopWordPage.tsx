@@ -126,7 +126,7 @@ export default function StopWordPage() {
             {stopWords.length > 0 ? (
               pagedStopWords.map((item) => (
                 <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 200 }} ellipsis>{item.word}</Typography.Text>
+                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 200 }} ellipsis={{ tooltip: true }}>{item.word}</Typography.Text>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 120 }}>
                     {item.language === 'zh' ? '中文' : item.language === 'en' ? '英文' : item.language}
                   </Typography.Text>

@@ -129,9 +129,9 @@ export default function ApiKeyPage() {
             {apiKeys.length > 0 ? (
               apiKeys.map((item) => (
                 <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 180 }} ellipsis>{item.name}</Typography.Text>
+                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 180 }} ellipsis={{ tooltip: true }}>{item.name}</Typography.Text>
                   <Flex gap={8} align="center" style={{ width: 260 }}>
-                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, fontFamily: 'monospace', flex: 1 }} ellipsis>{item.keyValue}</Typography.Text>
+                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, fontFamily: 'monospace', flex: 1 }} ellipsis={{ tooltip: true }}>{item.keyValue}</Typography.Text>
                     <Button
                       type="text"
                       size="small"
@@ -140,7 +140,7 @@ export default function ApiKeyPage() {
                       style={{ padding: '0 4px' }}
                     />
                   </Flex>
-                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, flex: 1 }} ellipsis>{item.description || '-'}</Typography.Text>
+                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, flex: 1 }} ellipsis={{ tooltip: true }}>{item.description || '-'}</Typography.Text>
                   <div style={{ width: 80, textAlign: 'center' }}>
                     <Tag
                       className={`tag-base ${item.enabled ? 'tag-enabled' : 'tag-disabled'}`}
