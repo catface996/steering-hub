@@ -113,6 +113,7 @@ export default function QueryLogPage() {
     fontWeight: 500,
     background: '#12121c',
     borderBottom: '1px solid #1e1e2a',
+    whiteSpace: 'nowrap',
   };
 
   return (
