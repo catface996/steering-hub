@@ -42,6 +42,7 @@ export default function SimilarPairDetailPage() {
   const dismissingRef = useRef(false);
   const [deprecatingId, setDeprecatingId] = useState<number | null>(null);
   const [deprecateTarget, setDeprecateTarget] = useState<{ id: number; title: string } | null>(null);
+  const [dismissConfirmOpen, setDismissConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!pair) { setLoading(false); return; }
@@ -86,6 +87,7 @@ export default function SimilarPairDetailPage() {
       navigate('/health');
     } catch {
       // error toasted by request layer
+      setDismissConfirmOpen(false);
     } finally {
       dismissingRef.current = false;
       setDismissing(false);
@@ -110,10 +112,10 @@ export default function SimilarPairDetailPage() {
     setActions(
       <Flex gap={8}>
         <Button icon={<ArrowLeft size={16} />} onClick={() => navigate('/health')}>返回</Button>
-        <Button type="primary" danger loading={dismissingRef.current} onClick={handleDismiss}>标记已处理</Button>
+        <Button type="primary" danger loading={dismissing} onClick={() => setDismissConfirmOpen(true)}>标记已处理</Button>
       </Flex>
     );
-  }, [id, setBreadcrumbs, setActions, navigate, handleDismiss]);
+  }, [id, setBreadcrumbs, setActions, navigate, dismissing]);
 
   if (!pair) {
     return (
@@ -197,6 +199,17 @@ export default function SimilarPairDetailPage() {
           </Col>
         </Row>
       ) : null}
+
+      {/* Dismiss Confirm Modal */}
+      <ConfirmModal
+        open={dismissConfirmOpen}
+        title="确认标记已处理"
+        content="将从健康度列表中移除此相似规范对，确认操作？"
+        okText="确认"
+        loading={dismissing}
+        onConfirm={handleDismiss}
+        onCancel={() => setDismissConfirmOpen(false)}
+      />
 
       {/* Deprecate Confirm Modal */}
       <ConfirmModal
