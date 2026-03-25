@@ -28,6 +28,8 @@ export default function SteeringDetailPage() {
   const [steering, setSteering] = useState<Steering | null>(null);
   const [loading, setLoading] = useState(true);
   const [deprecateOpen, setDeprecateOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [versions, setVersions] = useState<SteeringVersionVO[]>([]);
   const [versionsTotal, setVersionsTotal] = useState(0);
   const [versionsPage, setVersionsPage] = useState(0);
@@ -135,6 +137,9 @@ export default function SteeringDetailPage() {
         {steering.status === 'active' && (
           <Button danger onClick={() => setDeprecateOpen(true)}>废弃</Button>
         )}
+        {steering.status === 'deprecated' && (
+          <Button danger onClick={() => setDeleteOpen(true)}>删除</Button>
+        )}
       </Flex>
     );
     setActions(actionButtons);
@@ -148,6 +153,20 @@ export default function SteeringDetailPage() {
       setSteering(data);
     } catch {
       message.error('操作失败');
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await steeringService.delete(Number(id));
+      message.success('规范已删除');
+      navigate('/steerings');
+    } catch {
+      message.error('删除失败');
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
     }
   };
 
@@ -372,6 +391,21 @@ export default function SteeringDetailPage() {
         okButtonProps={{ danger: true }}
       >
         <Typography.Text type="secondary">确认废弃此规范？废弃后将无法通过 MCP 工具检索到此规范。</Typography.Text>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        open={deleteOpen}
+        onCancel={() => setDeleteOpen(false)}
+        onOk={handleDelete}
+        title="确认删除"
+        okText="删除"
+        cancelText="取消"
+        okButtonProps={{ danger: true, loading: deleting }}
+      >
+        <Typography.Text type="secondary">
+          删除后数据不可恢复，确认删除规范「{steering.title}」？
+        </Typography.Text>
       </Modal>
 
       {/* Version Detail Modal (read-only) */}
