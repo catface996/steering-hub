@@ -5,6 +5,7 @@ import { useHeader } from '../../contexts/HeaderContext';
 import { apiKeyService } from '../../services/apiKeyService';
 import type { ApiKeyItem } from '../../types';
 import { formatDate } from '../../utils/formatTime';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function ApiKeyPage() {
   const { setBreadcrumbs, setActions } = useHeader();
@@ -18,6 +19,8 @@ export default function ApiKeyPage() {
     open: false, key: '', name: '',
   });
   const [form, setForm] = useState({ name: '', description: '' });
+  const [deleteTarget, setDeleteTarget] = useState<ApiKeyItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs(
@@ -70,23 +73,23 @@ export default function ApiKeyPage() {
     }
   };
 
-  const handleDelete = async (item: ApiKeyItem) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除 API Key "${item.name}" 吗？`,
-      okText: '删除',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await apiKeyService.delete(item.id);
-          message.success('删除成功');
-          loadKeys();
-        } catch {
-          message.error('删除失败');
-        }
-      },
-    });
+  const handleDelete = (item: ApiKeyItem) => {
+    setDeleteTarget(item);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await apiKeyService.delete(deleteTarget.id);
+      message.success('删除成功');
+      setDeleteTarget(null);
+      loadKeys();
+    } catch {
+      message.error('删除失败');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleCopy = (id: number, keyValue: string) => {
@@ -219,6 +222,17 @@ export default function ApiKeyPage() {
           </Flex>
         </form>
       </Modal>
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="确认删除"
+        content={`确定要删除 API Key "${deleteTarget?.name}" 吗？`}
+        okText="删除"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {/* Key Display Modal */}
       <Modal

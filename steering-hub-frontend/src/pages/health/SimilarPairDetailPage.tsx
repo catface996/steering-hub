@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Button, Col, Flex, Modal, Progress, Row, Spin, Tag, Typography, message as antMessage } from 'antd';
+import { Button, Col, Flex, Progress, Row, Spin, Tag, Typography, message as antMessage } from 'antd';
+import ConfirmModal from '../../components/ConfirmModal';
 import { ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -39,6 +40,7 @@ export default function SimilarPairDetailPage() {
   const [loading, setLoading] = useState(true);
   const [dismissing, setDismissing] = useState(false);
   const [deprecatingId, setDeprecatingId] = useState<number | null>(null);
+  const [deprecateTarget, setDeprecateTarget] = useState<{ id: number; title: string } | null>(null);
 
   useEffect(() => {
     if (!pair) { setLoading(false); return; }
@@ -49,30 +51,28 @@ export default function SimilarPairDetailPage() {
   }, [pair]);
 
   const handleDeprecate = (specId: number, title: string) => {
-    Modal.confirm({
-      title: '确认禁用',
-      content: `将禁用规范「${title}」，禁用后该规范不再参与检索。此操作不可直接撤销。`,
-      okText: '确认禁用',
-      okButtonProps: { danger: true },
-      cancelText: '取消',
-      onOk: async () => {
-        setDeprecatingId(specId);
-        try {
-          await steeringService.review(specId, 'deprecate' as ReviewAction);
-          antMessage.success('规范已禁用');
-          setCompareData((prev) => {
-            if (!prev) return prev;
-            const update = (s: typeof prev.specA) =>
-              s.id === specId ? { ...s, status: 'deprecated' } : s;
-            return { specA: update(prev.specA), specB: update(prev.specB) };
-          });
-        } catch {
-          // error toasted by request layer
-        } finally {
-          setDeprecatingId(null);
-        }
-      },
-    });
+    setDeprecateTarget({ id: specId, title });
+  };
+
+  const handleConfirmDeprecate = async () => {
+    if (!deprecateTarget) return;
+    const specId = deprecateTarget.id;
+    setDeprecatingId(specId);
+    try {
+      await steeringService.review(specId, 'deprecate' as ReviewAction);
+      antMessage.success('规范已禁用');
+      setDeprecateTarget(null);
+      setCompareData((prev) => {
+        if (!prev) return prev;
+        const update = (s: typeof prev.specA) =>
+          s.id === specId ? { ...s, status: 'deprecated' } : s;
+        return { specA: update(prev.specA), specB: update(prev.specB) };
+      });
+    } catch {
+      // error toasted by request layer
+    } finally {
+      setDeprecatingId(null);
+    }
   };
 
   const handleDismiss = async () => {
@@ -191,6 +191,17 @@ export default function SimilarPairDetailPage() {
           </Col>
         </Row>
       ) : null}
+
+      {/* Deprecate Confirm Modal */}
+      <ConfirmModal
+        open={deprecateTarget !== null}
+        title="确认禁用"
+        content={`将禁用规范「${deprecateTarget?.title}」，禁用后该规范不再参与检索。此操作不可直接撤销。`}
+        okText="确认禁用"
+        loading={deprecatingId !== null}
+        onConfirm={handleConfirmDeprecate}
+        onCancel={() => setDeprecateTarget(null)}
+      />
 
       {/* Bottom actions */}
       <Flex justify="flex-end">

@@ -5,6 +5,7 @@ import { useHeader } from '../../contexts/HeaderContext';
 import { stopWordApi, type StopWordItem } from '../../api/stopWord';
 import Pagination from '../../components/Pagination';
 import { formatDate } from '../../utils/formatTime';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const PAGE_SIZE = 20;
 
@@ -17,6 +18,8 @@ export default function StopWordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ words: '', language: 'zh' });
   const [page, setPage] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<StopWordItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs(
@@ -77,23 +80,23 @@ export default function StopWordPage() {
     }
   };
 
-  const handleDelete = async (item: StopWordItem) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除停用词 "${item.word}" 吗？`,
-      okText: '删除',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await stopWordApi.delete(item.id);
-          message.success('删除成功');
-          loadStopWords();
-        } catch {
-          message.error('删除失败');
-        }
-      },
-    });
+  const handleDelete = (item: StopWordItem) => {
+    setDeleteTarget(item);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await stopWordApi.delete(deleteTarget.id);
+      message.success('删除成功');
+      setDeleteTarget(null);
+      loadStopWords();
+    } catch {
+      message.error('删除失败');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const labelStyle = { fontSize: 13, color: '#a1a1aa', display: 'block' as const, marginBottom: 4, fontWeight: 500 };
@@ -175,6 +178,17 @@ export default function StopWordPage() {
           />
         )}
       </Card>
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="确认删除"
+        content={`确定要删除停用词 "${deleteTarget?.word}" 吗？`}
+        okText="删除"
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {/* Create Modal */}
       <Modal
