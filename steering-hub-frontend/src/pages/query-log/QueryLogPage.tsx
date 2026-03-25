@@ -179,7 +179,7 @@ export default function QueryLogPage() {
                       {log.resultCount ?? '-'}
                     </Tag>
                   </td>
-                  <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13 }}>
+                  <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13, whiteSpace: 'nowrap' }}>
                     {formatDateTime(log.createdAt)}
                   </td>
                   <td style={tdStyle}>
