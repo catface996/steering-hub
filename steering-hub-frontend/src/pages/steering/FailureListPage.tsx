@@ -3,6 +3,7 @@ import { Typography, Card, Tag, Select, Flex, Spin } from 'antd';
 import { AlertCircle } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { get } from '../../utils/request';
+import { formatDateTime } from '../../utils/formatTime';
 import Pagination from '../../components/Pagination';
 
 interface FailureLog {
@@ -10,7 +11,7 @@ interface FailureLog {
   queryText: string;
   failureReason: string;
   expectedTopic: string;
-  agentId: string;
+  agentName: string;
   createdAt: string;
 }
 
@@ -104,7 +105,7 @@ export default function FailureListPage() {
                   <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
                     <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 40 }}>{item.id}</Typography.Text>
                     <Typography.Text
-                      ellipsis
+                      ellipsis={{ tooltip: true }}
                       style={{ color: '#f4f4f5', fontSize: 13, fontWeight: 500, width: 260, paddingRight: 8 }}
                     >
                       {item.queryText}
@@ -113,24 +114,19 @@ export default function FailureListPage() {
                       <Tag className={`tag-base ${reasonInfo.color}`}>{reasonInfo.label}</Tag>
                     </div>
                     <Typography.Text
-                      ellipsis
+                      ellipsis={{ tooltip: true }}
                       style={{ color: '#a1a1aa', fontSize: 13, flex: 1, paddingRight: 8 }}
                     >
-                      {item.expectedTopic || '--'}
+                      {item.expectedTopic || '-'}
                     </Typography.Text>
                     <Typography.Text
-                      ellipsis
+                      ellipsis={{ tooltip: true }}
                       style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180 }}
                     >
-                      {item.agentId || '--'}
+                      {item.agentName || '-'}
                     </Typography.Text>
                     <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 130 }}>
-                      {item.createdAt
-                        ? new Date(item.createdAt).toLocaleString('zh-CN', {
-                            month: '2-digit', day: '2-digit',
-                            hour: '2-digit', minute: '2-digit',
-                          })
-                        : '--'}
+                      {formatDateTime(item.createdAt)}
                     </Typography.Text>
                   </Flex>
                 );

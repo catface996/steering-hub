@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.RepoMapper">
+
+    <select id="listByCondition" resultType="com.steeringhub.steering.entity.Repo">
+        SELECT id, name, full_name, description, url, language, team, enabled, created_at, updated_at, deleted
+        FROM repo
+        WHERE deleted = false
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="team != null and team != ''">
+            AND team = #{team}
+        </if>
+        <if test="enabled != null">
+            AND enabled = #{enabled}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        SELECT COUNT(*)
+        FROM repo
+        WHERE deleted = false
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="team != null and team != ''">
+            AND team = #{team}
+        </if>
+        <if test="enabled != null">
+            AND enabled = #{enabled}
+        </if>
+    </select>
+
+    <!-- 包含软删除记录，用于 full_name 唯一性校验，防止同名仓库复活 -->
+    <select id="findByFullNameIncludeDeleted" resultType="com.steeringhub.steering.entity.Repo">
+        SELECT id, name, full_name, description, url, language, team, enabled, created_at, updated_at, deleted
+        FROM repo
+        WHERE full_name = #{fullName}
+        LIMIT 1
+    </select>
+
+    <!-- 仅返回 enabled=true 且未软删除的仓库，用于 MCP boost 查找 -->
+    <select id="findEnabledByFullName" resultType="com.steeringhub.steering.entity.Repo">
+        SELECT id, name, full_name, description, url, language, team, enabled, created_at, updated_at, deleted
+        FROM repo
+        WHERE full_name = #{fullName}
+          AND deleted = false
+          AND enabled = true
+        LIMIT 1
+    </select>
+
+</mapper>

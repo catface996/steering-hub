@@ -26,7 +26,7 @@ public class SteeringQueryLog implements Serializable {
 
     private String resultSteeringIds;  // JSON字符串
 
-    private String agentId;
+    private String source;
 
     private String repo;
 
@@ -39,6 +39,10 @@ public class SteeringQueryLog implements Serializable {
     private String failureReason;
 
     private String expectedTopic;
+
+    private String modelName;
+
+    private String agentName;
 
     @TableField(fill = FieldFill.INSERT)
     private OffsetDateTime createdAt;

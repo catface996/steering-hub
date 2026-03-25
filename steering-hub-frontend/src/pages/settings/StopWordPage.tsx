@@ -4,6 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { stopWordApi, type StopWordItem } from '../../api/stopWord';
 import Pagination from '../../components/Pagination';
+import { formatDate } from '../../utils/formatTime';
 
 const PAGE_SIZE = 20;
 
@@ -125,7 +126,7 @@ export default function StopWordPage() {
             {stopWords.length > 0 ? (
               pagedStopWords.map((item) => (
                 <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 200 }} ellipsis>{item.word}</Typography.Text>
+                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 200 }} ellipsis={{ tooltip: true }}>{item.word}</Typography.Text>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 120 }}>
                     {item.language === 'zh' ? '中文' : item.language === 'en' ? '英文' : item.language}
                   </Typography.Text>
@@ -137,7 +138,7 @@ export default function StopWordPage() {
                     </Tag>
                   </div>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, flex: 1 }}>
-                    {new Date(item.createdAt).toLocaleDateString('zh-CN')}
+                    {formatDate(item.createdAt)}
                   </Typography.Text>
                   <Flex gap={8} justify="center" style={{ width: 100 }}>
                     <Tooltip title={item.enabled ? '禁用' : '启用'}>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SteeringReviewMapper">
+
+    <select id="selectBySteeringId" resultType="com.steeringhub.steering.entity.SteeringReview">
+        SELECT id, steering_id, steering_version, action, comment, reviewer_id, reviewer_name, created_at
+        FROM steering_review
+        WHERE steering_id = #{steeringId}
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>

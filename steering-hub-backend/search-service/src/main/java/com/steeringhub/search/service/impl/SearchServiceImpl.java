@@ -1,6 +1,5 @@
 package com.steeringhub.search.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
 import com.steeringhub.search.dto.SteeringQualityReport;
@@ -9,6 +8,10 @@ import com.steeringhub.search.service.SearchService;
 import com.steeringhub.steering.entity.Steering;
 import com.steeringhub.steering.entity.SteeringCategory;
 import com.steeringhub.steering.entity.StopWord;
+import com.steeringhub.steering.entity.Repo;
+import com.steeringhub.steering.entity.RepoSteering;
+import com.steeringhub.steering.mapper.RepoMapper;
+import com.steeringhub.steering.mapper.RepoSteeringMapper;
 import com.steeringhub.steering.mapper.SteeringCategoryMapper;
 import com.steeringhub.steering.mapper.SteeringMapper;
 import com.steeringhub.steering.mapper.StopWordMapper;
@@ -21,6 +24,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Slf4j
 @Service
@@ -32,14 +36,14 @@ public class SearchServiceImpl implements SearchService {
     private final SteeringService steeringService;
     private final EmbeddingService embeddingService;
     private final StopWordMapper stopWordMapper;
+    private final RepoMapper repoMapper;
+    private final RepoSteeringMapper repoSteeringMapper;
 
     /**
      * 从数据库加载启用的停用词
      */
     private Set<String> getStopWords() {
-        List<StopWord> stopWords = stopWordMapper.selectList(
-            new LambdaQueryWrapper<StopWord>().eq(StopWord::getEnabled, true)
-        );
+        List<StopWord> stopWords = stopWordMapper.findAllEnabled();
         return stopWords.stream()
                 .map(sw -> sw.getWord().toLowerCase())
                 .collect(Collectors.toSet());
@@ -96,9 +100,40 @@ public class SearchServiceImpl implements SearchService {
         }
 
         // Sort: by score descending (matchType is metadata only, not sort key)
-        return merged.values().stream()
+        List<SearchResult> results = merged.values().stream()
                 .sorted(Comparator.comparingDouble(SearchResult::getScore).reversed())
                 .limit(request.getLimit())
+                .collect(Collectors.toList());
+
+        // Apply repo boost if repo param is provided
+        if (StringUtils.hasText(request.getRepo())) {
+            results = applyRepoBoost(results, request.getRepo());
+        }
+
+        return results;
+    }
+
+    /**
+     * Boost: 仅重排已有结果，不追加新条目。
+     * 排序键：primary = -score，secondary = binding priority (0=mandatory, 1=non-mandatory, 2=unbound)。
+     */
+    private List<SearchResult> applyRepoBoost(List<SearchResult> results, String repoFullName) {
+        Repo repo = repoMapper.findEnabledByFullName(repoFullName);
+        if (repo == null) {
+            return results;
+        }
+        List<RepoSteering> bindings = repoSteeringMapper.listAllByRepoId(repo.getId());
+        if (bindings.isEmpty()) {
+            return results;
+        }
+        Map<Long, Integer> priorityMap = new HashMap<>();
+        for (RepoSteering rs : bindings) {
+            priorityMap.put(rs.getSteeringId(), Boolean.TRUE.equals(rs.getMandatory()) ? 0 : 1);
+        }
+        return results.stream()
+                .sorted(Comparator
+                        .comparingDouble(SearchResult::getScore).reversed()
+                        .thenComparingInt(r -> priorityMap.getOrDefault(r.getSteeringId(), 2)))
                 .collect(Collectors.toList());
     }
 

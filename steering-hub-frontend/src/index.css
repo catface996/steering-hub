@@ -204,6 +204,15 @@ input:-webkit-autofill:active,
   opacity: 1;
 }
 
+/* ============ Glow Card Hover Effect ============ */
+.glow-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.glow-card:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.25), 0 0 24px rgba(139, 92, 246, 0.1) !important;
+}
+
 /* Color variants — shared by editable and display tags */
 .tag-color-0 { border: 1px solid #818CF8; color: #818CF8; }
 .tag-color-1 { border: 1px solid #32D583; color: #32D583; }

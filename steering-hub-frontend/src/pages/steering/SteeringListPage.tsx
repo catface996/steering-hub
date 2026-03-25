@@ -6,6 +6,7 @@ import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService, categoryService } from '../../services/steeringService';
 import { qualityService, type SteeringQuality } from '../../services/searchService';
 import type { Steering, SteeringStatus, SteeringCategory } from '../../types';
+import { formatDate } from '../../utils/formatTime';
 import Pagination from '../../components/Pagination';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
@@ -184,13 +185,14 @@ export default function SteeringListPage() {
               {data?.records?.map((record) => (
                 <Card
                   key={record.id}
+                  className="glow-card"
                   onClick={() => navigate(`/steerings/${record.id}`)}
                   style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
                   styles={{ body: { display: 'flex', flexDirection: 'column', flex: 1, height: '100%' } }}
                   hoverable
                 >
                   <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
-                    <Typography.Text style={{ fontWeight: 600, fontSize: 16 }} ellipsis>{record.title}</Typography.Text>
+                    <Typography.Text style={{ fontWeight: 600, fontSize: 16 }} ellipsis={{ tooltip: true }}>{record.title}</Typography.Text>
                     <Flex gap={8} align="center" style={{ flexShrink: 0 }}>
                       <Tag className={`tag-base ${STATUS_CLASS[record.status]}`}>{STATUS_LABEL[record.status]}</Tag>
                       <Typography.Text style={{ color: '#a1a1aa', fontSize: 12 }}>v{record.currentVersion}</Typography.Text>
@@ -303,7 +305,7 @@ export default function SteeringListPage() {
                     );
                   })()}
                 </div>
-                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0, alignSelf: 'center' }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0, alignSelf: 'center' }}>{formatDate(record.updatedAt)}</Typography.Text>
                 <Flex gap={4} style={{ width: 100, flexShrink: 0 }}>
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (

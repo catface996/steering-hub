@@ -17,8 +17,12 @@ def _get_headers() -> dict:
     return headers
 
 
-async def search_steerings(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid") -> list[dict]:
-    """Call /api/v1/mcp/search with hybrid mode, only returns 'active' steerings"""
+async def search_steerings(query: str, category_id: Optional[int] = None, limit: int = 10, mode: str = "hybrid", repo: Optional[str] = None, model_name: Optional[str] = None, agent_name: Optional[str] = None) -> tuple[list[dict], Optional[int]]:
+    """Call /api/v1/mcp/search with hybrid mode, only returns 'active' steerings.
+
+    Returns:
+        Tuple of (results, log_id) where log_id can be used for feedback reporting.
+    """
     params: dict[str, Any] = {
         "query": query,
         "limit": limit,
@@ -26,14 +30,23 @@ async def search_steerings(query: str, category_id: Optional[int] = None, limit:
     }
     if category_id:
         params["categoryId"] = category_id
+    if repo:
+        params["repo"] = repo
+    if model_name:
+        params["modelName"] = model_name
+    if agent_name:
+        params["agentName"] = agent_name
 
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
         resp = await client.get("/api/v1/mcp/search", params=params)
         resp.raise_for_status()
         data = resp.json()
+        payload = data.get("data", {})
+        log_id: Optional[int] = payload.get("logId") if isinstance(payload, dict) else None
+        raw_results = payload.get("results", []) if isinstance(payload, dict) else []
         # Filter to active steerings only (should already be filtered server-side)
-        results = data.get("data", [])
-        return [r for r in results if r.get("status") == "active"]
+        results = [r for r in raw_results if r.get("status") == "active"]
+        return results, log_id
 
 
 async def get_steering(steering_id: int) -> dict:
@@ -195,12 +208,24 @@ async def _resolve_category_id(code: str) -> int:
 async def _ensure_repo(full_name: str) -> int:
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
         name = full_name.split("/")[-1] if "/" in full_name else full_name
-        resp = await client.post(
-            "/api/v1/web/repos",
-            params={"name": name, "fullName": full_name},
-        )
-        resp.raise_for_status()
-        return resp.json()["data"]["id"]
+        try:
+            resp = await client.post(
+                "/api/v1/web/repos",
+                json={"name": name, "fullName": full_name},
+            )
+            resp.raise_for_status()
+            return resp.json()["data"]["id"]
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 409:
+                # Repo already exists; find it by searching
+                search_resp = await client.get("/api/v1/web/repos", params={"name": name, "size": 50})
+                search_resp.raise_for_status()
+                records = search_resp.json().get("data", {}).get("records", [])
+                for r in records:
+                    if r.get("fullName") == full_name:
+                        return r["id"]
+                raise ValueError(f"Repo {full_name} already exists but could not be found in list")
+            raise
 
 
 async def report_search_failure(query_id: int, reason: str, expected_topic: str = "") -> None:

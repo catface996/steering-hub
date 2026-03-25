@@ -99,6 +99,29 @@ export interface Repo {
   url?: string
   language?: string
   team?: string
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RepoSteeringBinding {
+  steeringId: number
+  steeringTitle: string
+  steeringStatus: string
+  mandatory: boolean
+  bindingId: number
+  createdAt: string
+  warning?: string
+}
+
+export interface RepoBindingItem {
+  bindingId: number
+  repoId: number
+  repoName: string
+  repoFullName: string
+  repoEnabled: boolean
+  mandatory: boolean
+  createdAt: string
 }
 
 export interface ComplianceReport {
@@ -139,6 +162,37 @@ export interface ApiResult<T> {
   code: number
   message: string
   data: T
+}
+
+export interface QueryLog {
+  id: number
+  queryText: string
+  searchMode?: string
+  resultCount?: number
+  resultSteeringIds?: string
+  source?: string | null
+  repo?: string
+  taskDescription?: string
+  responseTimeMs?: number
+  isEffective?: boolean
+  failureReason?: string
+  expectedTopic?: string
+  modelName?: string
+  agentName?: string
+  createdAt: string
+}
+
+export interface HitSteering {
+  id: number
+  title: string
+  contentSummary?: string
+  status?: string
+  currentVersion?: number
+  tags?: string
+}
+
+export interface QueryLogDetail extends QueryLog {
+  hitSteerings: HitSteering[]
 }
 
 export interface ApiKeyItem {

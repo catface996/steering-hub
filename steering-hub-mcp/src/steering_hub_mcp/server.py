@@ -112,10 +112,6 @@ async def list_tools() -> list[Tool]:
                         "description": "Maximum number of results to return (default: 5, max: 20)",
                         "default": 5,
                     },
-                    "agent_id": {
-                        "type": "string",
-                        "description": "Calling agent identifier for usage tracking",
-                    },
                     "repo": {
                         "type": "string",
                         "description": "Source repository name for context",
@@ -123,6 +119,14 @@ async def list_tools() -> list[Tool]:
                     "task_description": {
                         "type": "string",
                         "description": "Current coding task description for context",
+                    },
+                    "model_name": {
+                        "type": "string",
+                        "description": "Model name used by the calling agent (e.g. claude-sonnet-4-6, gpt-4o)",
+                    },
+                    "agent_name": {
+                        "type": "string",
+                        "description": "Agent type/name (e.g. claude-code, codex, cursor)",
                     },
                 },
                 "required": ["query"],
@@ -301,9 +305,10 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     tags = args.get("tags", [])
     category_code = args.get("category_code")
     limit = min(int(args.get("limit", 5)), 20)
-    agent_id = args.get("agent_id", "mcp-agent")
     repo = args.get("repo", "")
     task_description = args.get("task_description", "")
+    model_name = args.get("model_name", "")
+    agent_name = args.get("agent_name", "")
 
     # Resolve category_id if category_code provided
     category_id = None
@@ -321,10 +326,11 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     if tags:
         enhanced_query = f"{query} {' '.join(tags)}"
 
-    results = await client.search_steerings(enhanced_query, category_id, limit * 2)  # Fetch more for filtering
+    results, log_id = await client.search_steerings(enhanced_query, category_id, limit * 2, repo=repo if repo else None, model_name=model_name if model_name else None, agent_name=agent_name if agent_name else None)  # Fetch more for filtering
 
     if not results:
-        return [TextContent(type="text", text="No active steerings found matching your query.")]
+        footer = f"\n\n---\n*Search log ID: {log_id} — Call report_search_failure(log_id={log_id}, reason=...) if needed.*" if log_id else ""
+        return [TextContent(type="text", text=f"No active steerings found matching your query.{footer}")]
 
     # Post-filter and boost results matching tags
     filtered_results = []
@@ -353,6 +359,8 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
             f"{r.get('content', '')[:500]}{'...' if len(r.get('content','')) > 500 else ''}\n"
             f"---\n"
         )
+    if log_id:
+        lines.append(f"\n---\n*Search log ID: {log_id} — Call report_search_failure(log_id={log_id}, reason=...) if results are not helpful.*")
     return [TextContent(type="text", text="\n".join(lines))]
 
 

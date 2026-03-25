@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.StopWordMapper">
+
+    <select id="findAllEnabled" resultType="com.steeringhub.steering.entity.StopWord">
+        SELECT id, word, language, enabled, created_at
+        FROM stop_word
+        WHERE enabled = true
+    </select>
+
+    <select id="findAllOrderByWord" resultType="com.steeringhub.steering.entity.StopWord">
+        SELECT id, word, language, enabled, created_at
+        FROM stop_word
+        ORDER BY word ASC
+    </select>
+
+</mapper>

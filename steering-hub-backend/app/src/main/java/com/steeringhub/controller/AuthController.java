@@ -1,6 +1,5 @@
 package com.steeringhub.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.steeringhub.common.dto.LoginDTO;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.Result;
@@ -36,9 +35,7 @@ public class AuthController {
     @Operation(summary = "用户登录", description = "使用用户名和密码登录系统")
     public Result<Map<String, Object>> login(@RequestBody @Validated LoginDTO dto) {
         // 查询用户
-        SysUser user = userMapper.selectOne(
-                new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, dto.getUsername())
-        );
+        SysUser user = userMapper.findByUsername(dto.getUsername());
 
         // 验证用户名
         if (user == null) {

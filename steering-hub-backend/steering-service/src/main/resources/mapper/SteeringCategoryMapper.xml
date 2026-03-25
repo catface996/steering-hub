@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SteeringCategoryMapper">
+
+    <select id="selectTreeByParentId" resultType="com.steeringhub.steering.entity.SteeringCategory">
+        SELECT id, name, code, description, parent_id, sort_order, enabled, created_at, updated_at, deleted
+        FROM steering_category
+        WHERE deleted = false
+          AND enabled = true
+          <if test="parentId != null">
+            AND parent_id = #{parentId}
+          </if>
+          <if test="parentId == null">
+            AND parent_id IS NULL
+          </if>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+</mapper>

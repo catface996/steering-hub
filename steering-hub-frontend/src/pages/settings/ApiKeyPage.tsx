@@ -4,6 +4,7 @@ import { Plus, Trash2, Copy, Check, AlertTriangle } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { apiKeyService } from '../../services/apiKeyService';
 import type { ApiKeyItem } from '../../types';
+import { formatDate } from '../../utils/formatTime';
 
 export default function ApiKeyPage() {
   const { setBreadcrumbs, setActions } = useHeader();
@@ -128,9 +129,9 @@ export default function ApiKeyPage() {
             {apiKeys.length > 0 ? (
               apiKeys.map((item) => (
                 <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 180 }} ellipsis>{item.name}</Typography.Text>
+                  <Typography.Text style={{ fontSize: 13, fontWeight: 500, width: 180 }} ellipsis={{ tooltip: true }}>{item.name}</Typography.Text>
                   <Flex gap={8} align="center" style={{ width: 260 }}>
-                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, fontFamily: 'monospace', flex: 1 }} ellipsis>{item.keyValue}</Typography.Text>
+                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, fontFamily: 'monospace', flex: 1 }} ellipsis={{ tooltip: true }}>{item.keyValue}</Typography.Text>
                     <Button
                       type="text"
                       size="small"
@@ -139,7 +140,7 @@ export default function ApiKeyPage() {
                       style={{ padding: '0 4px' }}
                     />
                   </Flex>
-                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, flex: 1 }} ellipsis>{item.description || '-'}</Typography.Text>
+                  <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, flex: 1 }} ellipsis={{ tooltip: true }}>{item.description || '-'}</Typography.Text>
                   <div style={{ width: 80, textAlign: 'center' }}>
                     <Tag
                       className={`tag-base ${item.enabled ? 'tag-enabled' : 'tag-disabled'}`}
@@ -148,10 +149,10 @@ export default function ApiKeyPage() {
                     </Tag>
                   </div>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 120, textAlign: 'center' }}>
-                    {item.lastUsedAt ? new Date(item.lastUsedAt).toLocaleDateString('zh-CN') : '-'}
+                    {formatDate(item.lastUsedAt)}
                   </Typography.Text>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 120, textAlign: 'center' }}>
-                    {new Date(item.createdAt).toLocaleDateString('zh-CN')}
+                    {formatDate(item.createdAt)}
                   </Typography.Text>
                   <Flex gap={8} justify="center" style={{ width: 100 }}>
                     <Tooltip title={item.enabled ? '禁用' : '启用'}>

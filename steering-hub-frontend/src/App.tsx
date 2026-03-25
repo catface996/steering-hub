@@ -19,6 +19,10 @@ import CategoryPage from './pages/category/CategoryPage';
 import ApiKeyPage from './pages/settings/ApiKeyPage';
 import StopWordPage from './pages/settings/StopWordPage';
 import HealthPage from './pages/health/HealthPage';
+import RepoListPage from './pages/repo/RepoListPage';
+import RepoDetailPage from './pages/repo/RepoDetailPage';
+import QueryLogPage from './pages/query-log/QueryLogPage';
+import QueryLogDetailPage from './pages/query-log/QueryLogDetailPage';
 
 function ThemedApp() {
   const { primaryColor } = useThemeColor();
@@ -46,6 +50,10 @@ function ThemedApp() {
             <Route path="settings/api-keys" element={<ApiKeyPage />} />
             <Route path="settings/stop-words" element={<StopWordPage />} />
             <Route path="health" element={<HealthPage />} />
+            <Route path="repos" element={<RepoListPage />} />
+            <Route path="repos/:id" element={<RepoDetailPage />} />
+            <Route path="query-logs" element={<QueryLogPage />} />
+            <Route path="query-logs/:id" element={<QueryLogDetailPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

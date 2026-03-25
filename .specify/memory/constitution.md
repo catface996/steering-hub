@@ -135,4 +135,63 @@ Task T014 开始 → search("Redis 缓存 Key 命名") → 未命中 → report_
 3. 分层依赖正确，无跨层调用，DDD 三问全部通过
 4. 所有 Job 已加分布式锁
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-22
+### 实现后合规自查（Mandatory Post-Implementation Check）
+
+**每个 Feature 实现完成后，必须执行以下自查，发现违规立即修复：**
+
+#### 后端自查清单
+```bash
+# 1. QueryWrapper 违规检测（不应有任何结果）
+grep -rn "QueryWrapper\|LambdaQueryWrapper" \
+  steering-hub-backend/*/src/main/java/ | grep -v "//.*QueryWrapper"
+
+# 2. @Transactional 位置检测（不应出现在 Controller/Mapper 层）
+grep -rn "@Transactional" \
+  steering-hub-backend/*/src/main/java/*/controller/ \
+  steering-hub-backend/*/src/main/java/*/mapper/ 2>/dev/null
+
+# 3. Controller 注入实现类检测（应注入接口而非 Impl）
+grep -rn "private.*ServiceImpl\|private.*RepositoryImpl" \
+  steering-hub-backend/*/src/main/java/*/controller/ 2>/dev/null
+```
+
+#### 前端自查清单
+```bash
+# 1. 分页组件违规检测（不应自行实现分页，必须用 Pagination.tsx）
+grep -rn "Pagination\b" steering-hub-frontend/src/pages/ | grep -v "import.*Pagination"
+
+# 2. API 路径规范检测（Web 接口必须含 /web/，MCP 接口含 /mcp/）
+grep -rn "api/v1/[^w]" steering-hub-frontend/src/services/ | grep -v "/web/\|/mcp/"
+
+# 3. 直接 fetch/axios 调用检测（应统一使用 request.ts 封装）
+grep -rn "axios\.\|fetch(" steering-hub-frontend/src/pages/ \
+  steering-hub-frontend/src/services/ 2>/dev/null
+```
+
+### VI. Claude Code Session 管理（持续任务必须复用 Session）
+
+**对于持续性任务（同一项目的多轮 review、修复、迭代），必须使用命名 Session，禁止每次新建无状态调用。**
+
+#### 规则
+1. **首次启动**：使用 `--name <task-name>` 创建命名 Session，记录 Session ID
+2. **后续调用**：使用 `-r <session-name>` resume 同一 Session，CC 自行维护上下文
+3. **禁止行为**：对同一任务反复用 `--print` 无状态调用，导致 CC 遗失规范查询结果和历史决策
+4. **Session 命名规范**：`steering-hub-<task>-<date>`，如 `steering-hub-review-20260323`
+
+#### 原因
+- CC 每次无状态调用都是全新进程，不记得上次查了哪些规范、做了哪些判断
+- Review 结果无法被下一次调用继承，导致重复工作或规范遗漏
+- Session 模式让 CC 自己维护上下文，无需水滴每次手动摘要
+
+#### 调用模板
+```bash
+# 创建（首次）
+claude --name steering-hub-review-$(date +%Y%m%d) \
+  --permission-mode bypassPermissions --print "任务描述..."
+
+# 续接（后续）
+claude -r steering-hub-review-$(date +%Y%m%d) \
+  --permission-mode bypassPermissions --print "继续..."
+```
+
+**Version**: 1.2.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-23

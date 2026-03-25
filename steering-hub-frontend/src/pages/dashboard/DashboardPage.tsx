@@ -5,6 +5,7 @@ import { FileText, CheckCircle, Search, ShieldCheck, Plus, Tag as TagIcon } from
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
 import type { Steering, SteeringStatus } from '../../types';
+import { formatDate } from '../../utils/formatTime';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
@@ -53,8 +54,8 @@ export default function DashboardPage() {
   const stats = [
     { label: '规范总数', value: totalCount, icon: <FileText size={20} />, color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
     { label: '已生效规范', value: activeCount, icon: <CheckCircle size={20} />, color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
-    { label: '本周检索次数', value: '--', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
-    { label: '合规检查次数', value: '--', icon: <ShieldCheck size={20} />, color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
+    { label: '本周检索次数', value: '-', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
+    { label: '合规检查次数', value: '-', icon: <ShieldCheck size={20} />, color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
   ];
 
   const quickActions = [
@@ -112,14 +113,14 @@ export default function DashboardPage() {
               style={{ padding: '10px 20px', borderBottom: '1px solid #27273a', cursor: 'pointer' }}
             >
               <div style={{ width: '35%', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }} ellipsis>{steering.title}</Typography.Text>
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500 }} ellipsis={{ tooltip: true }}>{steering.title}</Typography.Text>
               </div>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '20%' }} ellipsis>{steering.categoryName}</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '20%' }} ellipsis={{ tooltip: true }}>{steering.categoryName}</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: '15%' }}>v{steering.currentVersion}</Typography.Text>
               <div style={{ width: '15%' }}>
                 <Tag className={`tag-base ${STATUS_CLASS[steering.status]}`}>{STATUS_LABEL[steering.status]}</Tag>
               </div>
-              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{steering.updatedAt?.slice(0, 10)}</Typography.Text>
+              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{formatDate(steering.updatedAt)}</Typography.Text>
             </Flex>
           ))}
         </Card>

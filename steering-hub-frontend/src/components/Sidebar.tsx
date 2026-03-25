@@ -14,6 +14,8 @@ import {
   Filter,
   BarChart3,
   Heart,
+  Database,
+  ScrollText,
 } from 'lucide-react';
 
 const drawerWidth = 280;
@@ -33,6 +35,8 @@ const mainItems: NavItem[] = [
   { icon: <Tag size={20} />, label: '分类管理', path: '/categories', iconColor: '#4ade80' },
   { icon: <BarChart3 size={20} />, label: '使用分析', path: '/analytics', iconColor: '#f472b6' },
   { icon: <Heart size={20} />, label: '规范健康度', path: '/health', iconColor: '#fb7185' },
+  { icon: <ScrollText size={20} />, label: '检索日志', path: '/query-logs', iconColor: '#fb923c' },
+  { icon: <Database size={20} />, label: '仓库管理', path: '/repos', iconColor: '#38bdf8' },
 ];
 
 const settingsItems: NavItem[] = [
