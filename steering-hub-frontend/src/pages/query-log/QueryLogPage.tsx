@@ -125,7 +125,7 @@ export default function QueryLogPage() {
             <thead>
               <tr>
                 <th style={{ ...thStyle, width: 72 }}>ID</th>
-                <th style={{ ...thStyle, maxWidth: 200 }}>查询内容</th>
+                <th style={{ ...thStyle, minWidth: 200 }}>查询内容</th>
                 <th style={{ ...thStyle, width: 120 }}>Agent 名称</th>
                 <th style={{ ...thStyle, width: 160 }}>模型名称</th>
                 <th style={{ ...thStyle }}>代码仓库</th>
@@ -148,10 +148,10 @@ export default function QueryLogPage() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                 >
                   <td style={{ ...tdStyle, color: '#71717a', fontSize: 13 }}>{log.id}</td>
-                  <td style={{ ...tdStyle, maxWidth: 200 }}>
+                  <td style={{ ...tdStyle, width: '100%' }}>
                     <Typography.Text
                       ellipsis
-                      style={{ color: '#e4e4e7', display: 'block', maxWidth: 200 }}
+                      style={{ color: '#e4e4e7', display: 'block' }}
                       title={log.queryText}
                     >
                       {highlight(log.queryText, filterKeyword)}
