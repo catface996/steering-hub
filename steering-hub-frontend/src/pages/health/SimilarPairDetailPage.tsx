@@ -223,12 +223,19 @@ function SpecPanel({
         <Typography.Title level={4} style={{ color: '#e4e4e7', margin: 0, flex: 1 }}>
           {spec.title}
         </Typography.Title>
-        <Tag
-          color={STATUS_ANT_COLOR[statusKey] || 'default'}
-          style={{ borderRadius: 100, flexShrink: 0 }}
-        >
-          {STATUS_LABEL[statusKey] || spec.status}
-        </Tag>
+        <Flex align="center" gap={8} style={{ flexShrink: 0 }}>
+          <Tag
+            color={STATUS_ANT_COLOR[statusKey] || 'default'}
+            style={{ borderRadius: 100, margin: 0 }}
+          >
+            {STATUS_LABEL[statusKey] || spec.status}
+          </Tag>
+          {canDeprecate && onDeprecate && (
+            <Button type="primary" danger size="small" loading={deprecating} onClick={onDeprecate}>
+              禁用
+            </Button>
+          )}
+        </Flex>
       </Flex>
 
       <Flex gap={6} wrap="wrap" style={{ marginBottom: 12 }}>
@@ -247,14 +254,6 @@ function SpecPanel({
       <div style={{ color: '#a1a1aa', fontSize: 14, lineHeight: 1.7 }}>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
       </div>
-
-      {canDeprecate && onDeprecate && (
-        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #1e1e2a' }}>
-          <Button type="primary" danger size="small" loading={deprecating} onClick={onDeprecate}>
-            禁用此规范
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
