@@ -4,111 +4,119 @@
 
 Analyze the Task along three dimensions, combine into a search query string.
 
-| Dimension | What to extract | Examples |
+| Dimension | How to determine | Examples |
 |-----------|----------------|---------|
 | **Layer** | Coding layer being implemented | `Controller`, `Service`, `Repository`, `Job`, `MQ Consumer`, `前端组件` |
-| **Tech stack** | Framework / library in use | `Spring`, `MyBatis`, `@Transactional`, `React`, `Ant Design` |
+| **Tech stack** | **Infer from current codebase context** — check imports, pom.xml, package.json, existing files | If codebase uses Spring → `Spring`; uses Quarkus → `Quarkus`; uses Vue → `Vue` |
 | **Scenario** | Specific concern or pattern | `分页`, `事务`, `缓存`, `分布式锁`, `幂等`, `弹窗`, `时间格式` |
 
 **Composition rule**: Start with the most specific combination (all 3 dimensions), then broaden on retry.
 
 ```
-1st attempt: {layer} + {tech stack} + {scenario}   ← most precise
-2nd attempt: {layer} + {scenario}                   ← drop tech stack
-3rd attempt: {scenario} or {layer} alone            ← broadest
+1st attempt: {layer} + {inferred tech stack} + {scenario}   ← most precise
+2nd attempt: {layer} + {scenario}                            ← drop tech stack
+3rd attempt: {scenario} or {layer} alone                     ← broadest
 ```
+
+> **Key principle**: Tech stack keywords come from reading the project's actual code/config, NOT from hardcoded templates. If the project switches from MyBatis to JPA, queries should reflect that automatically.
 
 ---
 
-## Per-Task 3-Round Keyword Strategy
+## How to Infer Tech Stack
 
-### HTTP Controller (REST)
-| Round | Query |
-|-------|-------|
-| 1 | `Controller Spring HTTP POST 接口规范` |
-| 2 | `HTTP 接口 Controller 返回格式` |
-| 3 | `接口规范` |
+Before forming the first query, scan the relevant context clues:
+
+| What to check | What it tells you |
+|---------------|------------------|
+| `pom.xml` / `build.gradle` dependencies | Backend framework (Spring Boot / Quarkus / Micronaut), ORM (MyBatis / JPA / JOOQ), MQ (RabbitMQ / Kafka / RocketMQ) |
+| `package.json` dependencies | Frontend framework (React / Vue / Angular), UI library (Ant Design / MUI / Element Plus) |
+| Existing files in same module | Coding patterns already in use (e.g., if `XxxController` uses `@RestController`, use Spring) |
+| Import statements in adjacent files | Confirms library versions and patterns |
+
+**Do not assume.** If context is unclear, skip the tech stack dimension and use a broader 2-dimension query.
+
+---
+
+## Per-Task 3-Round Strategy (tech stack is inferred, not fixed)
+
+The examples below show the pattern. Replace the tech stack part with what you actually infer from the project.
+
+### HTTP Controller
+| Round | Pattern | Example (if Spring inferred) |
+|-------|---------|------|
+| 1 | `Controller {tech} HTTP {method} 接口规范` | `Controller Spring HTTP POST 接口规范` |
+| 2 | `HTTP 接口 Controller 返回格式` | ← same, no tech stack |
+| 3 | `接口规范` | ← broadest |
 
 **Spec checklist after hit:** Return `Result<T>` · Params via `@Valid` + DTO · No business logic in Controller
 
 ---
 
-### Application Service / @Transactional
-| Round | Query |
-|-------|-------|
-| 1 | `Application Service Spring @Transactional 事务边界` |
-| 2 | `Service 事务 领域事件` |
-| 3 | `事务` |
+### Application Service / Transaction
+| Round | Pattern | Example (if Spring inferred) |
+|-------|---------|------|
+| 1 | `Service {tech} 事务边界` | `Application Service Spring @Transactional 事务边界` |
+| 2 | `Service 事务 领域事件` | ← same |
+| 3 | `事务` | ← same |
 
-**Spec checklist after hit:** `@Transactional` in Application layer only · Inject interface, not impl
+**Spec checklist after hit:** Transaction annotation in Application layer only · Inject interface, not impl
 
 ---
 
-### Repository / MyBatis Mapper
-| Round | Query |
-|-------|-------|
-| 1 | `Repository MyBatis Mapper XML 禁止 QueryWrapper` |
-| 2 | `Mapper 动态SQL XML` |
-| 3 | `Repository 规范` |
+### Repository / Data Access
+| Round | Pattern | Example (if MyBatis inferred) |
+|-------|---------|------|
+| 1 | `Repository {tech} 动态查询` | `Repository MyBatis Mapper XML 禁止 QueryWrapper` |
+| 2 | `Repository 动态SQL` | ← same |
+| 3 | `Repository 规范` | ← same |
 
-**Spec checklist after hit:** No `QueryWrapper`/`LambdaQueryWrapper` · No `SELECT *` · No loop queries (N+1) · Conditions in XML `<if>`
+**Spec checklist after hit:** No `QueryWrapper` · No `SELECT *` · No N+1 loop queries
 
 ---
 
 ### Job / Scheduled Task
-| Round | Query |
-|-------|-------|
-| 1 | `Job 定时任务 分布式锁 @Scheduled` |
-| 2 | `定时任务 RedissonLock setIfAbsent` |
+| Round | Pattern |
+|-------|---------|
+| 1 | `Job 定时任务 分布式锁` |
+| 2 | `定时任务 分布式锁 幂等` |
 | 3 | `分布式锁` |
 
-**Spec checklist after hit (Architecture Red Line):** Every `@Scheduled` method MUST acquire distributed lock at the very start. No lock = must not merge.
+**Architecture Red Line:** Every scheduled method MUST acquire distributed lock. No lock = must not merge.
 
 ---
 
 ### MQ Consumer
-| Round | Query |
-|-------|-------|
+| Round | Pattern |
+|-------|---------|
 | 1 | `MQ Consumer 消息消费 幂等` |
 | 2 | `消息队列 幂等性 重试` |
 | 3 | `Consumer 消息处理` |
 
 ---
 
-### MQ Producer
-| Round | Query |
-|-------|-------|
-| 1 | `MQ 消息发送 RabbitMQ 可靠性` |
-| 2 | `消息发布 事务 确认机制` |
-| 3 | `消息发送 规范` |
-
----
-
 ### Feign / External HTTP Client
-| Round | Query |
-|-------|-------|
-| 1 | `Feign 外部HTTP 超时 FallbackFactory` |
-| 2 | `HTTP Client 熔断 降级` |
+| Round | Pattern |
+|-------|---------|
+| 1 | `外部HTTP 调用 超时 熔断` |
+| 2 | `HTTP Client 降级 FallbackFactory` |
 | 3 | `外部调用 规范` |
-
-**Spec checklist after hit:** Must set timeout · Must have `FallbackFactory` · No bare HTTP call
 
 ---
 
 ### Domain Service / Aggregate Root
-| Round | Query |
-|-------|-------|
+| Round | Pattern |
+|-------|---------|
 | 1 | `Domain 聚合根 值对象 领域服务` |
 | 2 | `Domain Service 业务逻辑` |
 | 3 | `领域层 规范` |
 
-**Spec checklist after hit:** Domain layer must NOT import Spring annotations or JPA/MyBatis classes
+**Spec checklist after hit:** Domain layer must NOT import framework-specific annotations or ORM classes
 
 ---
 
 ### Redis Cache
-| Round | Query |
-|-------|-------|
+| Round | Pattern |
+|-------|---------|
 | 1 | `Redis 缓存 Key 命名 TTL` |
 | 2 | `缓存 Key 规范 序列化` |
 | 3 | `缓存规范` |
@@ -116,10 +124,10 @@ Analyze the Task along three dimensions, combine into a search query string.
 ---
 
 ### Frontend Component / Page
-| Round | Query |
-|-------|-------|
+| Round | Pattern |
+|-------|---------|
 | 1 | `前端展示交互规范 时间格式 Tag颜色` |
-| 2 | `formatDateTime 空值 Typography ellipsis` |
+| 2 | `formatDateTime 空值 Typography` |
 | 3 | `前端规范` |
 
 **Spec checklist after hit (spec [229]):**
@@ -130,8 +138,8 @@ Analyze the Task along three dimensions, combine into a search query string.
 ---
 
 ### Frontend Modal / Confirm Dialog
-| Round | Query |
-|-------|-------|
+| Round | Pattern |
+|-------|---------|
 | 1 | `前端二次确认弹窗 ConfirmModal 暗色主题` |
 | 2 | `ConfirmModal ConfigProvider 受控组件` |
 | 3 | `弹窗 确认 规范` |
@@ -141,8 +149,8 @@ Analyze the Task along three dimensions, combine into a search query string.
 ---
 
 ### Frontend Pagination
-| Round | Query |
-|-------|-------|
+| Round | Pattern |
+|-------|---------|
 | 1 | `分页 Pagination 组件 统一` |
 | 2 | `Pagination.tsx 前端分页` |
 | 3 | `分页规范` |
