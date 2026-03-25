@@ -1,95 +1,129 @@
-# Research: 分级 Category 导航
+# Research: 分级 Category 导航（DAG 方案）
 
 **Feature**: 004-hierarchical-category-navigation
 **Phase**: 0 — Research
-**Date**: 2026-03-25
+**Date**: 2026-03-25 (rev 2: 加入数据审计结论 + DAG 决策)
 
 ---
 
-## 1. 现有分类表结构确认
+## 1. 数据审计结论
 
-**Decision**: 直接使用现有 `steering_category` 表，无需 migration。
-**Rationale**: 表已有 `parent_id`（树形结构）、`sort_order`（同级排序）、`enabled`、`deleted` 字段及 `idx_steering_category_parent` 索引，完全满足本 Feature 需求。
-**Confirmed fields**: `id`, `name`, `code`, `description`, `parent_id`, `sort_order`, `enabled`, `created_at`, `updated_at`, `deleted`
+**审计日期**: 2026-03-25
+
+| 指标 | 数值 |
+|------|------|
+| 总分类数（active） | 6 |
+| 一级分类（parent_id IS NULL） | 6 |
+| 二级及以下 | 0 |
+| 最大层级深度 | 1 |
+
+**现有 6 个分类均为顶层平铺，没有任何父子关系。**
+
+| 分类 | code | active 规范数 |
+|------|------|-------------|
+| 编码规范 | coding | 118 |
+| 架构规范 | architecture | 85 |
+| 安全规范 | security | 9 |
+| 测试规范 | testing | 2 |
+| 业务规范 | business | 1 |
+| 文档规范 | documentation | 1 |
+
+`coding` + `architecture` 合占 92%，内容极度混杂，急需建立子分类。
+
+**`coding` 高频 tags 分析**:
+- 前端(36)、React(20)、Java(18)、MyBatisPlus(18)、TypeScript(11)、SpringBoot(9)、DDD(9)
 
 ---
 
-## 2. 分类导航策略：逐级懒加载 vs 完整树一次返回
+## 2. 数据模型选型：DAG vs 单亲树
 
-**Decision**: 逐级懒加载——`list_categories(parent_id?)` 每次只返回直接子节点。
+**Decision**: 新建 `category_hierarchy` 关联表（DAG），不使用 `steering_category.parent_id`。
+
 **Rationale**:
-- 完整树返回在分类数量大时会产生大量 token 消耗，对 Agent 不友好。
-- 逐级加载让 Agent 按需获取数据，通常 2~3 次调用即可定位目标分类。
-- 与浏览器 Tree 组件懒加载模式一致，概念简单。
+- 审计确认 `parent_id` 全为 NULL，无存量数据迁移成本。
+- 某些技术子域（如 "MyBatisPlus"）语义上同时归属 "Java 后端" 和 "数据访问"，单亲树无法表达。
+- DAG 表 `(parent, child, sort_order)` 设计简洁，扩展性好，后续还可支持更复杂的分类图谱。
+- `steering_category.parent_id` 字段保留但不在本 Feature 中使用，零破坏性变更。
 
 **Alternatives considered**:
-- 一次返回完整树（`/api/v1/mcp/categories/tree`）：token 消耗不可控，分类多时响应体巨大。
-- 提供"路径导航"接口（按 code 或 path 查询）：增加接口数量，Agent 需记更多工具。
+- 直接使用 `steering_category.parent_id`（单亲树）：无法处理多父节点场景，且字段现已全部为 NULL，语义退化。
+- Materialized Path（如 `/1/3/7`）：查询方便，但 PostgreSQL 无原生 ltree 支持（需扩展），且修改关系时路径重算复杂。
+- Nested Set：读性能好，但写性能差，每次插入需重算区间，不适合运营场景。
 
 ---
 
-## 3. 新工具 vs 复用现有 get_steering_tags
+## 3. 环检测：应用层 BFS vs DB 约束
 
-**Decision**: 新增两个独立工具 `list_categories` 和 `list_steerings`，不修改 `get_steering_tags`。
+**Decision**: 应用层 BFS 环检测 + DB 自环 CHECK 约束。
+
 **Rationale**:
-- `get_steering_tags` 返回的是 tag 列表（非分类树），语义不同，不宜混用。
-- 新工具职责清晰：`list_categories` = 导航树，`list_steerings` = 按分类取规范。
-- 保持现有工具不变，zero regression。
+- PostgreSQL 无原生 DAG 环检测约束，只能通过触发器或应用层实现。
+- 分类总数 < 100，BFS 遍历 O(V+E) 开销 < 1ms，应用层实现简单可控。
+- DB 层保留 `CHECK(parent != child)` 作为自环兜底，防止应用层 bug 漏检。
 
-**get_steering_tags 现有能力（保留）**:
-- 不传 category_code → 返回所有分类概览（tag 数量、规范数量）
-- 传 category_code → 返回该分类下的 tag 列表
+**BFS 策略**: 从 `childId` 出发，向下遍历所有后代，若 `parentId` 出现在后代集合中则拒绝插入。
 
 ---
 
-## 4. Controller 位置：新 Controller vs 扩展现有 Controller
+## 4. 顶层分类定义：无父节点
 
-**Decision**: 新建 `CategoryNavController` 处理 `/api/v1/mcp/categories` 和 `/api/v1/mcp/steerings` 两个接口。
+**Decision**: 顶层分类 = 在 `category_hierarchy` 中没有任何父节点的分类（`NOT EXISTS` 子查询）。
+
 **Rationale**:
-- `SteeringCategoryController` 当前路径为 `/api/v1/web/categories`，专属 Web 管理端。
-- MCP 专用接口放在独立 Controller 更清晰，职责分离；路径前缀也不同（`/mcp/` vs `/web/`）。
-- `SteeringController` 当前路径为 `/api/v1/web/steerings`，不混入 MCP 用途的端点。
-
-**Alternatives considered**:
-- 在 `SteeringCategoryController` 增加 `@GetMapping("/api/v1/mcp/categories")` 方法：会出现同一 Controller 承载不同路径前缀的情况，混乱。
-- 在 `SteeringController` 增加 `list by category` 方法：`SteeringController` 职责是规范 CRUD，不应承载导航语义。
+- 比依赖 `parent_id IS NULL` 更准确，与 DAG 模型一致。
+- 允许管理员通过调整 `category_hierarchy` 关系将某分类"升级"为顶层，无需修改 `steering_category` 表。
 
 ---
 
-## 5. list_steerings 返回字段设计
+## 5. tags 与 category 正交性
 
-**Decision**: 仅返回 id、title、tags、updatedAt，不含 content。
+**Decision**: `steering.tags` 字段和所有 tags 相关查询逻辑完全不修改。
+
 **Rationale**:
-- content 字段通常为长 Markdown 文档，一次返回多条会消耗大量 token。
-- Agent 获取列表后，可按需调用 `get_steering(id)` 获取完整内容。
-- 与 `search_steering` 返回格式保持一致（search 也返回摘要而非全文）。
+- tags = 技术栈维度（描述规范涉及哪些技术），category = 架构分层维度（规范属于哪个领域）。
+- 两个维度正交，互不影响，且可以组合（先导航到分类，再在分类内按 tags 精搜）。
+- 审计确认 `coding` 下 118 条规范都有丰富的 tags，保留 tags 能让 `search_steering` 继续正常工作。
 
 ---
 
-## 6. limit 上限设计
+## 6. 幂等 INSERT 策略
 
-**Decision**: `list_steerings` 的 limit 默认 10，上限 50（Clamp 处理，不报错）。
+**Decision**: `POST /api/v1/web/category-hierarchy` 使用 `INSERT ... ON CONFLICT DO NOTHING`。
+
 **Rationale**:
-- 默认 10 条覆盖大多数使用场景（大多数分类规范 < 20 条）。
-- 上限 50 防止单次返回内容过多，同时提供足够弹性。
-- Clamp 处理（而非报错）对 Agent 更友好，减少重试成本。
+- `PRIMARY KEY(parent_category_id, child_category_id)` 天然保证唯一性。
+- `ON CONFLICT DO NOTHING` 让重复请求返回成功，满足幂等要求，无需先查后写（避免竞态）。
 
 ---
 
-## 7. parent_id=0 的处理
+## 7. Web 管理接口位置
 
-**Decision**: `parent_id=0` 等价于 `parent_id=null`，均返回顶层分类。
+**Decision**: 新建 `CategoryNavController` 同时承载 MCP 只读端点和 Web 管理端点。
+
 **Rationale**:
-- MCP 工具 inputSchema 中 parent_id 类型为 integer，部分 Agent 可能传 0 表示"根节点"。
-- SQL 层统一处理：`parent_id=0` 时转为 `WHERE parent_id IS NULL`，避免 Agent 出错。
+- 所有接口都围绕 `category_hierarchy` 关联表，职责单一，集中在一个 Controller 更清晰。
+- 路径前缀区分用途：`/api/v1/mcp/` 供 MCP Server 调用，`/api/v1/web/` 供 Web 管理端调用。
 
 ---
 
-## 8. 现有 SteeringCategoryService 评估
+## 8. 建议的子分类结构（基于 tags 分析）
 
-**Current state**:
-- `listTree()` 方法已存在，但返回完整树（非逐级）
-- 内部实现未使用 XML Mapper（可能使用 QueryWrapper，待确认）
+```
+coding（保留）
+├── java-backend     → Java, SpringBoot, DDD, Lombok, 事务          (约 45 条)
+├── frontend         → React, Ant Design, 前端, 组件, Hook, 布局     (约 40 条)
+├── typescript       → TypeScript, 类型, 泛型, 枚举                   (约 15 条)
+└── data-access      → MyBatisPlus, Repository, XML Mapper           (约 18 条)
 
-**Decision**: 新服务方法 `listChildren(Long parentId)` 和 `listActiveSteeringsByCategory(Long categoryId, int limit)` 使用 XML Mapper 实现，不复用 `listTree()`。
-**Rationale**: 合规 Constitution III，新增查询方法必须通过 XML Mapper；`listTree()` 为既有代码不在修改范围。
+architecture（保留）
+├── api-design       → REST, HTTP, 接口设计, API版本, 限流            (约 15 条)
+├── database         → MySQL, Redis, 索引, 缓存, 分片                 (约 15 条)
+└── devops           → Docker, Git, CI/CD, 容器                      (约 15 条)
+
+security（暂不细分，9 条）
+testing（暂不细分，2 条）
+business（暂不细分，1 条）
+documentation（暂不细分，1 条）
+```
+
+**注意**: 子分类的 INSERT 和 `category_hierarchy` 关系的 INSERT 属于数据操作，纳入迁移脚本，不是应用代码。

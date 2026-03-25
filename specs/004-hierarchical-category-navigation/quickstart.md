@@ -1,12 +1,26 @@
-# Quickstart: 分级 Category 导航
+# Quickstart: 分级 Category 导航（DAG 方案）
 
-**Feature**: 004-hierarchical-category-navigation
+**Feature**: 004-hierarchical-category-navigation (rev 2: DAG)
 
 ---
 
-## 1. 无需数据库迁移
+## 1. 数据库迁移
 
-`steering_category.parent_id` 和 `sort_order` 已存在，直接跳过此步骤。
+```bash
+PGPASSWORD=steering123 psql -h localhost -U steering -d steering_hub \
+  -f docs/sql/migration_004_category_hierarchy.sql
+```
+
+**验证**:
+```bash
+# 应有 8 条记录（coding→4子分类 + architecture→4子分类）
+PGPASSWORD=steering123 psql -h localhost -U steering -d steering_hub \
+  -c "SELECT COUNT(*) FROM category_hierarchy;"
+
+# 应有 14 个分类（6原有 + 8新增）
+PGPASSWORD=steering123 psql -h localhost -U steering -d steering_hub \
+  -c "SELECT id, name, code FROM steering_category WHERE deleted=false ORDER BY id;"
+```
 
 ---
 
@@ -18,20 +32,48 @@ mvn clean package -DskipTests
 java -jar app/target/steering-hub-app-*.jar
 ```
 
-**验证 MCP 分类导航接口**:
-
+**验证 MCP 只读接口**:
 ```bash
-# 查询顶层分类（不传 parent_id）
+# 顶层分类（应返回 6 个，coding 和 architecture 的 childCount=4）
 curl -s "http://localhost:8080/api/v1/mcp/categories" | jq '.data[] | {id, name, code, childCount}'
 
-# 查询某顶层分类的子分类（替换 1 为实际 ID）
-curl -s "http://localhost:8080/api/v1/mcp/categories?parent_id=1" | jq '.data'
+# coding 子分类（应返回 java-backend/frontend/typescript/data-access）
+curl -s "http://localhost:8080/api/v1/mcp/categories?parent_id=1" | jq '.data[] | {id, name, code}'
 
-# 查询某分类下的规范摘要（替换 1 为实际分类 ID）
-curl -s "http://localhost:8080/api/v1/mcp/steerings?category_id=1&limit=5" | jq '.data[] | {id, title, tags}'
+# 某分类下的规范摘要（替换 category_id 为实际值）
+curl -s "http://localhost:8080/api/v1/mcp/steerings?category_id=1&limit=5" \
+  | jq '.data[] | {id, title, tags}'
 
-# 验证不存在的 parent_id 返回空数组而非报错
+# 叶节点 → 空数组
 curl -s "http://localhost:8080/api/v1/mcp/categories?parent_id=9999" | jq '.data'
+```
+
+**验证 Web 管理接口**:
+```bash
+# 添加关系（将 id 替换为实际值）
+curl -s -X POST http://localhost:8080/api/v1/web/category-hierarchy \
+  -H "Content-Type: application/json" \
+  -d '{"parentCategoryId": 1, "childCategoryId": 10, "sortOrder": 5}' | jq .
+
+# 触发环检测（A→B→C 存在时，尝试 C→A 应返回 400）
+# 先建 A→B
+curl -s -X POST http://localhost:8080/api/v1/web/category-hierarchy \
+  -H "Content-Type: application/json" \
+  -d '{"parentCategoryId": 10, "childCategoryId": 11, "sortOrder": 0}' | jq .
+# 再尝试 B→coding（成环）
+curl -s -X POST http://localhost:8080/api/v1/web/category-hierarchy \
+  -H "Content-Type: application/json" \
+  -d '{"parentCategoryId": 11, "childCategoryId": 1, "sortOrder": 0}' | jq .
+# 预期：400，CYCLE_DETECTED
+
+# 删除关系（幂等）
+curl -s -X DELETE http://localhost:8080/api/v1/web/category-hierarchy \
+  -H "Content-Type: application/json" \
+  -d '{"parentCategoryId": 10, "childCategoryId": 11}' | jq .
+# 重复删除同一关系 → 仍返回成功
+curl -s -X DELETE http://localhost:8080/api/v1/web/category-hierarchy \
+  -H "Content-Type: application/json" \
+  -d '{"parentCategoryId": 10, "childCategoryId": 11}' | jq .
 ```
 
 ---
@@ -46,34 +88,35 @@ uv run steering-hub-mcp
 在 Claude Code 中调用新工具：
 
 ```python
-# Step 1: 浏览顶层分类
+# Step 1: 顶层分类（含 childCount）
 mcp__steering-hub__list_categories()
-# 预期：返回 coding, architecture, business 等顶层分类，含 childCount
+# 预期：coding(childCount=4), architecture(childCount=4), business, security, testing, documentation
 
-# Step 2: 下钻到子分类（使用上一步返回的 id）
+# Step 2: 下钻到 coding 子分类
 mcp__steering-hub__list_categories(parent_id=1)
-# 预期：返回该顶层分类的子分类列表
+# 预期：java-backend, frontend, typescript, data-access
 
-# Step 3: 查看某分类下的规范（使用上一步返回的 id）
-mcp__steering-hub__list_steerings(category_id=5, limit=10)
-# 预期：返回 ≤10 条 active 规范的 id、title、tags
+# Step 3: 查看 java-backend 下的规范
+mcp__steering-hub__list_steerings(category_id=<java-backend-id>, limit=10)
+# 预期：active 规范列表，每条含 tags 字段（原始逗号分隔字符串）
 
-# Step 4: 获取具体规范完整内容（使用上一步返回的 id）
-mcp__steering-hub__get_steering(id=42)
-# 预期：返回完整规范内容
+# Step 4: 完整规范内容
+mcp__steering-hub__get_steering(id=<id>)
 ```
 
 ---
 
-## 4. 回归验证：确认现有工具未受影响
+## 4. 回归验证：tags 和 search_steering 不受影响
+
+```bash
+# 验证 search_steering 行为不变（结果应与改动前完全一致）
+curl -s "http://localhost:8080/api/v1/mcp/search?query=Controller&limit=5" | jq '.data[] | {id, title, score}'
+```
 
 ```python
-# 验证 search_steering 行为不变
-mcp__steering-hub__search_steering(
-    query="Controller REST 接口规范",
-    limit=5
-)
-# 预期：与改动前返回结果完全一致
+# 在 Claude Code 中验证 MCP search 不受影响
+mcp__steering-hub__search_steering(query="Controller REST 接口", tags=["Controller"])
+# 预期：返回结果与 Feature 004 上线前完全一致
 ```
 
 ---
@@ -82,12 +125,12 @@ mcp__steering-hub__search_steering(
 
 | 文件 | 说明 |
 |------|------|
-| `steering-service/.../controller/CategoryNavController.java` | 2 个 MCP 端点 |
-| `steering-service/.../service/CategoryNavService.java` | 服务接口 |
-| `steering-service/.../service/impl/CategoryNavServiceImpl.java` | 服务实现 |
-| `steering-service/.../mapper/SteeringCategoryMapper.xml` | 子分类查询 SQL |
-| `steering-service/.../mapper/SteeringMapper.xml` | 分类下规范查询 SQL |
-| `steering-service/.../dto/response/CategoryNavItem.java` | 分类摘要 DTO |
-| `steering-service/.../dto/response/SteeringNavItem.java` | 规范摘要 DTO |
-| `steering-hub-mcp/src/steering_hub_mcp/client.py` | MCP HTTP 调用层 |
-| `steering-hub-mcp/src/steering_hub_mcp/server.py` | MCP Tool 注册 |
+| `docs/sql/migration_004_category_hierarchy.sql` | DB 迁移：建表 + 子分类 + 关系初始化 |
+| `steering-service/.../entity/CategoryHierarchy.java` | DAG 关系实体 |
+| `steering-service/.../mapper/CategoryHierarchyMapper.xml` | insert/delete/selectChildIds SQL |
+| `steering-service/.../mapper/SteeringCategoryMapper.xml` | listTopLevel / listChildren SQL |
+| `steering-service/.../mapper/SteeringMapper.xml` | listActiveByCategory SQL |
+| `steering-service/.../service/impl/CategoryNavServiceImpl.java` | 核心：BFS 环检测 + 导航逻辑 |
+| `steering-service/.../controller/CategoryNavController.java` | 4 个端点 |
+| `steering-hub-mcp/.../client.py` | list_categories / list_steerings HTTP 调用 |
+| `steering-hub-mcp/.../server.py` | 2 个 MCP Tool 注册 |
