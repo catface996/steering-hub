@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Typography, Button, Flex, Spin, Tag, App, Modal, Select, Form, InputNumber,
+  Typography, Button, Flex, Spin, Tag, App, Modal, Select, Form, Input, InputNumber,
 } from 'antd';
 import { GitBranch, Plus, Trash2, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
@@ -82,6 +82,11 @@ export default function CategoryNavPage() {
   // All categories (for the add-hierarchy selects)
   const [allCategories, setAllCategories] = useState<SteeringCategory[]>([]);
 
+  // Create category modal
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createForm] = Form.useForm();
+
   // Add hierarchy modal
   const [addOpen, setAddOpen] = useState(false);
   const [addSubmitting, setAddSubmitting] = useState(false);
@@ -127,6 +132,13 @@ export default function CategoryNavPage() {
             删除关系
           </Button>
         )}
+        <Button icon={<Plus size={14} />} onClick={() => {
+            if (selectedNode) {
+              createForm.setFieldValue('parentId', selectedNode.categoryId);
+            }
+            setCreateOpen(true);
+          }}>新建分类
+        </Button>
         <Button type="primary" icon={<Plus size={14} />} onClick={() => {
             if (selectedNode) {
               addForm.setFieldValue('parentCategoryId', selectedNode.categoryId);
@@ -160,6 +172,28 @@ export default function CategoryNavPage() {
       setRoots((prev) =>
         updateNode(prev, node.nodeKey, (n) => ({ ...n, expanded: !n.expanded }))
       );
+    }
+  };
+
+  // ── Create category ───────────────────────────────────────────────────────
+  const handleCreateCategory = async (values: {
+    name: string;
+    code: string;
+    description?: string;
+    parentId?: number;
+  }) => {
+    setCreateSubmitting(true);
+    try {
+      await categoryNavService.createCategory(values);
+      message.success('分类创建成功');
+      setCreateOpen(false);
+      createForm.resetFields();
+      setSelectedNode(null);
+      loadRoots();
+    } catch {
+      // toast from request layer
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
@@ -301,6 +335,59 @@ export default function CategoryNavPage() {
           roots.map((node) => renderNode(node))
         )}
       </div>
+
+      {/* Create category modal */}
+      <Modal
+        open={createOpen}
+        onCancel={() => { setCreateOpen(false); createForm.resetFields(); }}
+        title="新建分类"
+        footer={null}
+        width={480}
+      >
+        <Form
+          form={createForm}
+          layout="vertical"
+          onFinish={handleCreateCategory}
+          style={{ paddingTop: 8 }}
+        >
+          <Form.Item
+            label="分类名称"
+            name="name"
+            rules={[{ required: true, message: '请输入分类名称' }]}
+          >
+            <Input placeholder="例：AI 开发工具" />
+          </Form.Item>
+          <Form.Item
+            label="分类代码"
+            name="code"
+            rules={[
+              { required: true, message: '请输入分类代码' },
+              { pattern: /^[a-z0-9-]+$/, message: '只允许小写字母、数字和连字符' },
+            ]}
+          >
+            <Input placeholder="例：ai-dev-tools" style={{ fontFamily: 'monospace' }} />
+          </Form.Item>
+          <Form.Item label="描述" name="description">
+            <Input.TextArea placeholder="选填" rows={3} />
+          </Form.Item>
+          <Form.Item label="父分类" name="parentId">
+            <Select
+              placeholder="不选则创建为一级分类"
+              showSearch
+              allowClear
+              optionFilterProp="label"
+              options={allCategories.map((c) => ({
+                value: c.id,
+                label: `${c.name} (${c.code})`,
+              }))}
+            />
+          </Form.Item>
+          <Flex justify="flex-end" gap={12}>
+            <Button onClick={() => { setCreateOpen(false); createForm.resetFields(); }}>取消</Button>
+            <Button type="primary" htmlType="submit" loading={createSubmitting}>创建</Button>
+          </Flex>
+        </Form>
+      </Modal>
 
       {/* Add hierarchy modal */}
       <Modal
