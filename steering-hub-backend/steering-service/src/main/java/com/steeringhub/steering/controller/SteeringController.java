@@ -9,6 +9,8 @@ import com.steeringhub.steering.dto.request.UpdateSteeringRequest;
 import com.steeringhub.steering.dto.response.CompareVO;
 import com.steeringhub.steering.dto.response.SpecDetailVO;
 import com.steeringhub.steering.dto.response.SteeringDetailResponse;
+import com.steeringhub.steering.dto.response.SteeringVersionDetailVO;
+import com.steeringhub.steering.dto.response.SteeringVersionVO;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.ResultCode;
 import com.steeringhub.steering.entity.Steering;
@@ -85,6 +87,23 @@ public class SteeringController {
     public Result<Void> generateContentEmbedding(@PathVariable Long id) {
         steeringService.generateContentEmbedding(id);
         return Result.ok();
+    }
+
+    @Operation(summary = "分页查询规范版本历史")
+    @GetMapping("/{id}/versions")
+    public Result<IPage<SteeringVersionVO>> listVersions(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "20") long size) {
+        return Result.ok(steeringService.listVersions(id, current, size));
+    }
+
+    @Operation(summary = "获取指定版本详情（只读）")
+    @GetMapping("/{id}/versions/{versionNumber}")
+    public Result<SteeringVersionDetailVO> getVersionDetail(
+            @PathVariable Long id,
+            @PathVariable int versionNumber) {
+        return Result.ok(steeringService.getVersionDetail(id, versionNumber));
     }
 
     @Operation(summary = "左右分屏对比两条规范内容")

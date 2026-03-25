@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Typography, Button, Input, Select, Flex, Spin, App, Tag } from 'antd';
+import { Typography, Button, Input, Select, Flex, Spin, App, Tag, Alert } from 'antd';
 import { FileText, Tag as TagIcon, BookOpen, Save, Plus, X } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
@@ -15,6 +15,7 @@ export default function SteeringEditPage() {
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isActiveSteering, setIsActiveSteering] = useState(false);
   const [categories, setCategories] = useState<SteeringCategory[]>([]);
 
   const [form, setForm] = useState({
@@ -128,6 +129,7 @@ export default function SteeringEditPage() {
     if (isEdit) {
       setLoading(true);
       steeringService.get(Number(id)).then((steering) => {
+        setIsActiveSteering(steering.status === 'active');
         setForm({
           title: steering.title ?? '',
           categoryId: steering.categoryId ? String(steering.categoryId) : '',
@@ -153,7 +155,15 @@ export default function SteeringEditPage() {
   );
 
   return (
-    <div style={{ padding: 24, flex: 1, overflow: 'auto', display: 'flex', gap: 24 }}>
+    <div style={{ padding: 24, flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {isActiveSteering && (
+        <Alert
+          type="info"
+          showIcon
+          message="当前规范处于生效状态，编辑将创建新草稿版本，不会直接修改现有内容"
+        />
+      )}
+      <div style={{ flex: 1, display: 'flex', gap: 24 }}>
       {/* Left Column - Main Content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Basic Information */}
@@ -277,6 +287,7 @@ export default function SteeringEditPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

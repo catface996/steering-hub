@@ -8,12 +8,12 @@ import type { Steering, SteeringStatus } from '../../types';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
-  rejected: '已驳回', active: '已生效', deprecated: '已废弃',
+  rejected: '已驳回', active: '已生效', deprecated: '已废弃', superseded: '已被取代',
 };
 
 const STATUS_CLASS: Record<SteeringStatus, string> = {
   draft: 'tag-status-draft', pending_review: 'tag-status-pending', approved: 'tag-status-approved',
-  rejected: 'tag-status-rejected', active: 'tag-status-active', deprecated: 'tag-status-deprecated',
+  rejected: 'tag-status-rejected', active: 'tag-status-active', deprecated: 'tag-status-deprecated', superseded: 'tag-status-deprecated',
 };
 
 export default function DashboardPage() {

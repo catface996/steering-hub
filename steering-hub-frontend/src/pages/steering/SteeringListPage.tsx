@@ -10,12 +10,12 @@ import Pagination from '../../components/Pagination';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
-  rejected: '已驳回', active: '已生效', deprecated: '已废弃',
+  rejected: '已驳回', active: '已生效', superseded: '已被取代', deprecated: '已废弃',
 };
 
 const STATUS_CLASS: Record<SteeringStatus, string> = {
   draft: 'tag-status-draft', pending_review: 'tag-status-pending', approved: 'tag-status-approved',
-  rejected: 'tag-status-rejected', active: 'tag-status-active', deprecated: 'tag-status-deprecated',
+  rejected: 'tag-status-rejected', active: 'tag-status-active', superseded: 'tag-status-deprecated', deprecated: 'tag-status-deprecated',
 };
 
 export default function SteeringListPage() {
@@ -110,6 +110,16 @@ export default function SteeringListPage() {
       setRefreshKey(k => k + 1);
     } catch {
       // request.ts 已全局处理错误 toast，这里不需要再处理
+    }
+  };
+
+  const handleWithdraw = async (id: number) => {
+    try {
+      await steeringService.withdraw(id);
+      message.success('已撤回');
+      setRefreshKey(k => k + 1);
+    } catch {
+      // ignore
     }
   };
 
@@ -298,6 +308,9 @@ export default function SteeringListPage() {
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (
                     <Button type="link" size="small" onClick={() => handleReview(record.id, 'submit')} style={{ fontSize: 12 }}>提交审核</Button>
+                  )}
+                  {record.status === 'pending_review' && (
+                    <Button type="link" size="small" onClick={() => handleWithdraw(record.id)} style={{ fontSize: 12 }}>撤回</Button>
                   )}
                   {record.status === 'approved' && (
                     <Button type="link" size="small" onClick={() => handleReview(record.id, 'activate')} style={{ color: '#32D583', fontSize: 12 }}>生效</Button>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SteeringVersionMapper">
+
+    <resultMap id="steeringVersionResultMap" type="com.steeringhub.steering.entity.SteeringVersion">
+        <id property="id" column="id"/>
+        <result property="steeringId" column="steering_id"/>
+        <result property="version" column="version"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="tags" column="tags"/>
+        <result property="keywords" column="keywords"/>
+        <result property="changeLog" column="change_log"/>
+        <result property="status" column="status"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="selectBySteeringId" resultMap="steeringVersionResultMap">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+        ORDER BY version DESC
+    </select>
+
+    <select id="selectBySteeringIdAndVersion" resultMap="steeringVersionResultMap">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+          AND version = #{version}
+    </select>
+
+    <select id="selectMaxVersionBySteeringId" resultType="java.lang.Integer">
+        SELECT MAX(version) FROM steering_version WHERE steering_id = #{steeringId}
+    </select>
+
+    <update id="updateVersionStatus">
+        UPDATE steering_version
+        SET status = #{toStatus}, updated_at = NOW()
+        WHERE steering_id = #{steeringId}
+          AND status = #{fromStatus}
+    </update>
+
+    <select id="findVersionBySteeringIdAndStatus" resultMap="steeringVersionResultMap">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+          AND status = #{status}
+        LIMIT 1
+    </select>
+
+    <select id="listVersionsBySteeringId" resultMap="steeringVersionResultMap">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+        ORDER BY version DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVersionsBySteeringId" resultType="int">
+        SELECT COUNT(*) FROM steering_version WHERE steering_id = #{steeringId}
+    </select>
+
+    <select id="findVersionByNumber" resultMap="steeringVersionResultMap">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+          AND version = #{versionNumber}
+    </select>
+
+</mapper>

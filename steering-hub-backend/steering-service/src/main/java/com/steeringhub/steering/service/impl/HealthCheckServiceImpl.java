@@ -1,8 +1,6 @@
 package com.steeringhub.steering.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.steeringhub.common.enums.SteeringStatus;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.PageResult;
 import com.steeringhub.common.response.ResultCode;
@@ -21,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import jakarta.annotation.PostConstruct;
@@ -78,16 +77,14 @@ public class HealthCheckServiceImpl implements HealthCheckService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public TriggerVO triggerCheck() {
         HealthCheckTask running = healthCheckTaskMapper.findRunning();
         if (running != null) {
             throw new BusinessException(ResultCode.TASK_ALREADY_RUNNING);
         }
 
-        long activeCount = steeringMapper.selectCount(
-                new LambdaQueryWrapper<Steering>()
-                        .eq(Steering::getStatus, SteeringStatus.ACTIVE)
-                        .eq(Steering::getDeleted, false));
+        int activeCount = steeringMapper.countActiveSpecs();
         if (activeCount < 2) {
             throw new BusinessException(ResultCode.SPEC_COUNT_INSUFFICIENT.getCode(),
                     "规范数量不足，无需检测（当前 active 规范 " + activeCount + " 条）");
@@ -96,7 +93,7 @@ public class HealthCheckServiceImpl implements HealthCheckService {
         HealthCheckTask task = new HealthCheckTask();
         task.setStatus("running");
         task.setSimilarPairCount(0);
-        task.setActiveSpecCount((int) activeCount);
+        task.setActiveSpecCount(activeCount);
         healthCheckTaskMapper.insertAndGetId(task);
 
         final Long taskId = task.getId();
@@ -111,11 +108,8 @@ public class HealthCheckServiceImpl implements HealthCheckService {
 
     public void runCheckAsync(Long taskId, int activeSpecCount) {
         try {
-            // 1. Load all active specs
-            List<Steering> activeSpecs = steeringMapper.selectList(
-                    new LambdaQueryWrapper<Steering>()
-                            .eq(Steering::getStatus, SteeringStatus.ACTIVE)
-                            .eq(Steering::getDeleted, false));
+            // 1. Load all active specs with embeddings
+            List<Steering> activeSpecs = steeringMapper.findAllActiveWithEmbedding();
 
             // 2. Batch-generate content_embedding for specs where it is NULL
             List<Long> withEmbedding = steeringMapper.findActiveSpecIdsWithEmbedding();

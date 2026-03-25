@@ -54,4 +54,30 @@ public interface SteeringMapper extends BaseMapper<Steering> {
      * 查询所有 active 且 content_embedding 不为 NULL 的规范 ID 列表
      */
     List<Long> findActiveSpecIdsWithEmbedding();
+
+    /**
+     * 统计 active 且未删除的规范数量
+     */
+    int countActiveSpecs();
+
+    /**
+     * 查询所有 active、未删除、且 content_embedding 不为 NULL 的规范列表
+     */
+    List<Steering> findAllActiveWithEmbedding();
+
+    /**
+     * 乐观锁 CAS：仅递增 lock_version，返回影响行数（0 表示并发冲突）
+     */
+    int claimActivateLock(@Param("id") Long id, @Param("lockVersion") Integer lockVersion);
+
+    /**
+     * 在 embedding 生成后更新主表热缓存（title/content/tags/currentVersion/status/embedding/content_embedding）
+     */
+    int commitActivate(@Param("id") Long id,
+                       @Param("title") String title,
+                       @Param("content") String content,
+                       @Param("tags") String tags,
+                       @Param("currentVersion") Integer currentVersion,
+                       @Param("embeddingStr") String embeddingStr,
+                       @Param("contentEmbeddingStr") String contentEmbeddingStr);
 }
