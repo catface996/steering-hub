@@ -39,6 +39,10 @@ public class Steering implements Serializable {
     @TableField(exist = false)
     private float[] embedding;
 
+    /** content_embedding vector(512)，专用于规范全文内容相似度检测 */
+    @TableField(exist = false)
+    private float[] contentEmbedding;
+
     /** 向量检索时的相似度分数（1 - 余弦距离），仅在 vectorSearch 时填充 */
     @TableField(exist = false)
     private Double similarityScore;

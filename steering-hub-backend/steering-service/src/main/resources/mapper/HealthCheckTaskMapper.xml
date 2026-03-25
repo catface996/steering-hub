@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.HealthCheckTaskMapper">
+
+    <resultMap id="taskResultMap" type="com.steeringhub.steering.entity.HealthCheckTask">
+        <id property="id" column="id"/>
+        <result property="status" column="status"/>
+        <result property="similarPairCount" column="similar_pair_count"/>
+        <result property="activeSpecCount" column="active_spec_count"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="errorMessage" column="error_message"/>
+    </resultMap>
+
+    <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO health_check_task (status, similar_pair_count, active_spec_count, started_at)
+        VALUES (#{status}, #{similarPairCount}, #{activeSpecCount}, NOW())
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE health_check_task
+        SET status            = #{status},
+            completed_at      = #{completedAt},
+            similar_pair_count = #{similarPairCount},
+            error_message     = #{errorMessage}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findLatestCompleted" resultMap="taskResultMap">
+        SELECT id, status, similar_pair_count, active_spec_count, started_at, completed_at, error_message
+        FROM health_check_task
+        WHERE status = 'completed'
+        ORDER BY completed_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="findRunning" resultMap="taskResultMap">
+        SELECT id, status, similar_pair_count, active_spec_count, started_at, completed_at, error_message
+        FROM health_check_task
+        WHERE status = 'running'
+        LIMIT 1
+    </select>
+
+</mapper>

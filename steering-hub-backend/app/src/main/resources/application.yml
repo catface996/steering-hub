@@ -52,6 +52,11 @@ knife4j:
     description: AI Coding Agent 规范管理平台 API
     version: 1.0.0
 
+health-check:
+  similarity-threshold: 0.7
+  sse-timeout-ms: 300000
+  async-thread-pool-size: 2
+
 logging:
   level:
     com.steeringhub: DEBUG

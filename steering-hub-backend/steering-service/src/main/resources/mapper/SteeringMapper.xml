@@ -58,4 +58,46 @@
         UPDATE steering SET embedding = #{embedding}::vector WHERE id = #{steeringId}
     </update>
 
+    <!-- 更新 content_embedding 向量 -->
+    <update id="updateContentEmbedding">
+        UPDATE steering SET content_embedding = CAST(#{vecStr} AS vector) WHERE id = #{id}
+    </update>
+
+    <!-- 基于 content_embedding 找 Top-K 相似规范（vecStr 参数形式） -->
+    <select id="findTopKSimilarByContentEmbedding" resultMap="steeringResultMap">
+        SELECT id, title, content, category_id, status, current_version, tags, keywords, author,
+               created_by, updated_by, created_at, updated_at, deleted,
+               1 - (content_embedding &lt;=&gt; CAST(#{vecStr} AS vector)) AS similarity_score
+        FROM steering
+        WHERE status = 'active'
+          AND deleted = false
+          AND id != #{excludeId}
+          AND content_embedding IS NOT NULL
+        ORDER BY content_embedding &lt;=&gt; CAST(#{vecStr} AS vector)
+        LIMIT #{limit}
+    </select>
+
+    <!-- 基于规范自身存储的 content_embedding 找 Top-K 相似规范（自连接形式） -->
+    <select id="findTopKSimilarBySpecId" resultMap="steeringResultMap">
+        SELECT s.id, s.title, s.content, s.category_id, s.status, s.current_version, s.tags, s.keywords,
+               s.author, s.created_by, s.updated_by, s.created_at, s.updated_at, s.deleted,
+               1 - (s.content_embedding &lt;=&gt; ref.content_embedding) AS similarity_score
+        FROM steering s
+        CROSS JOIN (SELECT content_embedding FROM steering WHERE id = #{specId}) ref
+        WHERE s.status = 'active'
+          AND s.deleted = false
+          AND s.id != #{specId}
+          AND s.content_embedding IS NOT NULL
+        ORDER BY s.content_embedding &lt;=&gt; ref.content_embedding
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询所有 active 且有 content_embedding 的规范 ID -->
+    <select id="findActiveSpecIdsWithEmbedding" resultType="long">
+        SELECT id FROM steering
+        WHERE status = 'active'
+          AND deleted = false
+          AND content_embedding IS NOT NULL
+    </select>
+
 </mapper>
