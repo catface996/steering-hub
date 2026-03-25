@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Col, Flex, Progress, Row, Spin, Tag, Typography, message as antMessage } from 'antd';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -39,6 +39,7 @@ export default function SimilarPairDetailPage() {
   const [compareData, setCompareData] = useState<CompareVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissing, setDismissing] = useState(false);
+  const dismissingRef = useRef(false);
   const [deprecatingId, setDeprecatingId] = useState<number | null>(null);
   const [deprecateTarget, setDeprecateTarget] = useState<{ id: number; title: string } | null>(null);
 
@@ -75,8 +76,9 @@ export default function SimilarPairDetailPage() {
     }
   };
 
-  const handleDismiss = async () => {
-    if (!id) return;
+  const handleDismiss = useCallback(async () => {
+    if (!id || dismissingRef.current) return;
+    dismissingRef.current = true;
     setDismissing(true);
     try {
       await healthService.dismissPair(Number(id));
@@ -85,9 +87,10 @@ export default function SimilarPairDetailPage() {
     } catch {
       // error toasted by request layer
     } finally {
+      dismissingRef.current = false;
       setDismissing(false);
     }
-  };
+  }, [id, navigate]);
 
   useEffect(() => {
     setBreadcrumbs(
@@ -107,10 +110,10 @@ export default function SimilarPairDetailPage() {
     setActions(
       <Flex gap={8}>
         <Button icon={<ArrowLeft size={16} />} onClick={() => navigate('/health')}>返回</Button>
-        <Button type="primary" danger loading={dismissing} onClick={handleDismiss}>标记已处理</Button>
+        <Button type="primary" danger loading={dismissingRef.current} onClick={handleDismiss}>标记已处理</Button>
       </Flex>
     );
-  }, [id, setBreadcrumbs, setActions, navigate, dismissing, handleDismiss]);
+  }, [id, setBreadcrumbs, setActions, navigate, handleDismiss]);
 
   if (!pair) {
     return (
