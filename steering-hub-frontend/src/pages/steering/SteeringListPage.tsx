@@ -6,6 +6,7 @@ import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService, categoryService } from '../../services/steeringService';
 import { qualityService, type SteeringQuality } from '../../services/searchService';
 import type { Steering, SteeringStatus, SteeringCategory } from '../../types';
+import { formatDate } from '../../utils/formatTime';
 import Pagination from '../../components/Pagination';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
@@ -294,7 +295,7 @@ export default function SteeringListPage() {
                     );
                   })()}
                 </div>
-                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0, alignSelf: 'center' }}>{record.updatedAt?.slice(0, 10)}</Typography.Text>
+                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0, alignSelf: 'center' }}>{formatDate(record.updatedAt)}</Typography.Text>
                 <Flex gap={4} style={{ width: 100, flexShrink: 0 }}>
                   <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
                   {record.status === 'draft' && (

@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
+import { formatDateTime } from '../../utils/formatTime';
 import { repoService } from '../../services/repoService';
 import type { Steering, SteeringStatus, RepoBindingItem } from '../../types';
 import Pagination from '../../components/Pagination';
@@ -153,8 +154,8 @@ export default function SteeringDetailPage() {
                   : '-'
               },
               { label: '作者', value: steering.author || '-' },
-              { label: '更新时间', value: steering.updatedAt },
-              { label: '创建时间', value: steering.createdAt },
+              { label: '更新时间', value: formatDateTime(steering.updatedAt) },
+              { label: '创建时间', value: formatDateTime(steering.createdAt) },
             ].map((item) => (
               <div key={item.label} style={{ marginBottom: 16 }}>
                 <Typography.Text style={{ color: '#71717a', fontSize: 12, display: 'block', marginBottom: 4 }}>{item.label}</Typography.Text>
@@ -249,7 +250,7 @@ export default function SteeringDetailPage() {
                       {b.repoEnabled ? '启用' : '停用'}
                     </Tag>
                   </td>
-                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a', fontSize: 12, color: '#71717a' }}>{b.createdAt}</td>
+                  <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a', fontSize: 12, color: '#71717a' }}>{formatDateTime(b.createdAt)}</td>
                 </tr>
               ))}
             </tbody>

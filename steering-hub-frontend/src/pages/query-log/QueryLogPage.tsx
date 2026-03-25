@@ -7,6 +7,7 @@ import { useHeader } from '../../contexts/HeaderContext';
 import { queryLogService } from '../../services/queryLogService';
 import type { QueryLog } from '../../types';
 import Pagination from '../../components/Pagination';
+import { formatDateTime } from '../../utils/formatTime';
 
 const PAGE_SIZE = 20;
 
@@ -178,7 +179,7 @@ export default function QueryLogPage() {
                     </Tag>
                   </td>
                   <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13 }}>
-                    {log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN', { hour12: false }) : '-'}
+                    {formatDateTime(log.createdAt)}
                   </td>
                   <td style={tdStyle}>
                     {log.source === 'MCP' ? (

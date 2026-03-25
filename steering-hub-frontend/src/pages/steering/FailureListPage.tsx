@@ -3,6 +3,7 @@ import { Typography, Card, Tag, Select, Flex, Spin } from 'antd';
 import { AlertCircle } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { get } from '../../utils/request';
+import { formatDateTime } from '../../utils/formatTime';
 import Pagination from '../../components/Pagination';
 
 interface FailureLog {
@@ -125,12 +126,7 @@ export default function FailureListPage() {
                       {item.agentName || '--'}
                     </Typography.Text>
                     <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 130 }}>
-                      {item.createdAt
-                        ? new Date(item.createdAt).toLocaleString('zh-CN', {
-                            month: '2-digit', day: '2-digit',
-                            hour: '2-digit', minute: '2-digit',
-                          })
-                        : '--'}
+                      {formatDateTime(item.createdAt)}
                     </Typography.Text>
                   </Flex>
                 );

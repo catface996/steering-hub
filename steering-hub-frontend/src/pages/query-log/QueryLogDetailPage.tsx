@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { queryLogService } from '../../services/queryLogService';
 import type { QueryLogDetail, HitSteering } from '../../types';
+import { formatDateTime } from '../../utils/formatTime';
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: '草稿',
@@ -143,7 +144,7 @@ export default function QueryLogDetailPage() {
               <Descriptions.Item label="来源"><SourceTag source={detail.source} /></Descriptions.Item>
               <Descriptions.Item label="查询时间">
                 <span style={{ fontSize: 12 }}>
-                  {detail.createdAt ? new Date(detail.createdAt).toLocaleString('zh-CN', { hour12: false }) : '-'}
+                  {formatDateTime(detail.createdAt)}
                 </span>
               </Descriptions.Item>
               <Descriptions.Item label="命中数量">

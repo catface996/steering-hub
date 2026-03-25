@@ -5,6 +5,7 @@ import ReactECharts from 'echarts-for-react';
 import { useNavigate } from 'react-router-dom';
 import { useHeader } from '../../contexts/HeaderContext';
 import { get } from '../../utils/request';
+import { formatDateTime } from '../../utils/formatTime';
 
 interface AnalyticsData {
   totalQueries: number;
@@ -88,7 +89,7 @@ export default function SteeringAnalyticsPage() {
     { title: 'Agent', dataIndex: 'agentName', key: 'agentName', width: 140, ellipsis: true },
     {
       title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 140,
-      render: (t: string) => t ? new Date(t).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--'
+      render: (t: string) => formatDateTime(t)
     },
   ];
 

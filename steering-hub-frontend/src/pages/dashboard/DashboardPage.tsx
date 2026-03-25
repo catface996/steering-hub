@@ -5,6 +5,7 @@ import { FileText, CheckCircle, Search, ShieldCheck, Plus, Tag as TagIcon } from
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
 import type { Steering, SteeringStatus } from '../../types';
+import { formatDate } from '../../utils/formatTime';
 
 const STATUS_LABEL: Record<SteeringStatus, string> = {
   draft: '草稿', pending_review: '待审核', approved: '已通过',
@@ -119,7 +120,7 @@ export default function DashboardPage() {
               <div style={{ width: '15%' }}>
                 <Tag className={`tag-base ${STATUS_CLASS[steering.status]}`}>{STATUS_LABEL[steering.status]}</Tag>
               </div>
-              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{steering.updatedAt?.slice(0, 10)}</Typography.Text>
+              <Typography.Text style={{ color: '#71717a', fontSize: 12, width: '15%' }}>{formatDate(steering.updatedAt)}</Typography.Text>
             </Flex>
           ))}
         </Card>

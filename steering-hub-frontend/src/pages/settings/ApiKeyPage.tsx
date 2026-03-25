@@ -4,6 +4,7 @@ import { Plus, Trash2, Copy, Check, AlertTriangle } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { apiKeyService } from '../../services/apiKeyService';
 import type { ApiKeyItem } from '../../types';
+import { formatDate } from '../../utils/formatTime';
 
 export default function ApiKeyPage() {
   const { setBreadcrumbs, setActions } = useHeader();
@@ -148,10 +149,10 @@ export default function ApiKeyPage() {
                     </Tag>
                   </div>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 120, textAlign: 'center' }}>
-                    {item.lastUsedAt ? new Date(item.lastUsedAt).toLocaleDateString('zh-CN') : '-'}
+                    {formatDate(item.lastUsedAt)}
                   </Typography.Text>
                   <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 120, textAlign: 'center' }}>
-                    {new Date(item.createdAt).toLocaleDateString('zh-CN')}
+                    {formatDate(item.createdAt)}
                   </Typography.Text>
                   <Flex gap={8} justify="center" style={{ width: 100 }}>
                     <Tooltip title={item.enabled ? '禁用' : '启用'}>
