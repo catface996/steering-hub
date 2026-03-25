@@ -1,212 +1,332 @@
-# Steering Hub - AI Coding Agent 规范管理平台
+# Steering Hub
 
-AI Coding Agent 规范管理平台，用于管理各类研发规范，并通过 MCP Server 为 AI Agent 提供动态规范检索能力，同时追踪规范使用情况并支持合规性审查。
+> AI Coding Agent 规范管理平台 | Specification Management Platform for AI Coding Agents
 
-## 快速启动（Docker）
+将团队编码规范结构化存储，通过 MCP 协议实时注入 AI Coding Agent（Claude Code、Cursor、Copilot 等），让 Agent 在编写代码时自动遵循团队规范，并追踪 Agent 的规范使用行为。
 
-**推荐使用 Docker Compose 一键启动所有服务：**
+---
 
-```bash
-# 需要配置 AWS Bedrock 权限（~/.aws/credentials）
-docker-compose up -d
+## 核心特性 | Key Features
 
-# 访问前端
-open http://localhost:3000
+- **规范管理**：Markdown 编写规范，支持版本迭代、审批流（草稿→审核→生效→废弃）、分类与标签
+- **混合检索**：向量语义检索（Amazon Bedrock Titan v2，512维）+ PostgreSQL 全文检索，双路合并排序
+- **仓库绑定**：注册代码仓库并绑定规范（强制/建议），MCP 搜索时对绑定规范进行排名提升（boost）
+- **MCP 接入**：标准 MCP Server，AI Agent 通过 `search_steering` 工具实时检索规范
+- **健康度检测**：自动扫描相似规范对，识别重复/冗余规范，维护规范库健康度
+- **检索日志**：记录 Agent 每次搜索（model_name、agent_name、repo），支持用量分析与失败归因
+- **合规检查**：提交代码片段，语义匹配相关规范，生成合规评分与违规详情
 
-# 查看日志
-docker-compose logs -f
+---
 
-# 停止服务
-docker-compose down
+## 系统架构 | Architecture
+
+```
+┌───────────────────────────────────────────────────────┐
+│               AI Coding Agent                         │
+│       (Claude Code / Cursor / Copilot etc.)           │
+└──────────────────────┬────────────────────────────────┘
+                       │ MCP Protocol (stdio)
+┌──────────────────────▼────────────────────────────────┐
+│          steering-hub-mcp  (Python 3.11+)             │
+│  search_steering / get_steering / submit_steering /   │
+│  record_usage / report_search_failure / get_tags      │
+└──────────────────────┬────────────────────────────────┘
+                       │ HTTP REST  :8080
+┌──────────────────────▼────────────────────────────────┐
+│       steering-hub-backend  (Spring Boot 3.2)         │
+│  ┌───────────────┐  ┌──────────────┐  ┌───────────┐  │
+│  │ steering-svc  │  │ search-svc   │  │compliance │  │
+│  │ CRUD / 审批流 │  │ 混合检索     │  │ 合规评分  │  │
+│  │ 版本 / 仓库   │  │ 仓库 boost   │  │ 报告生成  │  │
+│  │ 健康度检测    │  │ 检索日志分析 │  └───────────┘  │
+│  └───────────────┘  └──────────────┘                  │
+│  ┌────────────────────────────────────────────────┐   │
+│  │  common: Result / BusinessException / Enums    │   │
+│  └────────────────────────────────────────────────┘   │
+└──────────┬────────────────────────┬───────────────────┘
+           │                        │
+┌──────────▼───────────┐  ┌─────────▼─────────────────┐
+│  PostgreSQL 15+      │  │  Amazon Bedrock            │
+│  + pgvector (HNSW)   │  │  Titan Embeddings v2       │
+│  + tsvector GIN      │  │  512-dim cosine similarity │
+└──────────────────────┘  └───────────────────────────┘
+
+┌───────────────────────────────────────────────────────┐
+│     steering-hub-frontend  (React 18 + Ant Design 5)  │
+│  Dashboard / 规范管理 / 智能检索 / 仓库管理 /          │
+│  检索日志 / 使用分析 / 合规检查 / 系统设置             │
+└───────────────────────────────────────────────────────┘
 ```
 
-服务说明：
-- **前端**：http://localhost:3000
-- **后端 API**：http://localhost:8080
-- **API 文档**：http://localhost:8080/doc.html
-- **数据库**：localhost:5432
+---
 
-## 本地开发
+## 规范生命周期 | Spec Lifecycle
 
-### 前置依赖
+```
+DRAFT ──submit──► PENDING_REVIEW ──approve──► APPROVED ──activate──► ACTIVE
+  ▲                     │                                               │
+  │               reject│                                          deprecate
+  └──────edit──── REJECTED                                       DEPRECATED
+```
 
-- Java 17+
-- Maven 3.9+
-- PostgreSQL 15+（需安装 pgvector 扩展）
-- Python 3.11+（MCP Server）
-- Node.js 22+（前端）
-- AWS 凭证（用于 Bedrock Titan Embeddings，配置 `~/.aws/credentials`）
+只有 `ACTIVE` 状态的规范参与 MCP 搜索和合规检查。
 
-### 1. 初始化数据库
+---
+
+## 快速开始 | Quick Start
+
+### 环境要求
+
+| 组件 | 版本要求 |
+|---|---|
+| Java | 17+ |
+| Maven | 3.9+ |
+| Python | 3.11+ |
+| Node.js | 18+ |
+| PostgreSQL | 15+（需 pgvector 扩展） |
+| AWS | Bedrock 访问权限（us-east-1，Titan Embeddings v2） |
+
+### 1. 数据库初始化
 
 ```bash
-# 以 superuser 连接 PostgreSQL，执行初始化脚本
 psql -U postgres -c "CREATE DATABASE steering_hub;"
 psql -U postgres -c "CREATE USER steering WITH PASSWORD 'steering123';"
 psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE steering_hub TO steering;"
 psql -U steering -d steering_hub -f docs/sql/init.sql
 ```
 
-> `pgvector` 需在 PostgreSQL 中预先安装：[pgvector 安装指南](https://github.com/pgvector/pgvector)
+> Docker 快捷方式：
+> ```bash
+> docker run -d --name steering-hub-db \
+>   -e POSTGRES_USER=steering \
+>   -e POSTGRES_PASSWORD=steering123 \
+>   -e POSTGRES_DB=steering_hub \
+>   -p 5432:5432 ankane/pgvector
+> psql -h localhost -U steering -d steering_hub -f docs/sql/init.sql
+> ```
 
 ### 2. 启动后端
 
 ```bash
+# 配置 AWS 凭证（Bedrock Embeddings）
+export AWS_ACCESS_KEY_ID=your_key
+export AWS_SECRET_ACCESS_KEY=your_secret
+export AWS_DEFAULT_REGION=us-east-1
+
 cd steering-hub-backend
 mvn clean package -DskipTests
-java -jar app/target/steering-hub-app-1.0.0-SNAPSHOT.jar
+java -jar app/target/steering-hub-app-*.jar
+# 服务启动于 http://localhost:8080
+# API 文档（Knife4j）：http://localhost:8080/doc.html
 ```
 
-后端默认监听 `http://localhost:8080`
+后端配置文件：`app/src/main/resources/application.yml`
 
-API 文档（Knife4j）：`http://localhost:8080/doc.html`
-
-### 3. 启动 MCP Server
-
-```bash
-cd steering-hub-mcp
-cp .env.example .env
-# 编辑 .env，填写 STEERING_HUB_API_URL
-
-# 使用 uv（推荐）
-uv sync
-uv run steering-hub-mcp
-
-# 或使用 pip
-pip install -e .
-steering-hub-mcp
-```
-
-#### 集成到 Claude Desktop
-
-将 `mcp-config.json` 的内容合并到 `~/Library/Application Support/Claude/claude_desktop_config.json`（macOS）。
-
-### 4. 启动前端
+### 3. 启动前端
 
 ```bash
 cd steering-hub-frontend
 npm install
-npm run dev
-# 访问 http://localhost:3000
+npm run dev          # 开发服务器 http://localhost:5173（代理至 :8080）
+
+# 生产构建
+npm run build        # 产物在 dist/，部署至 Nginx
 ```
 
-## 项目结构
+### 4. 启动 MCP Server
+
+```bash
+cd steering-hub-mcp
+pip install -e .
+
+export STEERING_HUB_API_URL=http://localhost:8080
+export STEERING_HUB_API_KEY=sh_xxxx   # 在前端「系统设置 → API Keys」创建
+
+python -m steering_hub_mcp.server
+```
+
+---
+
+## MCP 接入 | MCP Integration
+
+### Claude Code 配置
+
+在项目根目录或 `~/.claude/` 下的 `settings.json` 中添加：
+
+```json
+{
+  "mcpServers": {
+    "steering-hub": {
+      "command": "python3.11",
+      "args": ["-m", "steering_hub_mcp.server"],
+      "cwd": "/path/to/steering-hub-mcp",
+      "env": {
+        "STEERING_HUB_API_URL": "http://localhost:8080",
+        "STEERING_HUB_API_KEY": "sh_xxxxxxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+示例配置文件：`steering-hub-mcp/mcp-config.json`
+
+### MCP 工具列表
+
+| 工具 | 用途 | 关键参数 |
+|---|---|---|
+| `get_steering_tags` | 获取所有可用标签和分类 | — |
+| `search_steering` | 混合检索规范（语义 + 全文） | `query`, `repo`, `tags`, `agent_name`, `model_name` |
+| `get_steering` | 按 ID 获取规范完整内容 | `id` |
+| `submit_steering` | 提交新规范（草稿，待审核） | `title`, `content`, `category_code` |
+| `record_usage` | 记录规范使用（写入检索日志） | `steering_id`, `task_description` |
+| `report_search_failure` | 上报无效检索（帮助持续改进） | `log_id`, `reason`, `expected_topic` |
+
+### 使用示例
+
+```python
+# 1. 开始编码前：检索规范
+search_steering(
+    query="Controller HTTP 接口设计 URL 格式",
+    repo="org/my-service",        # 优先返回该仓库绑定的规范
+    agent_name="claude-code",
+    model_name="claude-sonnet-4-6"
+)
+
+# 2. 确认使用某条规范后记录
+record_usage(steering_id=7, task_description="设计订单 Controller 接口")
+
+# 3. 搜不到想要的规范时上报
+report_search_failure(log_id=123, reason="missing_spec", expected_topic="分布式锁使用规范")
+```
+
+---
+
+## 目录结构 | Project Structure
 
 ```
 steering-hub/
-├── pom.xml                          # 根 Maven POM（多模块管理）
-├── docker-compose.yml               # Docker Compose 配置
-├── steering-hub-backend/            # Spring Boot 后端（模块化单体）
-│   ├── Dockerfile
-│   ├── common/                      # 公共模块（Result/异常/枚举/配置）
-│   ├── spec-service/                # 规范管理服务（CRUD/审核流/版本控制）
-│   ├── search-service/              # 检索服务（语义/全文/混合检索）
-│   ├── compliance-service/          # 合规审查服务
-│   └── app/                         # 主应用启动模块（聚合所有服务）
-├── steering-hub-mcp/                # MCP Server（Python）
-│   ├── src/steering_hub_mcp/
-│   │   ├── server.py                # MCP Server 入口，注册 4 个 Tool
-│   │   └── client.py                # HTTP 客户端，与后端 API 通信
-│   ├── pyproject.toml
-│   └── mcp-config.json              # Claude Desktop 配置示例
-├── steering-hub-frontend/           # React 18 + Ant Design 5 前端
-│   ├── Dockerfile
-│   ├── nginx.conf
+├── steering-hub-backend/           # Spring Boot 后端（Java 17，Maven 多模块）
+│   ├── common/                     # 公共模块：Result、BusinessException、枚举
+│   ├── steering-service/           # 规范 CRUD、分类、版本、审批、仓库管理、健康检测
+│   ├── search-service/             # 混合检索、Embedding、检索日志、使用分析
+│   ├── compliance-service/         # 合规检查、评分、报告生成
+│   └── app/                        # 启动类、Security 配置、application.yml
+│
+├── steering-hub-frontend/          # React 18 + Ant Design 5（TypeScript + Vite）
 │   └── src/
-│       ├── api/                     # API 请求层
-│       ├── pages/                   # 页面组件
-│       ├── components/              # 公共组件
-│       └── types/                   # TypeScript 类型定义
+│       ├── pages/
+│       │   ├── dashboard/          # 平台概览（规范统计、最近更新）
+│       │   ├── steering/           # 规范列表、详情、编辑、使用分析、失败记录
+│       │   ├── search/             # 智能检索页
+│       │   ├── repo/               # 仓库列表、详情与规范绑定
+│       │   ├── query-log/          # 检索日志列表、详情
+│       │   ├── compliance/         # 合规检查
+│       │   ├── category/           # 分类管理
+│       │   ├── settings/           # API Key 管理、停用词
+│       │   └── auth/               # 登录
+│       ├── services/               # API 请求层
+│       ├── components/             # 公共组件（Pagination 等）
+│       ├── utils/formatTime.ts     # 统一时间格式工具
+│       └── types/index.ts          # TypeScript 类型定义
+│
+├── steering-hub-mcp/               # MCP Server（Python 3.11+）
+│   └── src/steering_hub_mcp/
+│       ├── server.py               # MCP 工具定义与请求路由
+│       └── client.py               # 后端 HTTP 客户端封装
+│
 └── docs/
-    ├── sql/init.sql                 # 数据库初始化脚本
-    └── architecture.md              # 架构文档
+    ├── sql/init.sql                # 数据库初始化脚本
+    ├── sql/migration_*.sql         # 增量迁移脚本
+    └── architecture.md             # 架构详细说明（含检索流程图）
 ```
 
-## 技术栈
+---
 
-| 层次 | 技术选型 |
-|------|---------|
-| 后端框架 | Java 17 + Spring Boot 3.2 |
-| ORM | MyBatis Plus 3.5 |
-| 数据库 | PostgreSQL 15+ + pgvector |
-| 向量化 | Amazon Bedrock Titan Embeddings v2（512维） |
-| 全文检索 | PostgreSQL tsvector（可扩展 zhparser 中文分词） |
-| MCP Server | Python 3.11+ + mcp SDK |
-| 前端 | React 18 + Ant Design 5 + TypeScript + Vite |
-| 构建 | Maven 多模块 |
-| 容器化 | Docker + Docker Compose |
+## 检索机制 | Search Mechanism
 
-## 核心功能
+```
+查询文本
+  ├── Bedrock Titan v2 → 512维向量 → pgvector HNSW cosine 相似度搜索
+  ├── PostgreSQL tsvector → plainto_tsquery 全文检索（GIN 索引）
+  └── Merge & Re-rank（只返回 status=active 的规范）
+        ├── 基础排序：综合相似度分数
+        └── 仓库 Boost（传入 repo 参数时）：
+              强制绑定规范 > 建议绑定规范 > 未绑定规范
+              （高相似度未绑定规范仍可排在低相似度绑定规范之前）
+```
 
-### 规范管理
+---
 
-规范生命周期：**草稿** → **提交审核** → **审核通过 / 驳回** → **生效** → **废弃**
-
-- 支持版本控制：每次修改自动生成新版本号，保留历史版本，支持回滚
-- Markdown 格式内容，支持标签和关键词
-- 规范保存时自动异步生成 embedding 向量（通过 Bedrock Titan v2）
-
-### 智能检索
-
-| 模式 | 实现 |
-|------|------|
-| 语义检索 | pgvector HNSW 索引 + cosine similarity |
-| 全文检索 | PostgreSQL GIN tsvector 索引 |
-| 混合检索 | 两路结果合并、去重、按综合得分排序 |
-
-**注**：只返回 `status = 'active'` 的规范。
-
-### 可检索性评分（Self-Retrieval Score）
-
-自动评估规范的可被检索程度（0-100分），确保规范能被 AI Agent 准确找到。
-
-### MCP Server Tools
-
-| Tool | 描述 |
-|------|------|
-| `search_spec` | 混合检索规范，支持指定分类 |
-| `get_spec` | 按 ID 获取规范全文 |
-| `submit_spec` | Agent 提交新规范（草稿，需人工审核） |
-| `record_usage` | 记录规范使用（供合规追踪） |
-
-### 合规审查
-
-提交代码片段 + 仓库信息 → 语义匹配相关规范 → 生成合规评分（0-100）和违规详情报告。
-
-## 数据库表
+## 主要数据表 | Database Schema
 
 | 表名 | 描述 |
-|------|------|
-| `spec_category` | 规范分类（支持树形结构） |
-| `spec` | 规范主表（含 `vector(512)` embedding 字段） |
-| `spec_version` | 版本历史 |
-| `spec_review` | 审核记录 |
-| `spec_usage` | 使用追踪 |
-| `repo` | 代码仓库注册 |
-| `compliance_report` | 合规报告（violations/related_specs 使用 JSONB） |
+|---|---|
+| `steering_category` | 规范分类（支持树形，code 唯一） |
+| `steering` | 规范主表（含 `vector(512)` embedding 字段） |
+| `steering_version` | 版本历史（每次修改自动追加） |
+| `steering_review` | 审核记录（审核人、意见、时间） |
+| `steering_usage` | 规范使用记录（Agent 调用 record_usage 写入） |
+| `steering_query_log` | 检索日志（含 agent_name、model_name、repo） |
+| `repo` | 代码仓库注册（full_name 唯一） |
+| `repo_steering` | 仓库-规范绑定（多对多，含 mandatory 标记） |
+| `health_check_task` | 健康度检测任务 |
+| `similar_spec_pair` | 相似规范对（检测结果） |
+| `compliance_report` | 合规报告（violations/related_specs 为 JSONB） |
+| `sys_user` | 系统用户 |
+| `api_key` | API Key（MCP 鉴权） |
+| `stop_word` | 搜索停用词 |
 
-## 配置说明
+---
 
-### 后端配置（`app/src/main/resources/application.yml`）
+## API 文档 | API Docs
 
-```yaml
-spring.datasource.url: jdbc:postgresql://localhost:5432/steering_hub
-aws.region: us-east-1          # Bedrock 所在 Region
-embedding.dimensions: 512      # Titan Embeddings v2 维度
+后端启动后访问 Knife4j UI：**`http://localhost:8080/doc.html`**
+
+主要接口前缀：
+
+| 前缀 | 用途 |
+|---|---|
+| `/api/v1/steerings` | 规范管理（CRUD、审批、版本） |
+| `/api/v1/categories` | 分类管理 |
+| `/api/v1/repos` | 仓库管理与规范绑定 |
+| `/api/v1/web/search` | 前端检索、日志查询、使用分析 |
+| `/api/v1/compliance` | 合规检查 |
+| `/api/v1/health` | 健康度检测任务 |
+| `/mcp/v1/search` | MCP Agent 专用搜索接口（API Key 鉴权） |
+
+---
+
+## 开发规范 | Dev Guidelines
+
+本项目遵循平台内录入的编码规范，核心约束：
+
+| 规范 ID | 规范名 | 核心要求 |
+|---|---|---|
+| ID:7 | HTTP 流量入口层规范 | URL 格式 `/api/{version}/{resource}/{action}`，仅 POST，Controller 不含业务逻辑 |
+| ID:9 | Infrastructure 层规范 | 条件查询写 Mapper XML，禁止在 Java 层构造 `QueryWrapper` |
+| ID:229 | 前端展示与交互规范 | 时间用 `formatTime.ts`，空值显示 `-`，状态 Tag 用 Ant Design 语义 color prop |
+
+通过 MCP 检索更多规范：
+
+```bash
+search_steering(query="你的编码场景描述", repo="catface996/steering-hub")
 ```
 
-### MCP Server 配置（`.env`）
+---
 
-```
-STEERING_HUB_API_URL=http://localhost:8080
-LOG_LEVEL=INFO
-```
+## 技术栈 | Tech Stack
 
-## 扩展说明
+| 层 | 技术 |
+|---|---|
+| 后端 | Java 17, Spring Boot 3.2, MyBatis Plus 3.5, Maven 多模块 |
+| 前端 | React 18, TypeScript, Ant Design 5, Vite |
+| MCP Server | Python 3.11+, mcp SDK |
+| 数据库 | PostgreSQL 15+, pgvector（HNSW cosine）, tsvector GIN |
+| AI / Embedding | Amazon Bedrock Titan Embeddings v2（512-dim） |
+| 部署 | Nginx（前端静态）, JVM（后端）, Docker（数据库） |
 
-- **微服务拆分**：每个 `spec-service`、`search-service`、`compliance-service` 均为独立 Maven 模块，可直接拆分为独立 Spring Boot 应用，添加 Spring Cloud Gateway 即可完成微服务化。
-- **中文全文检索**：安装 `zhparser` 后，将 `init.sql` 中 tsvector 配置从 `simple` 切换为 `chinese`，实现精准中文分词检索。
-- **合规分析增强**：`ComplianceServiceImpl.detectViolations()` 目前为占位符，可替换为调用 Claude（Bedrock）进行 LLM-based 代码规范对比分析。
+---
 
 ## License
 
