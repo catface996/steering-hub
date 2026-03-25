@@ -1,5 +1,6 @@
 package com.steeringhub.steering.service;
 
+import com.steeringhub.steering.dto.response.CategoryChildCountVO;
 import com.steeringhub.steering.dto.response.CategoryNavItem;
 import com.steeringhub.steering.dto.response.SteeringNavItem;
 
@@ -14,4 +15,6 @@ public interface CategoryNavService {
     void addHierarchy(Long parentId, Long childId, int sortOrder);
 
     void removeHierarchy(Long parentId, Long childId);
+
+    CategoryChildCountVO countDirectChildren(Long categoryId);
 }

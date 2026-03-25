@@ -2,6 +2,7 @@ package com.steeringhub.steering.service.impl;
 
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.ResultCode;
+import com.steeringhub.steering.dto.response.CategoryChildCountVO;
 import com.steeringhub.steering.dto.response.CategoryNavItem;
 import com.steeringhub.steering.dto.response.SteeringNavItem;
 import com.steeringhub.steering.mapper.CategoryHierarchyMapper;
@@ -56,6 +57,12 @@ public class CategoryNavServiceImpl implements CategoryNavService {
     @Override
     public void removeHierarchy(Long parentId, Long childId) {
         categoryHierarchyMapper.deleteRelation(parentId, childId);
+    }
+
+    @Override
+    public CategoryChildCountVO countDirectChildren(Long categoryId) {
+        int count = steeringCategoryMapper.countDirectChildren(categoryId);
+        return new CategoryChildCountVO(categoryId, count);
     }
 
     private Set<Long> getAllDescendants(Long rootId) {

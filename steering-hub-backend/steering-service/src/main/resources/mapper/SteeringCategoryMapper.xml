@@ -71,4 +71,13 @@
         ORDER BY ch.sort_order ASC, sc.id ASC
     </select>
 
+
+    <select id="countDirectChildren" resultType="int">
+        SELECT COUNT(*)
+        FROM category_hierarchy ch
+        JOIN steering_category sc ON sc.id = ch.child_category_id
+        WHERE ch.parent_category_id = #{categoryId}
+          AND sc.enabled = TRUE AND sc.deleted = FALSE
+    </select>
+
 </mapper>

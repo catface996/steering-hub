@@ -3,6 +3,7 @@ package com.steeringhub.steering.controller;
 import com.steeringhub.common.response.Result;
 import com.steeringhub.steering.dto.request.CategoryHierarchyDeleteRequest;
 import com.steeringhub.steering.dto.request.CategoryHierarchyRequest;
+import com.steeringhub.steering.dto.response.CategoryChildCountVO;
 import com.steeringhub.steering.dto.response.CategoryNavItem;
 import com.steeringhub.steering.dto.response.SteeringNavItem;
 import com.steeringhub.steering.service.CategoryNavService;
@@ -26,6 +27,11 @@ public class CategoryNavController {
     public Result<List<CategoryNavItem>> listCategories(
             @RequestParam(required = false) Long parentId) {
         return Result.ok(categoryNavService.listCategories(parentId));
+    }
+
+    @GetMapping("/api/v1/mcp/categories/{categoryId}/child-count")
+    public Result<CategoryChildCountVO> childCount(@PathVariable Long categoryId) {
+        return Result.ok(categoryNavService.countDirectChildren(categoryId));
     }
 
     @GetMapping("/api/v1/mcp/steerings")

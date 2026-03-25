@@ -16,4 +16,6 @@ public interface SteeringCategoryMapper extends BaseMapper<SteeringCategory> {
     List<CategoryNavItem> listTopLevel();
 
     List<CategoryNavItem> listChildren(@Param("parentId") Long parentId);
+
+    int countDirectChildren(@Param("categoryId") Long categoryId);
 }
