@@ -105,9 +105,12 @@ export default function SimilarPairDetailPage() {
       </Flex>
     );
     setActions(
-      <Button icon={<ArrowLeft size={16} />} onClick={() => navigate('/health')}>返回</Button>
+      <Flex gap={8}>
+        <Button icon={<ArrowLeft size={16} />} onClick={() => navigate('/health')}>返回</Button>
+        <Button type="primary" danger loading={dismissing} onClick={handleDismiss}>标记已处理</Button>
+      </Flex>
     );
-  }, [id, setBreadcrumbs, setActions, navigate]);
+  }, [id, setBreadcrumbs, setActions, navigate, dismissing, handleDismiss]);
 
   if (!pair) {
     return (
@@ -202,13 +205,6 @@ export default function SimilarPairDetailPage() {
         onConfirm={handleConfirmDeprecate}
         onCancel={() => setDeprecateTarget(null)}
       />
-
-      {/* Bottom actions */}
-      <Flex justify="flex-end">
-        <Button type="primary" danger loading={dismissing} onClick={handleDismiss}>
-          标记已处理
-        </Button>
-      </Flex>
     </div>
   );
 }
