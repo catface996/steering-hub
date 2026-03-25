@@ -236,4 +236,9 @@ public class HealthCheckServiceImpl implements HealthCheckService {
         long total = similarSpecPairMapper.countByTaskIdFiltered(taskId, titleParam, categoryId);
         return PageResult.of(records, total, page, pageSize);
     }
+
+    @Override
+    public void dismissPair(Long pairId) {
+        similarSpecPairMapper.deleteById(pairId);
+    }
 }

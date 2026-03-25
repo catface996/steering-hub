@@ -17,4 +17,6 @@ public interface HealthCheckService {
     Optional<HealthCheckTaskVO> getLatestTask();
 
     PageResult<SimilarPairVO> getSimilarPairs(Long taskId, int page, int pageSize, String specTitle, Long categoryId);
+
+    void dismissPair(Long pairId);
 }

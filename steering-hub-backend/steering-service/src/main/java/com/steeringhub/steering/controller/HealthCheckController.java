@@ -38,6 +38,13 @@ public class HealthCheckController {
         return Result.ok(healthCheckService.getLatestTask().orElse(null));
     }
 
+    @Operation(summary = "标记相似对已处理（删除记录）")
+    @PostMapping("/pairs/{pairId}/dismiss")
+    public Result<Void> dismissPair(@PathVariable Long pairId) {
+        healthCheckService.dismissPair(pairId);
+        return Result.ok();
+    }
+
     @Operation(summary = "查询相似规范对列表")
     @GetMapping("/{taskId}/similar-pairs")
     public Result<PageResult<SimilarPairVO>> similarPairs(
