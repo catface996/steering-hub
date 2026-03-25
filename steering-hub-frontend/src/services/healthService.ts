@@ -78,4 +78,7 @@ export const healthService = {
 
   compareSpecs: (idA: number, idB: number) =>
     get<CompareVO>(`/api/v1/web/steerings/compare?idA=${idA}&idB=${idB}`).then((r) => r.data),
+
+  dismissPair: (pairId: number) =>
+    post<void>(`/api/v1/health-check/pairs/${pairId}/dismiss`).then((r) => r.data),
 };

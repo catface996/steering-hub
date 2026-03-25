@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Badge,
   Button,
-  Col,
-  Drawer,
   Flex,
   Input,
   Progress,
-  Row,
   Select,
   Spin,
   Table,
@@ -16,12 +14,9 @@ import {
   Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useHeader } from '../../contexts/HeaderContext';
 import {
   healthService,
-  type CompareVO,
   type HealthCheckTaskVO,
   type SimilarPairVO,
 } from '../../services/healthService';
@@ -37,6 +32,7 @@ interface Category {
 
 export default function HealthPage() {
   const { setBreadcrumbs, setActions } = useHeader();
+  const navigate = useNavigate();
   const [task, setTask] = useState<HealthCheckTaskVO | null>(null);
   const [pairs, setPairs] = useState<SimilarPairVO[]>([]);
   const [total, setTotal] = useState(0);
@@ -48,10 +44,6 @@ export default function HealthPage() {
   const [specTitle, setSpecTitle] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [compareData, setCompareData] = useState<CompareVO | null>(null);
-  const [compareLoading, setCompareLoading] = useState(false);
 
   const esRef = useRef<EventSource | null>(null);
 
@@ -193,16 +185,8 @@ export default function HealthPage() {
     );
   }, [specTitle, categoryId, categories, running, task, setBreadcrumbs, setActions]);
 
-  const handleCompare = async (specAId: number, specBId: number) => {
-    setDrawerOpen(true);
-    setCompareData(null);
-    setCompareLoading(true);
-    try {
-      const data = await healthService.compareSpecs(specAId, specBId);
-      setCompareData(data);
-    } finally {
-      setCompareLoading(false);
-    }
+  const handleCompare = (pair: SimilarPairVO) => {
+    navigate(`/health/${pair.id}`, { state: { pair } });
   };
 
   const columns: ColumnsType<SimilarPairVO> = [
@@ -260,7 +244,7 @@ export default function HealthPage() {
         <Button
           type="link"
           size="small"
-          onClick={() => handleCompare(record.specA.id, record.specB.id)}
+          onClick={() => handleCompare(record)}
         >
           查看对比
         </Button>
@@ -375,67 +359,6 @@ export default function HealthPage() {
         )}
       </div>
 
-      {/* Compare drawer */}
-      <Drawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        width="80%"
-        title="规范内容对比"
-        styles={{ body: { padding: 0, background: '#09090f' } }}
-      >
-        {compareLoading ? (
-          <Flex justify="center" align="center" style={{ height: 300 }}>
-            <Spin />
-          </Flex>
-        ) : compareData ? (
-          <Row style={{ height: '100%' }}>
-            <Col
-              span={12}
-              style={{
-                padding: 24,
-                borderRight: '1px solid #1e1e2a',
-                overflowY: 'auto',
-                maxHeight: 'calc(100vh - 120px)',
-              }}
-            >
-              <SpecPanel spec={compareData.specA} />
-            </Col>
-            <Col
-              span={12}
-              style={{
-                padding: 24,
-                overflowY: 'auto',
-                maxHeight: 'calc(100vh - 120px)',
-              }}
-            >
-              <SpecPanel spec={compareData.specB} />
-            </Col>
-          </Row>
-        ) : null}
-      </Drawer>
-    </div>
-  );
-}
-
-function SpecPanel({ spec }: { spec: NonNullable<CompareVO>['specA'] }) {
-  const tags = spec.tags ? spec.tags.split(',').filter(Boolean) : [];
-  return (
-    <div>
-      <Typography.Title level={4} style={{ color: '#e4e4e7', marginTop: 0 }}>
-        {spec.title}
-      </Typography.Title>
-      {tags.length > 0 && (
-        <Flex gap={4} wrap="wrap" style={{ marginBottom: 16 }}>
-          {tags.map((t) => (
-            <Tag key={t} color="geekblue">
-              {t}
-            </Tag>
-          ))}
-        </Flex>
-      )}
-      <div style={{ color: '#a1a1aa', fontSize: 14, lineHeight: 1.7 }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
-      </div>
     </div>
   );
 }
