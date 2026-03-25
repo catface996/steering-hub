@@ -128,7 +128,7 @@ export default function QueryLogPage() {
                 <th style={{ ...thStyle, maxWidth: 200 }}>查询内容</th>
                 <th style={{ ...thStyle, width: 120 }}>Agent 名称</th>
                 <th style={{ ...thStyle, width: 160 }}>模型名称</th>
-                <th style={{ ...thStyle, width: 160 }}>代码仓库</th>
+                <th style={{ ...thStyle }}>代码仓库</th>
                 <th style={{ ...thStyle, width: 90 }}>命中数量</th>
                 <th style={{ ...thStyle, width: 180 }}>查询时间</th>
                 <th style={{ ...thStyle, width: 90 }}>来源</th>
