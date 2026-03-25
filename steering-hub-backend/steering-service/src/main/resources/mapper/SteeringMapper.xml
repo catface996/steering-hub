@@ -137,4 +137,21 @@
         WHERE id = #{id}
     </update>
 
+    <resultMap id="SteeringNavItemMap" type="com.steeringhub.steering.dto.response.SteeringNavItem">
+        <result property="id"        column="id"/>
+        <result property="title"     column="title"/>
+        <result property="tags"      column="tags"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="listActiveByCategory" resultMap="SteeringNavItemMap">
+        SELECT id, title, tags, updated_at
+        FROM steering
+        WHERE category_id = #{categoryId}
+          AND status = 'active'
+          AND deleted = FALSE
+        ORDER BY updated_at DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

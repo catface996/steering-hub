@@ -17,4 +17,58 @@
         ORDER BY sort_order ASC, id ASC
     </select>
 
+
+    <resultMap id="CategoryNavItemMap" type="com.steeringhub.steering.dto.response.CategoryNavItem">
+        <result property="id"          column="id"/>
+        <result property="name"        column="name"/>
+        <result property="code"        column="code"/>
+        <result property="description" column="description"/>
+        <result property="childCount"  column="child_count"/>
+        <result property="sortOrder"   column="sort_order"/>
+    </resultMap>
+
+    <select id="listTopLevel" resultMap="CategoryNavItemMap">
+        SELECT
+            sc.id,
+            sc.name,
+            sc.code,
+            sc.description,
+            sc.sort_order,
+            (
+                SELECT COUNT(*)
+                FROM category_hierarchy ch2
+                JOIN steering_category sc2 ON sc2.id = ch2.child_category_id
+                WHERE ch2.parent_category_id = sc.id
+                  AND sc2.enabled = TRUE AND sc2.deleted = FALSE
+            ) AS child_count
+        FROM steering_category sc
+        WHERE sc.enabled = TRUE AND sc.deleted = FALSE
+          AND NOT EXISTS (
+              SELECT 1 FROM category_hierarchy ch
+              WHERE ch.child_category_id = sc.id
+          )
+        ORDER BY sc.sort_order ASC, sc.id ASC
+    </select>
+
+    <select id="listChildren" resultMap="CategoryNavItemMap">
+        SELECT
+            sc.id,
+            sc.name,
+            sc.code,
+            sc.description,
+            ch.sort_order,
+            (
+                SELECT COUNT(*)
+                FROM category_hierarchy ch2
+                JOIN steering_category sc2 ON sc2.id = ch2.child_category_id
+                WHERE ch2.parent_category_id = sc.id
+                  AND sc2.enabled = TRUE AND sc2.deleted = FALSE
+            ) AS child_count
+        FROM category_hierarchy ch
+        JOIN steering_category sc ON sc.id = ch.child_category_id
+        WHERE ch.parent_category_id = #{parentId}
+          AND sc.enabled = TRUE AND sc.deleted = FALSE
+        ORDER BY ch.sort_order ASC, sc.id ASC
+    </select>
+
 </mapper>
