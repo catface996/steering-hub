@@ -127,6 +127,7 @@ export default function QueryLogPage() {
                 <th style={{ ...thStyle, maxWidth: 200 }}>查询内容</th>
                 <th style={{ ...thStyle, width: 120 }}>Agent 名称</th>
                 <th style={{ ...thStyle, width: 160 }}>模型名称</th>
+                <th style={{ ...thStyle, width: 160 }}>代码仓库</th>
                 <th style={{ ...thStyle, width: 90 }}>命中数量</th>
                 <th style={{ ...thStyle, width: 180 }}>查询时间</th>
                 <th style={{ ...thStyle, width: 90 }}>来源</th>
@@ -135,7 +136,7 @@ export default function QueryLogPage() {
             <tbody>
               {logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: '#71717a' }}>暂无数据</td>
+                  <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: '#71717a' }}>暂无数据</td>
                 </tr>
               ) : logs.map((log) => (
                 <tr
@@ -164,6 +165,9 @@ export default function QueryLogPage() {
                     {log.modelName
                       ? <Tag color="purple" style={{ borderRadius: 100, fontSize: 11 }}>{log.modelName}</Tag>
                       : <span style={{ color: '#52525b' }}>-</span>}
+                  </td>
+                  <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13 }}>
+                    {log.repo || '-'}
                   </td>
                   <td style={tdStyle}>
                     <Tag
