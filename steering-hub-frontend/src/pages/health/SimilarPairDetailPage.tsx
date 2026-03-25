@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Button, Col, Flex, Progress, Row, Spin, Tag, Typography, message as antMessage } from 'antd';
+import { Button, Col, Flex, Modal, Progress, Row, Spin, Tag, Typography, message as antMessage } from 'antd';
 import { ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useHeader } from '../../contexts/HeaderContext';
 import { healthService, type CompareVO, type SimilarPairVO } from '../../services/healthService';
+import { steeringService } from '../../services/steeringService';
 import { formatDateTime } from '../../utils/formatTime';
+import type { ReviewAction } from '../../types';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '草稿',
@@ -36,6 +38,7 @@ export default function SimilarPairDetailPage() {
   const [compareData, setCompareData] = useState<CompareVO | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissing, setDismissing] = useState(false);
+  const [deprecatingId, setDeprecatingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!pair) { setLoading(false); return; }
@@ -44,6 +47,33 @@ export default function SimilarPairDetailPage() {
       .then(setCompareData)
       .finally(() => setLoading(false));
   }, [pair]);
+
+  const handleDeprecate = (specId: number, title: string) => {
+    Modal.confirm({
+      title: '确认禁用',
+      content: `将禁用规范「${title}」，禁用后该规范不再参与检索。此操作不可直接撤销。`,
+      okText: '确认禁用',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: async () => {
+        setDeprecatingId(specId);
+        try {
+          await steeringService.review(specId, 'deprecate' as ReviewAction);
+          antMessage.success('规范已禁用');
+          setCompareData((prev) => {
+            if (!prev) return prev;
+            const update = (s: typeof prev.specA) =>
+              s.id === specId ? { ...s, status: 'deprecated' } : s;
+            return { specA: update(prev.specA), specB: update(prev.specB) };
+          });
+        } catch {
+          // error toasted by request layer
+        } finally {
+          setDeprecatingId(null);
+        }
+      },
+    });
+  };
 
   const handleDismiss = async () => {
     if (!id) return;
@@ -141,12 +171,22 @@ export default function SimilarPairDetailPage() {
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={12}>
             <div style={{ background: '#13131f', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
-              <SpecPanel spec={compareData.specA} categoryName={pair.specA.categoryName} />
+              <SpecPanel
+                spec={compareData.specA}
+                categoryName={pair.specA.categoryName}
+                onDeprecate={() => handleDeprecate(compareData.specA.id, compareData.specA.title)}
+                deprecating={deprecatingId === compareData.specA.id}
+              />
             </div>
           </Col>
           <Col span={12}>
             <div style={{ background: '#13131f', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
-              <SpecPanel spec={compareData.specB} categoryName={pair.specB.categoryName} />
+              <SpecPanel
+                spec={compareData.specB}
+                categoryName={pair.specB.categoryName}
+                onDeprecate={() => handleDeprecate(compareData.specB.id, compareData.specB.title)}
+                deprecating={deprecatingId === compareData.specB.id}
+              />
             </div>
           </Col>
         </Row>
@@ -165,12 +205,17 @@ export default function SimilarPairDetailPage() {
 function SpecPanel({
   spec,
   categoryName,
+  onDeprecate,
+  deprecating,
 }: {
   spec: NonNullable<CompareVO>['specA'];
   categoryName?: string | null;
+  onDeprecate?: () => void;
+  deprecating?: boolean;
 }) {
   const tags = spec.tags ? spec.tags.split(',').filter(Boolean) : [];
   const statusKey = spec.status?.toLowerCase() ?? '';
+  const canDeprecate = statusKey === 'active' || statusKey === 'approved';
 
   return (
     <div>
@@ -202,6 +247,14 @@ function SpecPanel({
       <div style={{ color: '#a1a1aa', fontSize: 14, lineHeight: 1.7 }}>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{spec.content}</ReactMarkdown>
       </div>
+
+      {canDeprecate && onDeprecate && (
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid #1e1e2a' }}>
+          <Button type="primary" danger size="small" loading={deprecating} onClick={onDeprecate}>
+            禁用此规范
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
