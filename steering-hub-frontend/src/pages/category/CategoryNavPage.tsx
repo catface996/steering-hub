@@ -127,8 +127,12 @@ export default function CategoryNavPage() {
             删除关系
           </Button>
         )}
-        <Button type="primary" icon={<Plus size={14} />} onClick={() => setAddOpen(true)}>
-          添加子分类关系
+        <Button type="primary" icon={<Plus size={14} />} onClick={() => {
+            if (selectedNode) {
+              addForm.setFieldValue('parentCategoryId', selectedNode.categoryId);
+            }
+            setAddOpen(true);
+          }}>添加子分类关系
         </Button>
       </Flex>
     );
