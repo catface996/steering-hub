@@ -16,9 +16,24 @@
     </delete>
 
     <select id="selectChildIds" resultType="Long">
-        SELECT child_category_id
-        FROM category_hierarchy
-        WHERE parent_category_id = #{parentId}
+        SELECT ch.child_category_id
+        FROM category_hierarchy ch
+        JOIN steering_category sc ON sc.id = ch.child_category_id
+        WHERE ch.parent_category_id = #{parentId}
+          AND sc.enabled = TRUE AND sc.deleted = FALSE
+    </select>
+
+    <select id="selectAllDescendantIds" resultType="Long">
+        WITH RECURSIVE descendants AS (
+            SELECT child_category_id
+            FROM category_hierarchy
+            WHERE parent_category_id = #{rootId}
+            UNION ALL
+            SELECT ch.child_category_id
+            FROM category_hierarchy ch
+            JOIN descendants d ON ch.parent_category_id = d.child_category_id
+        )
+        SELECT child_category_id FROM descendants
     </select>
 
 </mapper>

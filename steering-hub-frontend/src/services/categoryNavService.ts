@@ -1,4 +1,4 @@
-import { get, post, del } from '../utils/request';
+import { get, post } from '../utils/request';
 import type { CategoryNavItem, SteeringNavItem } from '../types';
 
 export const categoryNavService = {
@@ -16,7 +16,7 @@ export const categoryNavService = {
     post('/api/v1/web/category-hierarchy', { parentCategoryId, childCategoryId, sortOrder }),
 
   removeHierarchy: (parentCategoryId: number, childCategoryId: number) =>
-    del('/api/v1/web/category-hierarchy', { body: { parentCategoryId, childCategoryId } }),
+    post('/api/v1/web/category-hierarchy/remove', { parentCategoryId, childCategoryId }),
 
   createCategory: (data: { name: string; code: string; description?: string; parentId?: number }) => {
     const params = new URLSearchParams();

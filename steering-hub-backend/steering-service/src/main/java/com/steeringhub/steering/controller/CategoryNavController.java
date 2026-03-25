@@ -51,7 +51,7 @@ public class CategoryNavController {
         return Result.ok();
     }
 
-    @DeleteMapping("/api/v1/web/category-hierarchy")
+    @PostMapping("/api/v1/web/category-hierarchy/remove")
     public Result<Void> removeHierarchy(
             @RequestBody @Valid CategoryHierarchyDeleteRequest req) {
         categoryNavService.removeHierarchy(

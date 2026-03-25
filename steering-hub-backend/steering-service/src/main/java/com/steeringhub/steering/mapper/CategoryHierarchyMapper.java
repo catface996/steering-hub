@@ -18,4 +18,6 @@ public interface CategoryHierarchyMapper extends BaseMapper<CategoryHierarchy> {
                         @Param("childId") Long childId);
 
     List<Long> selectChildIds(@Param("parentId") Long parentId);
+
+    List<Long> selectAllDescendantIds(@Param("rootId") Long rootId);
 }

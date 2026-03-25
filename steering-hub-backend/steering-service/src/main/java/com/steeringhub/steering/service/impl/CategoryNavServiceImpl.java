@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 
 @Service
@@ -66,17 +64,6 @@ public class CategoryNavServiceImpl implements CategoryNavService {
     }
 
     private Set<Long> getAllDescendants(Long rootId) {
-        Set<Long> visited = new HashSet<>();
-        Queue<Long> queue = new LinkedList<>();
-        queue.add(rootId);
-        while (!queue.isEmpty()) {
-            Long cur = queue.poll();
-            if (!visited.add(cur)) {
-                continue;
-            }
-            List<Long> children = categoryHierarchyMapper.selectChildIds(cur);
-            queue.addAll(children);
-        }
-        return visited;
+        return new HashSet<>(categoryHierarchyMapper.selectAllDescendantIds(rootId));
     }
 }
