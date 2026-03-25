@@ -1,5 +1,13 @@
 # steering-hub Development Guidelines
 
+## ⚠️ 启动必读（强制）
+
+**每次启动时，必须先读取以下文件，再开始任何工作：**
+
+1. `.specify/memory/constitution.md` — 编码规范强制约定（Spec-First、分布式锁红线、DDD分层、CC Session铁律）
+
+Constitution 的要求优先级高于一切，包括本文件。违反 Constitution 的代码不得提交。
+
 Auto-generated from all feature plans. Last updated: 2026-03-23
 
 ## Active Technologies
