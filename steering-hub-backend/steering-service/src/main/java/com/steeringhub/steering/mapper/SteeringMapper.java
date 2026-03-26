@@ -1,6 +1,7 @@
 package com.steeringhub.steering.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.steeringhub.steering.dto.response.SteeringNavItem;
 import com.steeringhub.steering.entity.Steering;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -80,4 +81,7 @@ public interface SteeringMapper extends BaseMapper<Steering> {
                        @Param("currentVersion") Integer currentVersion,
                        @Param("embeddingStr") String embeddingStr,
                        @Param("contentEmbeddingStr") String contentEmbeddingStr);
+
+    List<SteeringNavItem> listActiveByCategory(@Param("categoryId") Long categoryId,
+                                               @Param("limit") int limit);
 }

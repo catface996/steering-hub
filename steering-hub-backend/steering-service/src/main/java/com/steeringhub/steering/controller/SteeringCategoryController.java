@@ -1,10 +1,12 @@
 package com.steeringhub.steering.controller;
 
 import com.steeringhub.common.response.Result;
+import com.steeringhub.steering.dto.request.CreateCategoryRequest;
 import com.steeringhub.steering.entity.SteeringCategory;
 import com.steeringhub.steering.service.SteeringCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,11 +28,9 @@ public class SteeringCategoryController {
 
     @Operation(summary = "创建分类")
     @PostMapping
-    public Result<SteeringCategory> createCategory(@RequestParam String name,
-                                               @RequestParam String code,
-                                               @RequestParam(required = false) String description,
-                                               @RequestParam(required = false) Long parentId) {
-        return Result.ok(steeringCategoryService.createCategory(name, code, description, parentId));
+    public Result<SteeringCategory> createCategory(@RequestBody @Valid CreateCategoryRequest req) {
+        return Result.ok(steeringCategoryService.createCategory(
+                req.getName(), req.getCode(), req.getDescription(), req.getParentId()));
     }
 
     @Operation(summary = "更新分类")

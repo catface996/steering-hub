@@ -195,6 +195,22 @@ export interface QueryLogDetail extends QueryLog {
   hitSteerings: HitSteering[]
 }
 
+export interface CategoryNavItem {
+  id: number
+  name: string
+  code: string
+  description?: string
+  childCount: number
+  sortOrder: number
+}
+
+export interface SteeringNavItem {
+  id: number
+  title: string
+  tags?: string
+  updatedAt: string
+}
+
 export interface ApiKeyItem {
   id: number
   name: string

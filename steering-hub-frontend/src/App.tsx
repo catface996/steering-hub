@@ -16,6 +16,8 @@ import FailureListPage from './pages/steering/FailureListPage';
 import SearchPage from './pages/search/SearchPage';
 import CompliancePage from './pages/compliance/CompliancePage';
 import CategoryPage from './pages/category/CategoryPage';
+import CategoryNavPage from './pages/category/CategoryNavPage';
+import CategorySteeringsPage from './pages/category/CategorySteeringsPage';
 import ApiKeyPage from './pages/settings/ApiKeyPage';
 import StopWordPage from './pages/settings/StopWordPage';
 import HealthPage from './pages/health/HealthPage';
@@ -45,7 +47,9 @@ function ThemedApp() {
             <Route path="steerings/:id/edit" element={<SteeringEditPage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="compliance" element={<CompliancePage />} />
-            <Route path="categories" element={<CategoryPage />} />
+            <Route path="categories" element={<CategoryNavPage />} />
+            <Route path="categories/:id/steerings" element={<CategorySteeringsPage />} />
+            <Route path="category-management" element={<CategoryPage />} />
             <Route path="analytics" element={<SteeringAnalyticsPage />} />
             <Route path="analytics/failures" element={<FailureListPage />} />
             <Route path="settings/api-keys" element={<ApiKeyPage />} />

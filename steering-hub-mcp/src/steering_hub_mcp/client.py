@@ -228,6 +228,26 @@ async def _ensure_repo(full_name: str) -> int:
             raise
 
 
+async def list_categories(parent_id: Optional[int] = None) -> list[dict]:
+    """List categories. Omit parent_id (or pass 0) for top-level; pass positive int for direct subcategories."""
+    params: dict[str, Any] = {}
+    if parent_id is not None and parent_id > 0:
+        params["parentId"] = parent_id
+    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
+        resp = await client.get("/api/v1/mcp/categories", params=params)
+        resp.raise_for_status()
+        return resp.json().get("data", [])
+
+
+async def list_steerings(category_id: int, limit: int = 10) -> list[dict]:
+    """List active steerings in a category (summary: id, title, tags, updatedAt)."""
+    params: dict[str, Any] = {"categoryId": category_id, "limit": max(1, min(50, limit))}
+    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
+        resp = await client.get("/api/v1/mcp/steerings", params=params)
+        resp.raise_for_status()
+        return resp.json().get("data", [])
+
+
 async def report_search_failure(query_id: int, reason: str, expected_topic: str = "") -> None:
     """上报本次检索无效，帮助改进规范系统"""
     payload = {"queryId": query_id, "result": "failure", "reason": reason}

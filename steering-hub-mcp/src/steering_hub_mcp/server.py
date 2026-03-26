@@ -206,6 +206,51 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="list_categories",
+            description=(
+                "Browse the steering category DAG by listing direct children of a given parent. "
+                "Omit parent_id (or pass 0) to get top-level categories (nodes with no parents). "
+                "Pass a category ID to list its direct subcategories. "
+                "A category may appear under multiple parents — use this tool to navigate the hierarchy level by level."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "parent_id": {
+                        "type": "integer",
+                        "description": (
+                            "Parent category ID. Omit or pass 0 for top-level categories. "
+                            "Pass a positive integer for direct subcategories of that node."
+                        ),
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="list_steerings",
+            description=(
+                "List all active steerings in a specific category. "
+                "Returns id, title, and tags — call get_steering(id) for full content. "
+                "Note: 'tags' and 'category' are orthogonal dimensions. "
+                "Tags describe technology stack (Java, React, etc); categories describe architectural grouping."
+            ),
+            inputSchema={
+                "type": "object",
+                "required": ["category_id"],
+                "properties": {
+                    "category_id": {
+                        "type": "integer",
+                        "description": "Category ID from list_categories.",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max results to return (1-50, default 10).",
+                        "default": 10,
+                    },
+                },
+            },
+        ),
+        Tool(
             name="report_search_failure",
             description=(
                 "Report that a search_steering call did not return useful results. "
@@ -245,6 +290,10 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             return await handle_submit_steering(arguments)
         elif name == "record_usage":
             return await handle_record_usage(arguments)
+        elif name == "list_categories":
+            return await handle_list_categories(arguments)
+        elif name == "list_steerings":
+            return await handle_list_steerings(arguments)
         elif name == "report_search_failure":
             return await handle_report_search_failure(arguments)
         elif name == "report_search_success":
@@ -435,6 +484,47 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+async def handle_list_categories(args: dict) -> list[types.ContentBlock]:
+    parent_id = args.get("parent_id")
+    categories = await client.list_categories(int(parent_id) if parent_id is not None else None)
+
+    if not categories:
+        msg = "No subcategories found." if parent_id else "No top-level categories found."
+        return [TextContent(type="text", text=msg)]
+
+    lines = ["# Categories\n"]
+    for cat in categories:
+        child_count = cat.get("childCount", 0)
+        lines.append(
+            f"## [{cat['code']}] {cat['name']}\n"
+            f"{cat.get('description', '')}\n"
+            f"ID: {cat['id']} | Subcategories: {child_count}\n"
+        )
+    lines.append("\n---\nCall list_categories(parent_id=<id>) to drill down, or list_steerings(category_id=<id>) to see steerings.")
+    return [TextContent(type="text", text="\n".join(lines))]
+
+
+async def handle_list_steerings(args: dict) -> list[types.ContentBlock]:
+    category_id = int(args["category_id"])
+    limit = int(args.get("limit", 10))
+    steerings = await client.list_steerings(category_id, limit)
+
+    if not steerings:
+        return [TextContent(type="text", text=f"No active steerings found in category {category_id}.")]
+
+    lines = [f"# Steerings in Category {category_id}\n"]
+    for s in steerings:
+        tags = s.get("tags", "") or ""
+        updated = s.get("updatedAt", "")
+        lines.append(
+            f"## [{s['id']}] {s['title']}\n"
+            f"Tags: {tags}\n"
+            f"Updated: {updated}\n"
+        )
+    lines.append("\n---\nCall get_steering(steering_id=<id>) for full content.")
+    return [TextContent(type="text", text="\n".join(lines))]
 
 
 async def handle_report_search_failure(args: dict) -> list[types.ContentBlock]:
