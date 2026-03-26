@@ -1,14 +1,17 @@
-/**
- * 检测当前设备是否为手机（基于 User Agent）
- * 手机端 → 返回 true；PC / 桌面浏览器 → 返回 false
- */
+import { useState, useEffect } from 'react';
+
 export function isMobileDevice(): boolean {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
+  return window.innerWidth < 768;
 }
 
-/** React Hook 版本，直接在组件中使用 */
 export function useIsMobile(): boolean {
-  return isMobileDevice();
+  const [isMobile, setIsMobile] = useState(isMobileDevice());
+
+  useEffect(() => {
+    const handler = () => setIsMobile(isMobileDevice());
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  return isMobile;
 }
