@@ -41,6 +41,13 @@ public class CategoryNavController {
         return Result.ok(categoryNavService.listSteerings(categoryId, limit));
     }
 
+    @GetMapping("/api/v1/mcp/categories/{categoryId}/steerings")
+    public Result<List<SteeringNavItem>> listSteeringsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) Integer limit) {
+        return Result.ok(categoryNavService.listSteerings(categoryId, limit));
+    }
+
     @PostMapping("/api/v1/web/category-hierarchy")
     public Result<Void> addHierarchy(
             @RequestBody @Valid CategoryHierarchyRequest req) {

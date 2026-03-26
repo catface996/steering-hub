@@ -18,12 +18,6 @@ export const categoryNavService = {
   removeHierarchy: (parentCategoryId: number, childCategoryId: number) =>
     post('/api/v1/web/category-hierarchy/remove', { parentCategoryId, childCategoryId }),
 
-  createCategory: (data: { name: string; code: string; description?: string; parentId?: number }) => {
-    const params = new URLSearchParams();
-    params.set('name', data.name);
-    params.set('code', data.code);
-    if (data.description) params.set('description', data.description);
-    if (data.parentId != null) params.set('parentId', String(data.parentId));
-    return post(`/api/v1/web/categories?${params.toString()}`);
-  },
+  createCategory: (data: { name: string; code: string; description?: string; parentId?: number }) =>
+    post('/api/v1/web/categories', data),
 };
