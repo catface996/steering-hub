@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Layout, Typography, Divider, Flex } from 'antd';
-import { Check, LogOut } from 'lucide-react';
+import { Layout, Typography, Divider, Flex, Drawer } from 'antd';
+import { Check, LogOut, Menu } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { logout, getUser } from '../../utils/auth';
 import Sidebar from '../Sidebar';
 import { HeaderProvider, useHeader } from '../../contexts/HeaderContext';
 import { useThemeColor, THEME_COLORS } from '../../contexts/ThemeColorContext';
+import { useIsMobile } from '../../utils/deviceDetect';
 
-function GlobalHeader() {
+interface GlobalHeaderProps {
+  isMobile: boolean;
+  onHamburgerClick: () => void;
+}
+
+function GlobalHeader({ isMobile, onHamburgerClick }: GlobalHeaderProps) {
   const navigate = useNavigate();
   const user = getUser();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,10 +24,20 @@ function GlobalHeader() {
     <>
       <Flex
         align="center"
-        style={{ height: 64, padding: '0 24px', borderBottom: '1px solid #27273a', flexShrink: 0 }}
+        style={{ height: 64, padding: isMobile ? '0 12px' : '0 24px', borderBottom: '1px solid #27273a', flexShrink: 0 }}
       >
+        {/* Hamburger icon — mobile only */}
+        {isMobile && (
+          <div
+            style={{ marginRight: 12, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            onClick={onHamburgerClick}
+          >
+            <Menu size={22} color="#a1a1aa" />
+          </div>
+        )}
+
         {/* Left: Breadcrumbs */}
-        <div style={{ flex: '0 0 auto' }}>
+        <div style={{ flex: '0 0 auto', minWidth: 0, overflow: 'hidden' }}>
           {breadcrumbs}
         </div>
 
@@ -136,12 +152,31 @@ function GlobalHeader() {
 }
 
 export default function MainLayout() {
+  const isMobile = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   return (
     <Layout style={{ height: '100vh' }}>
-      <Sidebar />
+      {/* PC: fixed sidebar */}
+      {!isMobile && <Sidebar />}
+
+      {/* Mobile: Drawer sidebar */}
+      {isMobile && (
+        <Drawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          placement="left"
+          width={280}
+          styles={{ body: { padding: 0 }, header: { display: 'none' } }}
+          style={{ padding: 0 }}
+        >
+          <Sidebar onMenuClick={() => setDrawerOpen(false)} />
+        </Drawer>
+      )}
+
       <Layout style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <HeaderProvider>
-          <GlobalHeader />
+          <GlobalHeader isMobile={isMobile} onHamburgerClick={() => setDrawerOpen(true)} />
           <Layout.Content style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
             <Outlet />
           </Layout.Content>

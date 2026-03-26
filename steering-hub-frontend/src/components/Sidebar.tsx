@@ -46,7 +46,11 @@ const settingsItems: NavItem[] = [
 
 type SectionKey = 'main' | 'settings';
 
-export default function Sidebar() {
+interface SidebarProps {
+  onMenuClick?: () => void;
+}
+
+export default function Sidebar({ onMenuClick }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
@@ -69,7 +73,7 @@ export default function Sidebar() {
           key={item.label}
           align="center"
           gap={12}
-          onClick={() => navigate(item.path)}
+          onClick={() => { navigate(item.path); onMenuClick?.(); }}
           style={{
             padding: '8px 16px',
             borderRadius: 100,
