@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Button, Tag, Input, Select, Flex, Spin, Modal, App, Progress, Tooltip, Card } from 'antd';
+import { useIsMobile } from '../../utils/deviceDetect';
 import { Plus, LayoutList, LayoutGrid } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService, categoryService } from '../../services/steeringService';
@@ -23,6 +24,7 @@ export default function SteeringListPage() {
   const navigate = useNavigate();
   const { message } = App.useApp();
   const { setBreadcrumbs, setActions } = useHeader();
+  const isMobile = useIsMobile();
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState<string>('');
   const [keyword, setKeyword] = useState('');
@@ -35,7 +37,8 @@ export default function SteeringListPage() {
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [categories, setCategories] = useState<SteeringCategory[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'card'>('card');
-  const pageSize = viewMode === 'card' ? 9 : 10;
+  const effectiveViewMode = isMobile ? 'card' : viewMode;
+  const pageSize = effectiveViewMode === 'card' ? 9 : 10;
 
   useEffect(() => {
     categoryService.list().then(setCategories).catch(() => {});
@@ -56,7 +59,7 @@ export default function SteeringListPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const result = await steeringService.page({ current: page + 1, size: pageSize, status: status || undefined, keyword, categoryId });
+        const result = await steeringService.page({ current: page + 1, size: effectiveViewMode === 'card' ? 9 : 10, status: status || undefined, keyword, categoryId });
         setData(result);
         // Load quality data
         if (result.records.length > 0) {
@@ -133,13 +136,13 @@ export default function SteeringListPage() {
   return (
     <div className="list-page">
       {/* Filters */}
-      <Flex gap={12} justify="space-between" align="center">
-        <Flex gap={12}>
+      <Flex gap={12} justify="space-between" align="center" wrap="wrap">
+        <Flex gap={12} wrap="wrap">
           <Input
             placeholder="搜索规范标题..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            style={{ width: 280 }}
+            style={{ width: isMobile ? '100%' : 280 }}
           />
           <Select
             value={status}
@@ -159,29 +162,31 @@ export default function SteeringListPage() {
             options={categories.map((c) => ({ label: c.name, value: c.id }))}
           />
         </Flex>
-        <Flex gap={4}>
-          <Button
-            type={viewMode === 'list' ? 'primary' : 'default'}
-            icon={<LayoutList size={16} />}
-            onClick={() => { setViewMode('list'); setPage(0); }}
-          />
-          <Button
-            type={viewMode === 'card' ? 'primary' : 'default'}
-            icon={<LayoutGrid size={16} />}
-            onClick={() => { setViewMode('card'); setPage(0); }}
-          />
-        </Flex>
+        {!isMobile && (
+          <Flex gap={4}>
+            <Button
+              type={viewMode === 'list' ? 'primary' : 'default'}
+              icon={<LayoutList size={16} />}
+              onClick={() => { setViewMode('list'); setPage(0); }}
+            />
+            <Button
+              type={viewMode === 'card' ? 'primary' : 'default'}
+              icon={<LayoutGrid size={16} />}
+              onClick={() => { setViewMode('card'); setPage(0); }}
+            />
+          </Flex>
+        )}
       </Flex>
 
       {/* Table Card */}
-      {viewMode === 'card' && (
+      {effectiveViewMode === 'card' && (
         <>
           {loading ? (
             <Flex justify="center" align="center" style={{ flex: 1, padding: 48 }}>
               <Spin size="large" />
             </Flex>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
               {data?.records?.map((record) => (
                 <Card
                   key={record.id}
@@ -222,7 +227,7 @@ export default function SteeringListPage() {
           />
         </>
       )}
-      {viewMode === 'list' && <Card
+      {effectiveViewMode === 'list' && <Card
         style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
       >
@@ -346,6 +351,7 @@ export default function SteeringListPage() {
         okText="删除"
         cancelText="取消"
         okButtonProps={{ danger: true }}
+        width={isMobile ? '90vw' : 520}
       >
         <Typography.Text type="secondary">确定要删除这条规范吗？此操作不可撤销。</Typography.Text>
       </Modal>
@@ -356,7 +362,7 @@ export default function SteeringListPage() {
         onCancel={() => setQualityDetail(null)}
         footer={<Button onClick={() => setQualityDetail(null)}>关闭</Button>}
         title="可检索性评分详情"
-        width={480}
+        width={isMobile ? '90vw' : 480}
       >
         {qualityDetail && (
           <div>

@@ -4,6 +4,7 @@ import {
   Alert,
   Badge,
   Button,
+  Card,
   Flex,
   Input,
   Progress,
@@ -13,6 +14,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
+import { useIsMobile } from '../../utils/deviceDetect';
 import type { ColumnsType } from 'antd/es/table';
 import { useHeader } from '../../contexts/HeaderContext';
 import {
@@ -33,6 +35,7 @@ interface Category {
 export default function HealthPage() {
   const { setBreadcrumbs, setActions } = useHeader();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [task, setTask] = useState<HealthCheckTaskVO | null>(null);
   const [pairs, setPairs] = useState<SimilarPairVO[]>([]);
   const [total, setTotal] = useState(0);
@@ -327,7 +330,7 @@ export default function HealthPage() {
         </div>
       )}
 
-      {/* Similar pairs table */}
+      {/* Similar pairs */}
       <div
         style={{
           background: '#13131f',
@@ -336,18 +339,62 @@ export default function HealthPage() {
           overflow: 'hidden',
         }}
       >
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={pairs}
-          pagination={false}
-          style={{ background: 'transparent' }}
-          locale={{
-            emptyText: task
-              ? '未发现相似规范对'
-              : '请运行检测以查看结果',
-          }}
-        />
+        {isMobile ? (
+          /* Mobile: card list */
+          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pairs.length === 0 ? (
+              <Typography.Text style={{ color: '#71717a', textAlign: 'center', display: 'block', padding: 32 }}>
+                {task ? '未发现相似规范对' : '请运行检测以查看结果'}
+              </Typography.Text>
+            ) : pairs.map((pair) => (
+              <Card
+                key={pair.id}
+                size="small"
+                style={{ background: '#1a1a24', border: '1px solid #27273a', borderRadius: 8 }}
+              >
+                <Flex vertical gap={8}>
+                  <Typography.Text style={{ color: '#e4e4e7', fontSize: 13, fontWeight: 500 }} ellipsis={{ tooltip: true }}>
+                    {pair.specA.title}
+                  </Typography.Text>
+                  <Typography.Text style={{ color: '#52525b', fontSize: 11 }}>↔ 相似</Typography.Text>
+                  <Typography.Text style={{ color: '#e4e4e7', fontSize: 13 }} ellipsis={{ tooltip: true }}>
+                    {pair.specB.title}
+                  </Typography.Text>
+                  <Flex align="center" gap={8}>
+                    <Progress
+                      percent={Math.round((pair.overallScore ?? 0) * 100)}
+                      size="small"
+                      strokeColor={pair.overallScore >= 0.9 ? '#f87171' : pair.overallScore >= 0.8 ? '#fb923c' : '#facc15'}
+                      style={{ flex: 1, margin: 0 }}
+                    />
+                    <Button type="link" size="small" style={{ padding: 0 }} onClick={() => handleCompare(pair)}>
+                      对比
+                    </Button>
+                  </Flex>
+                  <Flex gap={4} wrap="wrap">
+                    {(pair.reasonTags ?? []).map((t) => (
+                      <Tag key={t} color="blue" style={{ fontSize: 11 }}>{t}</Tag>
+                    ))}
+                  </Flex>
+                </Flex>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          /* PC: table */
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={pairs}
+            pagination={false}
+            style={{ background: 'transparent' }}
+            locale={{
+              emptyText: task
+                ? '未发现相似规范对'
+                : '请运行检测以查看结果',
+            }}
+          />
+        )}
         {total > 0 && task && (
           <Pagination
             count={total}

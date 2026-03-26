@@ -8,6 +8,7 @@ import { queryLogService } from '../../services/queryLogService';
 import type { QueryLog } from '../../types';
 import Pagination from '../../components/Pagination';
 import { formatDateTime } from '../../utils/formatTime';
+import { useIsMobile } from '../../utils/deviceDetect';
 
 const PAGE_SIZE = 20;
 
@@ -32,6 +33,7 @@ function highlight(text: string, keyword: string) {
 export default function QueryLogPage() {
   const { setBreadcrumbs, setActions } = useHeader();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [logs, setLogs] = useState<QueryLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -117,11 +119,46 @@ export default function QueryLogPage() {
   };
 
   return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ padding: isMobile ? 12 : 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: '#0d0d14' }}>
         {loading ? (
           <Flex justify="center" style={{ padding: 64 }}><Spin /></Flex>
+        ) : isMobile ? (
+          /* Mobile: card list */
+          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {logs.length === 0 ? (
+              <Typography.Text style={{ color: '#71717a', textAlign: 'center', display: 'block', padding: 32 }}>暂无数据</Typography.Text>
+            ) : logs.map((log) => (
+              <div
+                key={log.id}
+                onClick={() => navigate(`/query-logs/${log.id}`)}
+                style={{ background: '#13131f', border: '1px solid #1e1e2a', borderRadius: 8, padding: '12px 14px', cursor: 'pointer' }}
+              >
+                <Typography.Text
+                  ellipsis
+                  style={{ display: 'block', color: '#e4e4e7', fontWeight: 500, marginBottom: 8 }}
+                  title={log.queryText}
+                >
+                  {highlight(log.queryText, filterKeyword)}
+                </Typography.Text>
+                <Flex gap={6} wrap="wrap" align="center">
+                  <Tag color={log.resultCount === 0 ? 'error' : 'success'} style={{ borderRadius: 100, fontSize: 12 }}>
+                    {log.resultCount ?? '-'} 命中
+                  </Tag>
+                  {log.source === 'MCP' ? (
+                    <Tag color="blue" style={{ borderRadius: 100, fontSize: 12 }}>MCP</Tag>
+                  ) : log.source === 'WEB' || log.source === 'Web' ? (
+                    <Tag color="green" style={{ borderRadius: 100, fontSize: 12 }}>Web</Tag>
+                  ) : (
+                    <Tag color="default" style={{ borderRadius: 100, fontSize: 12 }}>未知</Tag>
+                  )}
+                  <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>{formatDateTime(log.createdAt)}</Typography.Text>
+                </Flex>
+              </div>
+            ))}
+          </div>
         ) : (
+          /* PC: table */
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>

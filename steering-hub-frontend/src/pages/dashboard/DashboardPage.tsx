@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Card, Button, Tag, Flex, Spin } from 'antd';
+import { useIsMobile } from '../../utils/deviceDetect';
 import { FileText, CheckCircle, Search, ShieldCheck, Plus, Tag as TagIcon } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
@@ -20,6 +21,7 @@ const STATUS_CLASS: Record<SteeringStatus, string> = {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { setBreadcrumbs } = useHeader();
+  const isMobile = useIsMobile();
   const [totalCount, setTotalCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [recentSteerings, setRecentSteerings] = useState<Steering[]>([]);
@@ -70,9 +72,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: isMobile ? 12 : 24 }}>
       {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: isMobile ? 10 : 16, marginBottom: isMobile ? 12 : 24 }}>
         {stats.map((stat) => (
           <Card key={stat.label} style={{ borderRadius: 12 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, background: stat.bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: stat.color, marginBottom: 12 }}>
@@ -85,7 +87,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 20 }}>
         {/* Recent Updates */}
         <Card
           title={
