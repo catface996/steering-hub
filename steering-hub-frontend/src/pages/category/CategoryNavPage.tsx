@@ -109,6 +109,51 @@ export default function CategoryNavPage() {
     }
   }, []);
 
+  // Reload roots then select & scroll to the newly created node
+  const loadRootsAndSelect = useCallback(async (newId: number, parentId?: number) => {
+    setLoading(true);
+    try {
+      const data = await categoryNavService.listCategories();
+      const newRoots = data.map(buildRootNode);
+
+      if (!parentId) {
+        setRoots(newRoots);
+        const node = newRoots.find(n => n.categoryId === newId);
+        if (node) {
+          setSelectedNode(node);
+          setTimeout(() => {
+            document.querySelector(`[data-node-id="${node.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 100);
+        }
+      } else {
+        const parentInRoots = newRoots.find(n => n.categoryId === parentId);
+        if (parentInRoots) {
+          const children = await categoryNavService.listCategories(parentId);
+          const childNodes = children.map(c => buildChildNode(c, parentId));
+          setRoots(newRoots.map(n =>
+            n.categoryId === parentId
+              ? { ...n, loaded: true, expanded: true, children: childNodes }
+              : n
+          ));
+          const childNode = childNodes.find(c => c.categoryId === newId);
+          if (childNode) {
+            setSelectedNode(childNode);
+            setTimeout(() => {
+              document.querySelector(`[data-node-id="${childNode.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+          }
+        } else {
+          // Parent is a nested node — just reload without auto-select
+          setRoots(newRoots);
+        }
+      }
+    } catch {
+      // toast from request layer
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => { loadRoots(); }, [loadRoots]);
 
   // Load all categories for dropdown
@@ -183,12 +228,11 @@ export default function CategoryNavPage() {
   }) => {
     setCreateSubmitting(true);
     try {
-      await categoryNavService.createCategory(values);
+      const newCategory = await categoryNavService.createCategory(values);
       message.success('分类创建成功');
       setCreateOpen(false);
       createForm.resetFields();
-      setSelectedNode(null);
-      loadRoots();
+      await loadRootsAndSelect(newCategory.id, values.parentId);
       categoryService.list().then(setAllCategories).catch(() => {});
     } catch {
       // toast from request layer
@@ -248,7 +292,7 @@ export default function CategoryNavPage() {
     const hasChildren = node.childCount > 0;
 
     return (
-      <div key={node.nodeKey}>
+      <div key={node.nodeKey} data-node-id={node.nodeKey}>
         <Flex
           align="center"
           gap={8}
