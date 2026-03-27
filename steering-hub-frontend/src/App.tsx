@@ -61,8 +61,8 @@ function ThemedApp() {
             <Route path="repos/:id" element={<RepoDetailPage />} />
             <Route path="query-logs" element={<QueryLogPage />} />
             <Route path="query-logs/:id" element={<QueryLogDetailPage />} />
-            <Route path="docs" element={<DocsPage />} />
           </Route>
+          <Route path="/docs" element={<RequireAuth><DocsPage /></RequireAuth>} />
         </Routes>
       </BrowserRouter>
       </ModalProvider>
