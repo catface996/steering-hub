@@ -150,23 +150,25 @@ export default function SearchPage() {
           </Typography.Text>
         </>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: centered ? 650 : undefined }}>
-        <Input
-          ref={inputRef}
-          placeholder="输入关键词或描述，如：Controller URL 命名规范..."
-          size="large"
-          defaultValue={centered ? undefined : query}
-          style={{ width: '100%' }}
-          onPressEnter={doSearch}
-          allowClear
-        />
-        <Flex gap={8}>
+
+      {/* PC: single horizontal row */}
+      {!isMobile && (
+        <Flex gap={8} align="center" style={{ width: '100%', maxWidth: centered ? 850 : undefined }}>
+          <Input
+            ref={inputRef}
+            placeholder="输入关键词或描述，如：Controller URL 命名规范..."
+            size="large"
+            defaultValue={centered ? undefined : query}
+            style={{ flex: 1 }}
+            onPressEnter={doSearch}
+            allowClear
+          />
           <Select
             value={categoryId}
             onChange={setCategoryId}
             placeholder="规范类型"
             size="large"
-            style={{ flex: 1 }}
+            style={{ width: 150, flexShrink: 0 }}
             allowClear
             options={[
               { label: '全部类型', value: undefined },
@@ -177,27 +179,61 @@ export default function SearchPage() {
             value={mode}
             onChange={setMode}
             size="large"
-            style={{ flex: 1 }}
+            style={{ width: 130, flexShrink: 0 }}
             options={[
               { label: '混合检索', value: 'hybrid' },
               { label: '语义检索', value: 'semantic' },
               { label: '全文检索', value: 'fulltext' },
             ]}
           />
-          {!isMobile && (
-            <Select
-              value={limit}
-              onChange={setLimit}
-              size="large"
-              style={{ width: 120, flexShrink: 0 }}
-              options={[10, 20, 50].map((v) => ({ label: `前 ${v} 条`, value: v }))}
-            />
-          )}
+          <Button type="primary" size="large" onClick={doSearch} loading={searching} icon={searching ? undefined : <Search size={16} />}>
+            搜索
+          </Button>
         </Flex>
-        <Button type="primary" size="large" block onClick={doSearch} loading={searching} icon={searching ? undefined : <Search size={16} />}>
-          搜索
-        </Button>
-      </div>
+      )}
+
+      {/* Mobile: vertical stack */}
+      {isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+          <Input
+            ref={inputRef}
+            placeholder="输入关键词或描述，如：Controller URL 命名规范..."
+            size="large"
+            defaultValue={centered ? undefined : query}
+            style={{ width: '100%' }}
+            onPressEnter={doSearch}
+            allowClear
+          />
+          <Flex gap={8}>
+            <Select
+              value={categoryId}
+              onChange={setCategoryId}
+              placeholder="规范类型"
+              size="large"
+              style={{ flex: 1 }}
+              allowClear
+              options={[
+                { label: '全部类型', value: undefined },
+                ...categories.map((cat) => ({ label: cat.name, value: cat.id }))
+              ]}
+            />
+            <Select
+              value={mode}
+              onChange={setMode}
+              size="large"
+              style={{ flex: 1 }}
+              options={[
+                { label: '混合检索', value: 'hybrid' },
+                { label: '语义检索', value: 'semantic' },
+                { label: '全文检索', value: 'fulltext' },
+              ]}
+            />
+          </Flex>
+          <Button type="primary" size="large" block onClick={doSearch} loading={searching} icon={searching ? undefined : <Search size={16} />}>
+            搜索
+          </Button>
+        </div>
+      )}
     </div>
   );
 
