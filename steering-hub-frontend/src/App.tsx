@@ -63,6 +63,7 @@ function ThemedApp() {
             <Route path="query-logs/:id" element={<QueryLogDetailPage />} />
           </Route>
           <Route path="/docs" element={<RequireAuth><DocsPage /></RequireAuth>} />
+          <Route path="/docs/steerings/:id" element={<RequireAuth><SteeringDetailPage /></RequireAuth>} />
         </Routes>
       </BrowserRouter>
       </ModalProvider>
