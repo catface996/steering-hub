@@ -18,6 +18,6 @@ export const categoryNavService = {
   removeHierarchy: (parentCategoryId: number, childCategoryId: number) =>
     post('/api/v1/web/category-hierarchy/remove', { parentCategoryId, childCategoryId }),
 
-  createCategory: (data: { name: string; code: string; description?: string; parentId?: number }) =>
+  createCategory: (data: { name: string; code?: string; description?: string; parentId?: number }) =>
     post('/api/v1/web/categories', data),
 };

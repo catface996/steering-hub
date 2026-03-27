@@ -178,7 +178,6 @@ export default function CategoryNavPage() {
   // ── Create category ───────────────────────────────────────────────────────
   const handleCreateCategory = async (values: {
     name: string;
-    code: string;
     description?: string;
     parentId?: number;
   }) => {
@@ -190,6 +189,7 @@ export default function CategoryNavPage() {
       createForm.resetFields();
       setSelectedNode(null);
       loadRoots();
+      categoryService.list().then(setAllCategories).catch(() => {});
     } catch {
       // toast from request layer
     } finally {
@@ -287,7 +287,6 @@ export default function CategoryNavPage() {
           >
             {node.name}
           </Typography.Text>
-          <Tag style={{ borderRadius: 100, fontSize: 11, fontFamily: 'monospace' }}>{node.code}</Tag>
 
           {/* childCount badge */}
           {node.childCount > 0 && (
@@ -357,17 +356,7 @@ export default function CategoryNavPage() {
           >
             <Input placeholder="例：AI 开发工具" />
           </Form.Item>
-          <Form.Item
-            label="分类代码"
-            name="code"
-            rules={[
-              { required: true, message: '请输入分类代码' },
-              { pattern: /^[a-z0-9-]+$/, message: '只允许小写字母、数字和连字符' },
-            ]}
-          >
-            <Input placeholder="例：ai-dev-tools" style={{ fontFamily: 'monospace' }} />
-          </Form.Item>
-          <Form.Item label="描述" name="description">
+<Form.Item label="描述" name="description">
             <Input.TextArea placeholder="选填" rows={3} />
           </Form.Item>
           <Form.Item label="父分类" name="parentId">
@@ -378,7 +367,7 @@ export default function CategoryNavPage() {
               optionFilterProp="label"
               options={allCategories.map((c) => ({
                 value: c.id,
-                label: `${c.name} (${c.code})`,
+                label: c.name,
               }))}
             />
           </Form.Item>
@@ -414,7 +403,7 @@ export default function CategoryNavPage() {
               optionFilterProp="label"
               options={allCategories.map((c) => ({
                 value: c.id,
-                label: `${c.name} (${c.code})`,
+                label: c.name,
               }))}
             />
           </Form.Item>
@@ -429,7 +418,7 @@ export default function CategoryNavPage() {
               optionFilterProp="label"
               options={allCategories.map((c) => ({
                 value: c.id,
-                label: `${c.name} (${c.code})`,
+                label: c.name,
               }))}
             />
           </Form.Item>

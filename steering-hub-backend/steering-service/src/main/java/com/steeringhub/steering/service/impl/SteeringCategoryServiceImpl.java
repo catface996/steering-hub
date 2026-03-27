@@ -1,6 +1,5 @@
 package com.steeringhub.steering.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.ResultCode;
@@ -20,16 +19,18 @@ public class SteeringCategoryServiceImpl extends ServiceImpl<SteeringCategoryMap
 
     @Override
     public List<SteeringCategory> listTree() {
-        return list(new LambdaQueryWrapper<SteeringCategory>()
-                .eq(SteeringCategory::getEnabled, true)
-                .orderByAsc(SteeringCategory::getSortOrder));
+        return baseMapper.selectAllEnabled();
     }
 
     @Override
     @Transactional
     public SteeringCategory createCategory(String name, String code, String description, Long parentId) {
+        // Auto-generate code when not provided
+        if (code == null || code.isBlank()) {
+            code = "cat-" + System.currentTimeMillis();
+        }
         // Check code uniqueness
-        long count = count(new LambdaQueryWrapper<SteeringCategory>().eq(SteeringCategory::getCode, code));
+        int count = baseMapper.countByCode(code);
         if (count > 0) {
             throw new BusinessException(ResultCode.CONFLICT.getCode(), "分类编码已存在: " + code);
         }
