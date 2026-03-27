@@ -272,22 +272,13 @@ export default function CategoryNavPage() {
     );
     setActions(
       <Flex gap={8}>
-        {selectedNode?.parentCategoryId != null && (
+        {selectedNode && (selectedNode.childCount === 0 || selectedNode.parentCategoryId != null) && (
           <Button
             danger
             icon={<Trash2 size={14} />}
-            onClick={() => setDeleteConfirmOpen(true)}
+            onClick={() => selectedNode.childCount === 0 ? setDeleteCategoryModalOpen(true) : setDeleteConfirmOpen(true)}
           >
-            删除关系
-          </Button>
-        )}
-        {selectedNode && selectedNode.childCount === 0 && (
-          <Button
-            danger
-            icon={<Trash2 size={14} />}
-            onClick={() => setDeleteCategoryModalOpen(true)}
-          >
-            删除分类
+            删除
           </Button>
         )}
         <Button type="primary" icon={<Plus size={14} />} onClick={() => {
