@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Spin, Tag, Card, Flex, Empty } from 'antd';
 import { BookOpen, ChevronDown, ChevronRight, FolderOpen, Folder } from 'lucide-react';
-import { useHeader } from '../../contexts/HeaderContext';
 import { categoryNavService } from '../../services/categoryNavService';
 import { steeringService } from '../../services/steeringService';
 import { useIsMobile } from '../../utils/deviceDetect';
@@ -53,7 +52,6 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function DocsPage() {
   const navigate = useNavigate();
-  const { setBreadcrumbs, setActions } = useHeader();
   const isMobile = useIsMobile();
 
   const [roots, setRoots] = useState<DocTreeNode[]>([]);
@@ -62,19 +60,6 @@ export default function DocsPage() {
   const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
   const [steerings, setSteerings] = useState<Steering[]>([]);
   const [steeringsLoading, setSteeringsLoading] = useState(false);
-
-  // ── Header ────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    setBreadcrumbs(
-      <Flex align="center" gap={8}>
-        <BookOpen size={18} color="var(--color-primary)" />
-        <Typography.Text style={{ fontSize: 20, fontWeight: 700, color: '#f4f4f5' }}>
-          文档模式
-        </Typography.Text>
-      </Flex>
-    );
-    setActions(null);
-  }, [setBreadcrumbs, setActions]);
 
   // ── Load top-level categories ─────────────────────────────────────────────
   const loadRoots = useCallback(async () => {
@@ -251,7 +236,14 @@ export default function DocsPage() {
 
   // ── Layout ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', height: '100%', gap: 0, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-base)', overflow: 'hidden' }}>
+      {/* Header */}
+      <Flex align="center" gap={10} style={{ padding: '0 20px', height: 52, borderBottom: '1px solid #1e1e2a', flexShrink: 0 }}>
+        <BookOpen size={18} color="var(--color-primary)" />
+        <Typography.Text style={{ fontSize: 16, fontWeight: 700, color: '#f4f4f5' }}>文档模式</Typography.Text>
+      </Flex>
+      {/* Body */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       {/* Left: category outline */}
       {!isMobile && (
         <div
@@ -300,6 +292,7 @@ export default function DocsPage() {
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );
