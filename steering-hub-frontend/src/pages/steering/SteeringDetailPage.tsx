@@ -137,7 +137,7 @@ export default function SteeringDetailPage() {
         {steering.status === 'active' && (
           <Button danger onClick={() => setDeprecateOpen(true)}>废弃</Button>
         )}
-        {steering.status === 'deprecated' && (
+        {(steering.status === 'draft' || steering.status === 'deprecated') && (
           <Button danger onClick={() => setDeleteOpen(true)}>删除</Button>
         )}
       </Flex>

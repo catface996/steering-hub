@@ -11,6 +11,7 @@ interface FailureLog {
   queryText: string;
   failureReason: string;
   expectedTopic: string;
+  repo: string;
   agentName: string;
   createdAt: string;
 }
@@ -95,6 +96,7 @@ export default function FailureListPage() {
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 260 }}>查询词</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 110 }}>失败原因</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>期望找到的规范</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180 }}>代码仓库</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180 }}>Agent</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 130 }}>时间</Typography.Text>
               </Flex>
@@ -118,6 +120,12 @@ export default function FailureListPage() {
                       style={{ color: '#a1a1aa', fontSize: 13, flex: 1, paddingRight: 8 }}
                     >
                       {item.expectedTopic || '-'}
+                    </Typography.Text>
+                    <Typography.Text
+                      ellipsis={{ tooltip: true }}
+                      style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180 }}
+                    >
+                      {item.repo || '-'}
                     </Typography.Text>
                     <Typography.Text
                       ellipsis={{ tooltip: true }}

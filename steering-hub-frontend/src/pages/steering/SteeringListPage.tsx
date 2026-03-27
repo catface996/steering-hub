@@ -325,7 +325,7 @@ export default function SteeringListPage() {
                   {record.status === 'active' && (
                     <Button type="link" size="small" danger onClick={() => handleDeprecate(record.id)} style={{ fontSize: 12 }}>废弃</Button>
                   )}
-                  {record.status === 'deprecated' && (
+                  {(record.status === 'draft' || record.status === 'deprecated') && (
                     <Button type="link" size="small" danger onClick={() => setDeleteId(record.id)} style={{ fontSize: 12 }}>删除</Button>
                   )}
                 </Flex>

@@ -169,49 +169,84 @@ export default function CategoryNavPage() {
     }
   }, []);
 
-  // Reload roots then select & scroll to the newly created node
+  // Reload roots then select & scroll to the newly created node (preserving expand state)
   const loadRootsAndSelect = useCallback(async (newId: number, parentId?: number) => {
     setLoading(true);
     try {
       const data = await categoryNavService.listCategories();
-      const newRoots = data.map(buildRootNode);
+      const rawRoots = data.map(buildRootNode);
 
-      if (!parentId) {
-        setRoots(newRoots);
-        saveExpandedKeys(newRoots);
-        const node = newRoots.find(n => n.categoryId === newId);
-        if (node) {
-          setSelectedNode(node);
-          saveSelectedKey(node);
-          setTimeout(() => {
-            document.querySelector(`[data-node-id="${node.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 100);
-        }
-      } else {
-        const parentInRoots = newRoots.find(n => n.categoryId === parentId);
-        if (parentInRoots) {
-          const children = await categoryNavService.listCategories(parentId);
-          const childNodes = children.map(c => buildChildNode(c, parentId));
-          const updatedRoots = newRoots.map(n =>
-            n.categoryId === parentId
-              ? { ...n, loaded: true, expanded: true, children: childNodes }
-              : n
-          );
-          setRoots(updatedRoots);
-          saveExpandedKeys(updatedRoots);
-          const childNode = childNodes.find(c => c.categoryId === newId);
-          if (childNode) {
-            setSelectedNode(childNode);
-            saveSelectedKey(childNode);
-            setTimeout(() => {
-              document.querySelector(`[data-node-id="${childNode.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
+      // Read previously persisted expanded keys and add the parent of the new node
+      const savedKeys = new Set(loadExpandedKeys());
+      if (parentId) {
+        // Ensure the parent path is expanded so the new node is visible
+        const parentRootKey = `root::${parentId}`;
+        savedKeys.add(parentRootKey);
+        // Also add nested parent key pattern — if parent is itself a child node,
+        // its nodeKey would be "{grandparentId}::{parentId}"; we don't know the
+        // grandparent here, but any key ending with ::parentId will be picked up
+        // during recursive restore because we match by nodeKey which is built from
+        // the tree structure itself.
+      }
+
+      // Recursively restore expanded nodes (same logic as loadRoots)
+      const restore = async (nodes: TreeNode[]): Promise<TreeNode[]> =>
+        Promise.all(nodes.map(async (node) => {
+          if (savedKeys.has(node.nodeKey) && node.childCount > 0) {
+            try {
+              const children = await categoryNavService.listCategories(node.categoryId);
+              const childNodes = children.map(c => buildChildNode(c, node.categoryId));
+              return { ...node, loaded: true, expanded: true, children: await restore(childNodes) };
+            } catch { return node; }
           }
-        } else {
-          // Parent is a nested node — just reload without auto-select
-          setRoots(newRoots);
-          saveExpandedKeys(newRoots);
+          return node;
+        }));
+
+      const restoredRoots = savedKeys.size > 0 ? await restore(rawRoots) : rawRoots;
+
+      // For nested parents not covered by root-level keys, ensure they are expanded
+      let finalRoots = restoredRoots;
+      if (parentId) {
+        const parentNode = findNodeByKey(restoredRoots, `root::${parentId}`);
+        if (!parentNode) {
+          // Parent is a nested node — find and expand it by scanning all possible nodeKeys
+          const nestedKey = (() => {
+            const found = findNodeByKey(restoredRoots, `root::${parentId}`);
+            if (found) return found.nodeKey;
+            // Search for any key matching "X::parentId"
+            const search = (nodes: TreeNode[]): string | null => {
+              for (const n of nodes) {
+                if (n.categoryId === parentId) return n.nodeKey;
+                const r = search(n.children);
+                if (r) return r;
+              }
+              return null;
+            };
+            return search(restoredRoots);
+          })();
+          if (nestedKey) {
+            // Load children for the nested parent and expand it
+            const children = await categoryNavService.listCategories(parentId);
+            const childNodes = children.map(c => buildChildNode(c, parentId));
+            finalRoots = updateNode(restoredRoots, nestedKey, (n) => ({
+              ...n, loaded: true, expanded: true, children: childNodes,
+            }));
+          }
         }
+      }
+
+      setRoots(finalRoots);
+      saveExpandedKeys(finalRoots);
+
+      // Select and scroll to the new node
+      const newNodeKey = parentId ? `${parentId}::${newId}` : `root::${newId}`;
+      const newNode = findNodeByKey(finalRoots, newNodeKey);
+      if (newNode) {
+        setSelectedNode(newNode);
+        saveSelectedKey(newNode);
+        setTimeout(() => {
+          document.querySelector(`[data-node-id="${newNode.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
       }
     } catch {
       // toast from request layer

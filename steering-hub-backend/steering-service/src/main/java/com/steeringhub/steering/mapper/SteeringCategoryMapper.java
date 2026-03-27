@@ -22,4 +22,6 @@ public interface SteeringCategoryMapper extends BaseMapper<SteeringCategory> {
     List<SteeringCategory> selectAllEnabled();
 
     int countByCode(@Param("code") String code);
+
+    SteeringCategory selectByCode(@Param("code") String code);
 }

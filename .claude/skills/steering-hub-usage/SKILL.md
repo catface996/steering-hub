@@ -1,11 +1,20 @@
 ---
 name: steering-hub-usage
-description: How to use Steering Hub MCP tools correctly during coding tasks. Use at the start of EVERY coding task involving Controller, Service, Repository, Job, MQ Consumer, or frontend components. Also triggered by "查规范", "搜索规范", "steering hub查询", "spec-first". Covers keyword extraction, query count rules (3 consecutive misses required before stopping), relevance judgment, and failure reporting. Do NOT skip this for "similar" tasks — each Task requires an independent query.
+description: How to use Steering Hub MCP tools correctly during coding tasks. Use at the start of EVERY coding task in this project — not limited to specific layers. Also triggered by "查规范", "搜索规范", "steering hub查询", "spec-first". Covers keyword extraction, query count rules (3 consecutive misses required before stopping), relevance judgment, and failure reporting. Do NOT skip this for "similar" tasks — each Task requires an independent query.
 ---
 
 # How to Use Steering Hub
 
 Execute this workflow at the start of every coding Task. Four steps, no skipping.
+
+## Prerequisites
+
+The `steering-hub` MCP server must be running. If any MCP tool call fails with a connection error:
+
+1. Inform the user: `⚠️ Steering Hub MCP server 不可用，无法执行规范查询。`
+2. Ask the user to start the server (`cd steering-hub-mcp && python -m steering_hub_mcp.server`).
+3. **Do not skip the query** — wait for the server to become available, then proceed with Step 1.
+4. If the user explicitly confirms to proceed without the server, code using Constitution defaults and add a comment: `// Steering Hub MCP 不可用，按 Constitution 默认规范编码`
 
 ## Step 1 — Extract Keywords
 
@@ -25,9 +34,11 @@ Call `mcp__steering-hub__search_steering`:
 ```
 query:      <extracted keywords>
 agent_name: "claude-code"
-model_name: <current model, e.g. "claude-sonnet-4-6">
+model_name: <auto-detect from current session, e.g. "claude-opus-4-6" or "claude-sonnet-4-6">
 repo:       "catface996/steering-hub"
 ```
+
+> **model_name**: Use the model powering the current session. Check the system environment info for the exact model ID (e.g. `claude-opus-4-6`). Do not hardcode a specific model.
 
 ---
 
@@ -61,6 +72,13 @@ See `references/failure-report.md` for call format and post-report behavior.
 ```
 ✅ 规范查询（第N次）：query="..." → 命中 ID:X「规范名」
 覆盖要点：<关键强制要求，1–3条>
+```
+
+**Partial hit:**
+```
+⚠️ 规范查询（第N次）：query="..." → 部分命中 ID:X「规范名」
+适用部分：<具体说明>
+不覆盖：<具体说明，继续用其他关键词补查>
 ```
 
 **Miss (each attempt):**

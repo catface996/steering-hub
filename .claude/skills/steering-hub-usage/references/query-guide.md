@@ -130,7 +130,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `formatDateTime 空值 Typography` |
 | 3 | `前端规范` |
 
-**Spec checklist after hit (spec [229]):**
+**Spec checklist after hit (前端展示与交互规范):**
 - Time: `formatDateTime()` from `formatTime.ts`
 - Null/empty → `-` (not `--` or `N/A`)
 - Long text: `Typography.Text ellipsis={{ tooltip: text }}`
@@ -144,7 +144,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `ConfirmModal ConfigProvider 受控组件` |
 | 3 | `弹窗 确认 规范` |
 
-**Spec checklist after hit (spec [230]):** Use `ConfirmModal` controlled component · Wrap with `ConfigProvider` dark theme · Never use `Modal.confirm()`
+**Spec checklist after hit (前端二次确认弹窗规范):** Use `ConfirmModal` controlled component · Wrap with `ConfigProvider` dark theme · Never use `Modal.confirm()`
 
 ---
 

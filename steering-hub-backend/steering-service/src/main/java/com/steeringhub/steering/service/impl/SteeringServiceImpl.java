@@ -333,8 +333,8 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         if (steering == null) {
             throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
         }
-        if (steering.getStatus() != SteeringStatus.DEPRECATED) {
-            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只有已废弃（deprecated）的规范可以删除");
+        if (steering.getStatus() != SteeringStatus.DEPRECATED && steering.getStatus() != SteeringStatus.DRAFT) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只有草稿（draft）或已废弃（deprecated）的规范可以删除");
         }
         removeById(id);
     }

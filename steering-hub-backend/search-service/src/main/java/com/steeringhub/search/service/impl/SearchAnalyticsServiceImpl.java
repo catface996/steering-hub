@@ -95,7 +95,7 @@ public class SearchAnalyticsServiceImpl implements SearchAnalyticsService {
                 .select("AVG(response_time_ms) as avg_ms")
                 .ge("created_at", since)
                 .isNotNull("response_time_ms"))
-            .stream().findFirst().orElse(new HashMap<>());
+            .stream().filter(m -> m != null).findFirst().orElse(new HashMap<>());
         analytics.put("avgResponseTimeMs", avgResponseTime.get("avg_ms"));
 
         return analytics;
