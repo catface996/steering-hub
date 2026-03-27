@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Typography, Spin, Tag, Card, Flex, Empty, Drawer } from 'antd';
-import { BookOpen, ChevronDown, ChevronRight, FolderOpen, Folder, X } from 'lucide-react';
+import { Typography, Spin, Tag, Card, Flex, Empty } from 'antd';
+import { BookOpen, ChevronDown, ChevronRight, FolderOpen, Folder } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { categoryNavService } from '../../services/categoryNavService';
 import { steeringService } from '../../services/steeringService';
 import { useIsMobile } from '../../utils/deviceDetect';
+import { useHeader } from '../../contexts/HeaderContext';
 import { formatDate } from '../../utils/formatTime';
 import type { CategoryNavItem, Steering } from '../../types';
 
@@ -51,6 +53,8 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function DocsPage() {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { setBreadcrumbs } = useHeader();
 
   const [roots, setRoots] = useState<DocTreeNode[]>([]);
   const [treeLoading, setTreeLoading] = useState(true);
@@ -58,7 +62,6 @@ export default function DocsPage() {
   const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
   const [steerings, setSteerings] = useState<Steering[]>([]);
   const [steeringsLoading, setSteeringsLoading] = useState(false);
-  const [drawerSteering, setDrawerSteering] = useState<Steering | null>(null);
 
   // ── Load top-level categories ─────────────────────────────────────────────
   const loadRoots = useCallback(async () => {
@@ -74,6 +77,16 @@ export default function DocsPage() {
   }, []);
 
   useEffect(() => { loadRoots(); }, [loadRoots]);
+
+  useEffect(() => {
+    if (selectedCategoryName) {
+      setBreadcrumbs(
+        <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>{selectedCategoryName}</Typography.Text>
+      );
+    } else {
+      setBreadcrumbs(null);
+    }
+  }, [selectedCategoryName, setBreadcrumbs]);
 
   // ── Load steerings for selected category ─────────────────────────────────
   const loadSteerings = useCallback(async (categoryId: number) => {
@@ -188,7 +201,7 @@ export default function DocsPage() {
       <Card
         key={s.id}
         hoverable
-        onClick={() => setDrawerSteering(s)}
+        onClick={() => navigate('/docs/steerings/' + s.id)}
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid #1e1e2a',
@@ -235,14 +248,7 @@ export default function DocsPage() {
 
   // ── Layout ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-base)', overflow: 'hidden' }}>
-      {/* Header */}
-      <Flex align="center" gap={10} style={{ padding: '0 20px', height: 52, borderBottom: '1px solid #1e1e2a', flexShrink: 0 }}>
-        <BookOpen size={18} color="var(--color-primary)" />
-        <Typography.Text style={{ fontSize: 16, fontWeight: 700, color: '#f4f4f5' }}>文档模式</Typography.Text>
-      </Flex>
-      {/* Body */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flex: 1, overflow: 'hidden', background: 'var(--bg-base)' }}>
       {/* Left: category outline */}
       {!isMobile && (
         <div
@@ -292,34 +298,6 @@ export default function DocsPage() {
           </>
         )}
       </div>
-      </div>
-
-      {/* Steering Detail Drawer */}
-      <Drawer
-        open={!!drawerSteering}
-        onClose={() => setDrawerSteering(null)}
-        width={isMobile ? '100%' : 640}
-        closeIcon={<X size={16} color="#a1a1aa" />}
-        title={
-          drawerSteering ? (
-            <Flex vertical gap={6}>
-              <Typography.Text style={{ fontSize: 15, fontWeight: 700, color: '#f4f4f5' }}>
-                {drawerSteering.title}
-              </Typography.Text>
-              <Flex gap={4} wrap="wrap">
-                {drawerSteering.tags?.map(t => <Tag key={t} color="blue" style={{ fontSize: 11, margin: 0 }}>{t}</Tag>)}
-              </Flex>
-            </Flex>
-          ) : null
-        }
-        styles={{ header: { background: '#16161e', borderBottom: '1px solid #1e1e2a' }, body: { background: '#16161e', padding: 20 } }}
-      >
-        {drawerSteering && (
-          <div className="markdown-body" style={{ fontSize: 13, color: '#d4d4d8', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-            {drawerSteering.content}
-          </div>
-        )}
-      </Drawer>
     </div>
   );
 }

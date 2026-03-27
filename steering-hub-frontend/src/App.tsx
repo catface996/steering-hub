@@ -27,6 +27,7 @@ import RepoDetailPage from './pages/repo/RepoDetailPage';
 import QueryLogPage from './pages/query-log/QueryLogPage';
 import QueryLogDetailPage from './pages/query-log/QueryLogDetailPage';
 import DocsPage from './pages/docs/DocsPage';
+import DocsLayout from './components/Layout/DocsLayout';
 
 function ThemedApp() {
   const { primaryColor } = useThemeColor();
@@ -62,8 +63,10 @@ function ThemedApp() {
             <Route path="query-logs" element={<QueryLogPage />} />
             <Route path="query-logs/:id" element={<QueryLogDetailPage />} />
           </Route>
-          <Route path="/docs" element={<RequireAuth><DocsPage /></RequireAuth>} />
-          <Route path="/docs/steerings/:id" element={<RequireAuth><SteeringDetailPage /></RequireAuth>} />
+          <Route path="/docs" element={<RequireAuth><DocsLayout /></RequireAuth>}>
+            <Route index element={<DocsPage />} />
+            <Route path="steerings/:id" element={<SteeringDetailPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
       </ModalProvider>
