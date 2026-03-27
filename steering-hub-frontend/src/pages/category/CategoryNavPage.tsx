@@ -71,29 +71,37 @@ function updateNode(
 }
 
 // ── localStorage persistence ──────────────────────────────────────────────
-const STORAGE_EXPANDED = 'steering-hub:category-expanded-ids';
+const STORAGE_EXPANDED_KEYS = 'steering-hub:category-expanded-keys';
 const STORAGE_SELECTED = 'steering-hub:category-selected-key';
 
-function saveExpandedIds(roots: TreeNode[]) {
-  const ids = roots.filter(n => n.expanded).map(n => n.categoryId);
-  localStorage.setItem(STORAGE_EXPANDED, JSON.stringify(ids));
+function collectExpandedKeys(nodes: TreeNode[]): string[] {
+  const keys: string[] = [];
+  for (const node of nodes) {
+    if (node.expanded) {
+      keys.push(node.nodeKey);
+      keys.push(...collectExpandedKeys(node.children));
+    }
+  }
+  return keys;
+}
+function saveExpandedKeys(nodes: TreeNode[]) {
+  localStorage.setItem(STORAGE_EXPANDED_KEYS, JSON.stringify(collectExpandedKeys(nodes)));
 }
 function saveSelectedKey(node: TreeNode | null) {
   if (node) localStorage.setItem(STORAGE_SELECTED, node.nodeKey);
   else localStorage.removeItem(STORAGE_SELECTED);
 }
-function loadExpandedIds(): number[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_EXPANDED) || '[]'); } catch { return []; }
+function loadExpandedKeys(): string[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_EXPANDED_KEYS) || '[]'); } catch { return []; }
 }
 function loadSelectedKey(): string | null {
   return localStorage.getItem(STORAGE_SELECTED);
 }
-function findNodeByKey(roots: TreeNode[], key: string): TreeNode | null {
-  for (const root of roots) {
-    if (root.nodeKey === key) return root;
-    for (const child of root.children) {
-      if (child.nodeKey === key) return child;
-    }
+function findNodeByKey(nodes: TreeNode[], key: string): TreeNode | null {
+  for (const node of nodes) {
+    if (node.nodeKey === key) return node;
+    const found = findNodeByKey(node.children, key);
+    if (found) return found;
   }
   return null;
 }
@@ -130,25 +138,22 @@ export default function CategoryNavPage() {
     try {
       const data = await categoryNavService.listCategories();
       const rawRoots = data.map(buildRootNode);
+      const savedKeys = new Set(loadExpandedKeys());
 
-      // Restore expanded state
-      const savedExpandedIds = loadExpandedIds();
-      let restoredRoots = rawRoots;
-      if (savedExpandedIds.length > 0) {
-        restoredRoots = await Promise.all(
-          rawRoots.map(async (root) => {
-            if (savedExpandedIds.includes(root.categoryId) && root.childCount > 0) {
-              try {
-                const children = await categoryNavService.listCategories(root.categoryId);
-                return { ...root, loaded: true, expanded: true, children: children.map(c => buildChildNode(c, root.categoryId)) };
-              } catch {
-                return root;
-              }
-            }
-            return root;
-          })
-        );
-      }
+      // Recursively restore expanded nodes
+      const restore = async (nodes: TreeNode[]): Promise<TreeNode[]> =>
+        Promise.all(nodes.map(async (node) => {
+          if (savedKeys.has(node.nodeKey) && node.childCount > 0) {
+            try {
+              const children = await categoryNavService.listCategories(node.categoryId);
+              const childNodes = children.map(c => buildChildNode(c, node.categoryId));
+              return { ...node, loaded: true, expanded: true, children: await restore(childNodes) };
+            } catch { return node; }
+          }
+          return node;
+        }));
+
+      const restoredRoots = savedKeys.size > 0 ? await restore(rawRoots) : rawRoots;
       setRoots(restoredRoots);
 
       // Restore selected node
@@ -173,7 +178,7 @@ export default function CategoryNavPage() {
 
       if (!parentId) {
         setRoots(newRoots);
-        saveExpandedIds(newRoots);
+        saveExpandedKeys(newRoots);
         const node = newRoots.find(n => n.categoryId === newId);
         if (node) {
           setSelectedNode(node);
@@ -193,7 +198,7 @@ export default function CategoryNavPage() {
               : n
           );
           setRoots(updatedRoots);
-          saveExpandedIds(updatedRoots);
+          saveExpandedKeys(updatedRoots);
           const childNode = childNodes.find(c => c.categoryId === newId);
           if (childNode) {
             setSelectedNode(childNode);
@@ -205,7 +210,7 @@ export default function CategoryNavPage() {
         } else {
           // Parent is a nested node — just reload without auto-select
           setRoots(newRoots);
-          saveExpandedIds(newRoots);
+          saveExpandedKeys(newRoots);
         }
       }
     } catch {
@@ -270,7 +275,7 @@ export default function CategoryNavPage() {
             expanded: true,
             children: children.map((c) => buildChildNode(c, node.categoryId)),
           }));
-          saveExpandedIds(updated);
+          saveExpandedKeys(updated);
           return updated;
         });
       } catch {
@@ -279,7 +284,7 @@ export default function CategoryNavPage() {
     } else {
       setRoots((prev) => {
         const updated = updateNode(prev, node.nodeKey, (n) => ({ ...n, expanded: !n.expanded }));
-        saveExpandedIds(updated);
+        saveExpandedKeys(updated);
         return updated;
       });
     }
