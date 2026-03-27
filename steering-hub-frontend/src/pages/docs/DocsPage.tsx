@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Typography, Spin, Tag, Card, Flex, Empty } from 'antd';
-import { BookOpen, ChevronDown, ChevronRight, FolderOpen, Folder } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Typography, Spin, Tag, Card, Flex, Empty, Button } from 'antd';
+import { BookOpen, ChevronDown, ChevronRight, FolderOpen, Folder, ArrowLeft } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { categoryNavService } from '../../services/categoryNavService';
 import { steeringService } from '../../services/steeringService';
 import { useIsMobile } from '../../utils/deviceDetect';
 import { useHeader } from '../../contexts/HeaderContext';
-import { formatDate } from '../../utils/formatTime';
+import { formatDate, formatDateTime } from '../../utils/formatTime';
 import type { CategoryNavItem, Steering } from '../../types';
 
 interface DocTreeNode {
@@ -51,17 +52,18 @@ const STATUS_COLOR: Record<string, string> = {
   pending_review: 'processing',
 };
 
+type RightPanel =
+  | { kind: 'empty' }
+  | { kind: 'list'; categoryId: number; categoryName: string; steerings: Steering[]; loading: boolean }
+  | { kind: 'detail'; steering: Steering; fromCategoryId: number; fromCategoryName: string };
+
 export default function DocsPage() {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const { setBreadcrumbs } = useHeader();
 
   const [roots, setRoots] = useState<DocTreeNode[]>([]);
   const [treeLoading, setTreeLoading] = useState(true);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
-  const [steerings, setSteerings] = useState<Steering[]>([]);
-  const [steeringsLoading, setSteeringsLoading] = useState(false);
+  const [rightPanel, setRightPanel] = useState<RightPanel>({ kind: 'empty' });
 
   // ── Load top-level categories ─────────────────────────────────────────────
   const loadRoots = useCallback(async () => {
@@ -79,34 +81,39 @@ export default function DocsPage() {
   useEffect(() => { loadRoots(); }, [loadRoots]);
 
   useEffect(() => {
-    if (selectedCategoryName) {
+    if (rightPanel.kind === 'list') {
       setBreadcrumbs(
-        <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>{selectedCategoryName}</Typography.Text>
+        <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>{rightPanel.categoryName}</Typography.Text>
+      );
+    } else if (rightPanel.kind === 'detail') {
+      setBreadcrumbs(
+        <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>{rightPanel.steering.title}</Typography.Text>
       );
     } else {
       setBreadcrumbs(null);
     }
-  }, [selectedCategoryName, setBreadcrumbs]);
+  }, [rightPanel, setBreadcrumbs]);
 
   // ── Load steerings for selected category ─────────────────────────────────
-  const loadSteerings = useCallback(async (categoryId: number) => {
-    setSteeringsLoading(true);
-    setSteerings([]);
+  const handleSelectCategory = useCallback(async (categoryId: number, categoryName: string) => {
+    setRightPanel({ kind: 'list', categoryId, categoryName, steerings: [], loading: true });
     try {
       const result = await steeringService.page({ categoryId, status: 'active', size: 50 });
-      setSteerings(result.records);
+      setRightPanel({ kind: 'list', categoryId, categoryName, steerings: result.records, loading: false });
     } catch {
-      // toast from request layer
-    } finally {
-      setSteeringsLoading(false);
+      setRightPanel({ kind: 'list', categoryId, categoryName, steerings: [], loading: false });
     }
   }, []);
 
-  useEffect(() => {
-    if (selectedCategoryId != null) {
-      loadSteerings(selectedCategoryId);
+  // ── Load steering detail ──────────────────────────────────────────────────
+  const handleSelectSteering = useCallback(async (steeringId: number, fromCategoryId: number, fromCategoryName: string) => {
+    try {
+      const data = await steeringService.get(steeringId);
+      setRightPanel({ kind: 'detail', steering: data, fromCategoryId, fromCategoryName });
+    } catch {
+      // toast from request layer
     }
-  }, [selectedCategoryId, loadSteerings]);
+  }, []);
 
   // ── Expand / lazy-load ────────────────────────────────────────────────────
   const handleToggleExpand = async (node: DocTreeNode) => {
@@ -135,7 +142,9 @@ export default function DocsPage() {
 
   // ── Render tree node ──────────────────────────────────────────────────────
   const renderNode = (node: DocTreeNode, depth = 0): React.ReactNode => {
-    const isSelected = selectedCategoryId === node.categoryId;
+    const isSelected =
+      (rightPanel.kind === 'list' && rightPanel.categoryId === node.categoryId) ||
+      (rightPanel.kind === 'detail' && rightPanel.fromCategoryId === node.categoryId);
     const hasChildren = node.childCount > 0;
 
     return (
@@ -151,10 +160,7 @@ export default function DocsPage() {
             marginBottom: 2,
             transition: 'background 0.15s',
           }}
-          onClick={() => {
-            setSelectedCategoryId(node.categoryId);
-            setSelectedCategoryName(node.name);
-          }}
+          onClick={() => handleSelectCategory(node.categoryId, node.name)}
           onMouseEnter={(e) => {
             if (!isSelected) e.currentTarget.style.background = 'var(--bg-surface)';
           }}
@@ -195,13 +201,13 @@ export default function DocsPage() {
   };
 
   // ── Steering card ─────────────────────────────────────────────────────────
-  const renderCard = (s: Steering) => {
+  const renderCard = (s: Steering, fromCategoryId: number, fromCategoryName: string) => {
     const excerpt = s.content ? s.content.replace(/[#*`>\-]/g, '').trim().slice(0, 100) : '-';
     return (
       <Card
         key={s.id}
         hoverable
-        onClick={() => navigate('/docs/steerings/' + s.id)}
+        onClick={() => handleSelectSteering(s.id, fromCategoryId, fromCategoryName)}
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid #1e1e2a',
@@ -246,11 +252,63 @@ export default function DocsPage() {
     );
   };
 
+  // ── Detail view ───────────────────────────────────────────────────────────
+  const renderDetail = (steering: Steering, fromCategoryId: number, fromCategoryName: string) => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Back bar */}
+      <Flex align="center" gap={8} style={{ padding: '12px 20px', borderBottom: '1px solid #1e1e2a', flexShrink: 0 }}>
+        <Button
+          type="text"
+          icon={<ArrowLeft size={14} />}
+          style={{ color: '#a1a1aa', paddingLeft: 0 }}
+          onClick={() => handleSelectCategory(fromCategoryId, fromCategoryName)}
+        >
+          返回列表
+        </Button>
+        <Typography.Text style={{ color: '#52525b' }}>/</Typography.Text>
+        <Typography.Text style={{ color: '#e4e4e7', fontWeight: 600, fontSize: 14 }} ellipsis>
+          {steering.title}
+        </Typography.Text>
+        <Tag color={STATUS_COLOR[steering.status] ?? 'default'} style={{ marginLeft: 4 }}>
+          {steering.status}
+        </Tag>
+      </Flex>
+
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+        {/* Tags */}
+        {steering.tags && steering.tags.length > 0 && (
+          <Flex gap={4} wrap="wrap" style={{ marginBottom: 12 }}>
+            {steering.tags.map((tag) => (
+              <Tag key={tag} color="blue" style={{ fontSize: 11, margin: 0 }}>{tag}</Tag>
+            ))}
+          </Flex>
+        )}
+
+        {/* Meta */}
+        <Flex gap={16} style={{ marginBottom: 20, flexWrap: 'wrap' }}>
+          {steering.categoryName && (
+            <Typography.Text style={{ fontSize: 12, color: '#71717a' }}>分类：{steering.categoryName}</Typography.Text>
+          )}
+          <Typography.Text style={{ fontSize: 12, color: '#71717a' }}>版本：v{steering.currentVersion}</Typography.Text>
+          <Typography.Text style={{ fontSize: 12, color: '#71717a' }}>更新于 {formatDateTime(steering.updatedAt)}</Typography.Text>
+        </Flex>
+
+        {/* Markdown content */}
+        <div className="markdown-body">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{steering.content}</ReactMarkdown>
+        </div>
+      </div>
+    </div>
+  );
+
   // ── Layout ────────────────────────────────────────────────────────────────
+  const showSidebar = !isMobile || rightPanel.kind === 'empty';
+
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden', background: 'var(--bg-base)' }}>
       {/* Left: category outline */}
-      {!isMobile && (
+      {showSidebar && (
         <div
           style={{
             width: 240,
@@ -274,28 +332,36 @@ export default function DocsPage() {
         </div>
       )}
 
-      {/* Right: steering cards */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 20, background: 'var(--bg-base)' }}>
-        {selectedCategoryId == null ? (
+      {/* Right: dynamic panel */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)' }}>
+        {rightPanel.kind === 'empty' && (
           <Flex vertical align="center" justify="center" style={{ height: '100%', minHeight: 300 }}>
             <BookOpen size={40} color="#3f3f46" />
             <Typography.Text style={{ color: 'var(--text-dimmed)', marginTop: 12 }}>
               {isMobile ? '暂无选中分类' : '← 请从左侧选择一个分类'}
             </Typography.Text>
           </Flex>
-        ) : (
-          <>
+        )}
+
+        {rightPanel.kind === 'list' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
             <Typography.Title level={5} style={{ color: '#e4e4e7', marginTop: 0, marginBottom: 16 }}>
-              {selectedCategoryName}
+              {rightPanel.categoryName}
             </Typography.Title>
-            {steeringsLoading ? (
+            {rightPanel.loading ? (
               <Flex justify="center" style={{ paddingTop: 48 }}><Spin /></Flex>
-            ) : steerings.length === 0 ? (
+            ) : rightPanel.steerings.length === 0 ? (
               <Empty description={<span style={{ color: 'var(--text-dimmed)' }}>该分类下暂无 active 规范</span>} />
             ) : (
-              steerings.map(renderCard)
+              rightPanel.steerings.map((s) => renderCard(s, rightPanel.categoryId, rightPanel.categoryName))
             )}
-          </>
+          </div>
+        )}
+
+        {rightPanel.kind === 'detail' && renderDetail(
+          rightPanel.steering,
+          rightPanel.fromCategoryId,
+          rightPanel.fromCategoryName,
         )}
       </div>
     </div>
