@@ -26,7 +26,7 @@ interface FailureLog {
   createdAt: string;
 }
 
-const TAG_COLORS = ['#818CF8', '#32D583', '#22d3ee', '#f59e0b', '#E85A4F', '#a78bfa', '#f472b6'];
+const TAG_COLORS = ['#818CF8', '#32D583', 'var(--accent-cyan)', 'var(--accent-orange)', '#E85A4F', 'var(--accent-purple)', 'var(--accent-pink)'];
 
 const REASON_LABELS: Record<string, { label: string; color: string }> = {
   no_results:   { label: '零结果',    color: 'tag-status-rejected' },

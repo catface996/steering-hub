@@ -1,3 +1,42 @@
+/* ============ Design Tokens ============ */
+:root {
+  /* Background shades (dark → light) */
+  --bg-deep: #0a0a0f;
+  --bg-base: #0d0d14;
+  --bg-elevated: #12121c;
+  --bg-surface: #13131f;
+  --bg-overlay: #1a1a24;
+  --bg-input: #141414;
+
+  /* Text extras */
+  --text-dimmed: #52525b;
+
+  /* Semantic colors (inline usage, not Tag) */
+  --color-danger: #f87171;
+  --color-danger-rgb: 248, 113, 113;
+  --color-warning: #fb923c;
+  --color-caution: #facc15;
+  --color-success-light: #4ade80;
+  --color-success-light-rgb: 74, 222, 128;
+
+  /* Existing palette RGB variants (for rgba() usage) */
+  --color-success-rgb: 50, 213, 131;   /* #32D583 */
+  --color-warning-tag-rgb: 255, 181, 71; /* #FFB547 */
+
+  /* Accent colors (sidebar icons, chart palette) */
+  --accent-purple: #a78bfa;
+  --accent-purple-rgb: 167, 139, 250;
+  --accent-pink: #f472b6;
+  --accent-cyan: #22d3ee;
+  --accent-blue: #38bdf8;
+  --accent-rose: #fb7185;
+  --accent-amber: #fbbf24;
+  --accent-orange: #f59e0b;
+
+  /* Scrollbar */
+  --scrollbar-hover: #3a3a4a;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -21,11 +60,11 @@ input:-webkit-autofill:active,
 .ant-input-affix-wrapper input:-webkit-autofill:hover,
 .ant-input-affix-wrapper input:-webkit-autofill:focus,
 .ant-input-affix-wrapper input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #141414 inset !important;
-  box-shadow: 0 0 0 1000px #141414 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
+  box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
   -webkit-text-fill-color: rgba(255, 255, 255, 0.85) !important;
   caret-color: rgba(255, 255, 255, 0.85) !important;
-  background-color: #141414 !important;
+  background-color: var(--bg-input) !important;
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
@@ -52,7 +91,7 @@ input:-webkit-autofill:active,
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3a4a;
+  background: var(--scrollbar-hover);
 }
 
 /* List page root */
@@ -95,7 +134,7 @@ input:-webkit-autofill:active,
   border-radius: 0 6px 6px 0;
 }
 .markdown-body code {
-  background: #1a1a24;
+  background: var(--bg-overlay);
   padding: 0.15em 0.4em;
   border-radius: 4px;
   font-size: 0.9em;
@@ -103,7 +142,7 @@ input:-webkit-autofill:active,
   color: #e4e4e7;
 }
 .markdown-body pre {
-  background: #0a0a0f;
+  background: var(--bg-deep);
   border: 1px solid #27273a;
   border-radius: 8px;
   padding: 16px;
@@ -122,7 +161,7 @@ input:-webkit-autofill:active,
   margin: 1em 0;
 }
 .markdown-body th {
-  background: #1a1a24;
+  background: var(--bg-overlay);
   color: #a1a1aa;
   font-weight: 500;
   text-align: left;
@@ -205,12 +244,15 @@ input:-webkit-autofill:active,
 }
 
 /* ============ Glow Card Hover Effect ============ */
+/* 覆盖 Ant Design Card 内联边框，默认带淡主题色边框 */
 .glow-card {
+  border-color: rgba(var(--primary-rgb), 0.15) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
+/* hover 加强发光 */
 .glow-card:hover {
-  border-color: rgba(139, 92, 246, 0.6) !important;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.25), 0 0 24px rgba(139, 92, 246, 0.1) !important;
+  border-color: rgba(var(--primary-rgb), 0.6) !important;
+  box-shadow: 0 0 12px rgba(var(--primary-rgb), 0.25), 0 0 24px rgba(var(--primary-rgb), 0.1) !important;
 }
 
 /* Color variants — shared by editable and display tags */

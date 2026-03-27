@@ -29,20 +29,20 @@ interface NavItem {
 }
 
 const mainItems: NavItem[] = [
-  { icon: <LayoutDashboard size={20} />, label: '概览', path: '/dashboard', iconColor: '#a78bfa' },
-  { icon: <FileText size={20} />, label: '规范管理', path: '/steerings', iconColor: '#818cf8' },
-  { icon: <Search size={20} />, label: '规范检索', path: '/search', iconColor: '#22d3ee' },
-  { icon: <ShieldCheck size={20} />, label: '合规审查', path: '/compliance', iconColor: '#f59e0b' },
-  { icon: <GitBranch size={20} />, label: '分类导航', path: '/categories', iconColor: '#4ade80' },
-  { icon: <BarChart3 size={20} />, label: '使用分析', path: '/analytics', iconColor: '#f472b6' },
-  { icon: <Heart size={20} />, label: '规范健康度', path: '/health', iconColor: '#fb7185' },
-  { icon: <ScrollText size={20} />, label: '检索日志', path: '/query-logs', iconColor: '#fb923c' },
-  { icon: <Database size={20} />, label: '仓库管理', path: '/repos', iconColor: '#38bdf8' },
+  { icon: <LayoutDashboard size={20} />, label: '概览', path: '/dashboard', iconColor: 'var(--accent-purple)' },
+  { icon: <FileText size={20} />, label: '规范管理', path: '/steerings', iconColor: '#818CF8' },
+  { icon: <Search size={20} />, label: '规范检索', path: '/search', iconColor: 'var(--accent-cyan)' },
+  { icon: <ShieldCheck size={20} />, label: '合规审查', path: '/compliance', iconColor: 'var(--accent-orange)' },
+  { icon: <GitBranch size={20} />, label: '分类导航', path: '/categories', iconColor: 'var(--color-success-light)' },
+  { icon: <BarChart3 size={20} />, label: '使用分析', path: '/analytics', iconColor: 'var(--accent-pink)' },
+  { icon: <Heart size={20} />, label: '规范健康度', path: '/health', iconColor: 'var(--accent-rose)' },
+  { icon: <ScrollText size={20} />, label: '检索日志', path: '/query-logs', iconColor: 'var(--color-warning)' },
+  { icon: <Database size={20} />, label: '仓库管理', path: '/repos', iconColor: 'var(--accent-blue)' },
 ];
 
 const settingsItems: NavItem[] = [
-  { icon: <Key size={20} />, label: 'API Keys', path: '/settings/api-keys', iconColor: '#fbbf24' },
-  { icon: <Filter size={20} />, label: '停用词', path: '/settings/stop-words', iconColor: '#fb923c' },
+  { icon: <Key size={20} />, label: 'API Keys', path: '/settings/api-keys', iconColor: 'var(--accent-amber)' },
+  { icon: <Filter size={20} />, label: '停用词', path: '/settings/stop-words', iconColor: 'var(--color-warning)' },
 ];
 
 type SectionKey = 'main' | 'settings';
@@ -113,7 +113,7 @@ export default function Sidebar({ onMenuClick }: SidebarProps) {
     <Layout.Sider
       width={drawerWidth}
       style={{
-        background: '#0d0d14',
+        background: 'var(--bg-base)',
         borderRight: '1px solid #1e1e2a',
         height: '100vh',
         overflow: 'hidden',

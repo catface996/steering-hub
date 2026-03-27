@@ -72,8 +72,8 @@ function SteeringCard({ s }: { s: HitSteering }) {
           )}
         </div>
         <Flex vertical align="flex-end" gap={4} style={{ flexShrink: 0 }}>
-          <Typography.Text style={{ fontSize: 11, color: '#52525b' }}>ID: {s.id}</Typography.Text>
-          <Typography.Text style={{ fontSize: 11, color: '#52525b' }}>v{s.currentVersion}</Typography.Text>
+          <Typography.Text style={{ fontSize: 11, color: 'var(--text-dimmed)' }}>ID: {s.id}</Typography.Text>
+          <Typography.Text style={{ fontSize: 11, color: 'var(--text-dimmed)' }}>v{s.currentVersion}</Typography.Text>
         </Flex>
       </Flex>
     </Card>
@@ -155,7 +155,7 @@ export default function QueryLogDetailPage() {
               <Descriptions.Item label="Agent 名称">
                 {detail.agentName
                   ? <Tag style={{ borderRadius: 100, fontSize: 11 }}>{detail.agentName}</Tag>
-                  : <span style={{ color: '#52525b' }}>-</span>}
+                  : <span style={{ color: 'var(--text-dimmed)' }}>-</span>}
               </Descriptions.Item>
               {detail.modelName && (
                 <Descriptions.Item label="模型名称">
@@ -176,7 +176,7 @@ export default function QueryLogDetailPage() {
               </Descriptions.Item>
               {detail.failureReason && (
                 <Descriptions.Item label="失败原因">
-                  <span style={{ color: '#f87171', fontSize: 12 }}>{detail.failureReason}</span>
+                  <span style={{ color: 'var(--color-danger)', fontSize: 12 }}>{detail.failureReason}</span>
                 </Descriptions.Item>
               )}
             </Descriptions>
@@ -185,7 +185,7 @@ export default function QueryLogDetailPage() {
               <Typography.Text style={{ color: '#71717a', fontSize: 12, display: 'block', marginBottom: 6 }}>
                 查询内容
               </Typography.Text>
-              <div style={{ background: '#12121c', border: '1px solid #1e1e2a', borderRadius: 8, padding: '8px 12px', color: '#e4e4e7', fontSize: 13, lineHeight: 1.6, wordBreak: 'break-all' }}>
+              <div style={{ background: 'var(--bg-elevated)', border: '1px solid #1e1e2a', borderRadius: 8, padding: '8px 12px', color: '#e4e4e7', fontSize: 13, lineHeight: 1.6, wordBreak: 'break-all' }}>
                 {detail.queryText}
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function QueryLogDetailPage() {
                 <Typography.Text style={{ color: '#71717a', fontSize: 12, display: 'block', marginBottom: 6 }}>
                   任务描述
                 </Typography.Text>
-                <div style={{ background: '#12121c', border: '1px solid #1e1e2a', borderRadius: 8, padding: '8px 12px', color: '#a1a1aa', fontSize: 12, lineHeight: 1.6 }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '1px solid #1e1e2a', borderRadius: 8, padding: '8px 12px', color: '#a1a1aa', fontSize: 12, lineHeight: 1.6 }}>
                   {detail.taskDescription}
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function QueryLogDetailPage() {
                 <Typography.Text style={{ color: '#71717a', fontSize: 12, display: 'block', marginBottom: 6 }}>
                   期望话题
                 </Typography.Text>
-                <div style={{ background: '#12121c', border: '1px solid #1e1e2a', borderRadius: 8, padding: '8px 12px', color: '#a1a1aa', fontSize: 12 }}>
+                <div style={{ background: 'var(--bg-elevated)', border: '1px solid #1e1e2a', borderRadius: 8, padding: '8px 12px', color: '#a1a1aa', fontSize: 12 }}>
                   {detail.expectedTopic}
                 </div>
               </div>
@@ -225,7 +225,7 @@ export default function QueryLogDetailPage() {
             </div>
             <div style={{ padding: 16 }}>
               {!detail.hitSteerings || detail.hitSteerings.length === 0 ? (
-                <Typography.Text style={{ color: '#52525b', fontSize: 13 }}>
+                <Typography.Text style={{ color: 'var(--text-dimmed)', fontSize: 13 }}>
                   无命中规范记录
                 </Typography.Text>
               ) : (

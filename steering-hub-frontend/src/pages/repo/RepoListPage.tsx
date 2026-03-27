@@ -167,14 +167,14 @@ export default function RepoListPage() {
     fontSize: 12,
     color: '#a1a1aa',
     fontWeight: 500,
-    background: '#12121c',
+    background: 'var(--bg-elevated)',
     borderBottom: '1px solid #1e1e2a',
   };
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Table */}
-      <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: '#0d0d14' }}>
+      <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: 'var(--bg-base)' }}>
         {loading ? (
           <Flex justify="center" style={{ padding: 64 }}><Spin /></Flex>
         ) : (

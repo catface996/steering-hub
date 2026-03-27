@@ -38,8 +38,8 @@ export default function LoginPage() {
   };
 
   return (
-    <Flex align="center" justify="center" style={{ minHeight: '100vh', background: '#0a0a0f' }}>
-      <Card style={{ width: 420, padding: 20, background: '#0d0d14', border: '1px solid #27273a', borderRadius: 16 }}>
+    <Flex align="center" justify="center" style={{ minHeight: '100vh', background: 'var(--bg-deep)' }}>
+      <Card style={{ width: 420, padding: 20, background: 'var(--bg-base)', border: '1px solid #27273a', borderRadius: 16 }}>
         {/* Logo */}
         <Flex align="center" justify="center" gap={12} style={{ marginBottom: 24 }}>
           <div style={{ width: 48, height: 48, background: 'var(--primary-color)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

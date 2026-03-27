@@ -65,7 +65,7 @@ export default function CategorySteeringsPage() {
         >
           分类导航
         </Typography.Text>
-        <Typography.Text style={{ color: '#52525b' }}>/</Typography.Text>
+        <Typography.Text style={{ color: 'var(--text-dimmed)' }}>/</Typography.Text>
         <Typography.Text style={{ fontSize: 16, fontWeight: 700, color: '#f4f4f5' }}>
           {categoryName}
         </Typography.Text>
@@ -80,7 +80,7 @@ export default function CategorySteeringsPage() {
     fontSize: 12,
     color: '#a1a1aa',
     fontWeight: 500,
-    background: '#12121c',
+    background: 'var(--bg-elevated)',
     borderBottom: '1px solid #1e1e2a',
     whiteSpace: 'nowrap',
   };
@@ -101,7 +101,7 @@ export default function CategorySteeringsPage() {
           overflow: 'auto',
           borderRadius: 12,
           border: '1px solid #1e1e2a',
-          background: '#0d0d14',
+          background: 'var(--bg-base)',
         }}
       >
         {loading ? (
@@ -131,7 +131,7 @@ export default function CategorySteeringsPage() {
                       key={item.id}
                       onClick={() => navigate(`/steerings/${item.id}`)}
                       style={{ cursor: 'pointer' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#13131f')}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-surface)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                     >
                       <td style={{ ...tdStyle, color: '#71717a', fontSize: 13 }}>{item.id}</td>
@@ -153,7 +153,7 @@ export default function CategorySteeringsPage() {
                           </Flex>
                         ) : (
                           /* Spec [229]: empty value → '-' */
-                          <span style={{ color: '#52525b' }}>-</span>
+                          <span style={{ color: 'var(--text-dimmed)' }}>-</span>
                         )}
                       </td>
                       <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13, whiteSpace: 'nowrap' }}>

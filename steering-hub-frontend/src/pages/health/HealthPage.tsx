@@ -221,7 +221,7 @@ export default function HealthPage() {
         <Progress
           percent={Math.round((score ?? 0) * 100)}
           size="small"
-          strokeColor={score >= 0.9 ? '#f87171' : score >= 0.8 ? '#fb923c' : '#facc15'}
+          strokeColor={score >= 0.9 ? 'var(--color-danger)' : score >= 0.8 ? 'var(--color-warning)' : 'var(--color-caution)'}
           format={(p) => `${p}%`}
         />
       ),
@@ -278,7 +278,7 @@ export default function HealthPage() {
       {task && (
         <div
           style={{
-            background: '#13131f',
+            background: 'var(--bg-surface)',
             border: '1px solid #1e1e2a',
             borderRadius: 8,
             padding: '16px 20px',
@@ -333,7 +333,7 @@ export default function HealthPage() {
       {/* Similar pairs */}
       <div
         style={{
-          background: '#13131f',
+          background: 'var(--bg-surface)',
           border: '1px solid #1e1e2a',
           borderRadius: 8,
           overflow: 'hidden',
@@ -350,13 +350,13 @@ export default function HealthPage() {
               <Card
                 key={pair.id}
                 size="small"
-                style={{ background: '#1a1a24', border: '1px solid #27273a', borderRadius: 8 }}
+                style={{ background: 'var(--bg-overlay)', border: '1px solid #27273a', borderRadius: 8 }}
               >
                 <Flex vertical gap={8}>
                   <Typography.Text style={{ color: '#e4e4e7', fontSize: 13, fontWeight: 500 }} ellipsis={{ tooltip: true }}>
                     {pair.specA.title}
                   </Typography.Text>
-                  <Typography.Text style={{ color: '#52525b', fontSize: 11 }}>↔ 相似</Typography.Text>
+                  <Typography.Text style={{ color: 'var(--text-dimmed)', fontSize: 11 }}>↔ 相似</Typography.Text>
                   <Typography.Text style={{ color: '#e4e4e7', fontSize: 13 }} ellipsis={{ tooltip: true }}>
                     {pair.specB.title}
                   </Typography.Text>
@@ -364,7 +364,7 @@ export default function HealthPage() {
                     <Progress
                       percent={Math.round((pair.overallScore ?? 0) * 100)}
                       size="small"
-                      strokeColor={pair.overallScore >= 0.9 ? '#f87171' : pair.overallScore >= 0.8 ? '#fb923c' : '#facc15'}
+                      strokeColor={pair.overallScore >= 0.9 ? 'var(--color-danger)' : pair.overallScore >= 0.8 ? 'var(--color-warning)' : 'var(--color-caution)'}
                       style={{ flex: 1, margin: 0 }}
                     />
                     <Button type="link" size="small" style={{ padding: 0 }} onClick={() => handleCompare(pair)}>

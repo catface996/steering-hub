@@ -247,7 +247,7 @@ export default function ApiKeyPage() {
         width={520}
       >
         <Flex vertical gap={16} style={{ paddingTop: 8 }}>
-          <div style={{ background: 'rgba(255, 181, 71, 0.08)', borderRadius: 8, padding: 12, border: '1px solid rgba(255, 181, 71, 0.2)' }}>
+          <div style={{ background: 'rgba(var(--color-warning-tag-rgb), 0.08)', borderRadius: 8, padding: 12, border: '1px solid rgba(var(--color-warning-tag-rgb), 0.2)' }}>
             <Flex gap={8} align="flex-start">
               <AlertTriangle size={16} color="#FFB547" style={{ flexShrink: 0, marginTop: 2 }} />
               <div>

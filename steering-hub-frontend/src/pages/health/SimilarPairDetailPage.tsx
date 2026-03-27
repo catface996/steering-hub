@@ -131,7 +131,7 @@ export default function SimilarPairDetailPage() {
       {/* Score & reason summary bar */}
       <div
         style={{
-          background: '#13131f',
+          background: 'var(--bg-surface)',
           border: '1px solid #1e1e2a',
           borderRadius: 8,
           padding: '16px 20px',
@@ -144,7 +144,7 @@ export default function SimilarPairDetailPage() {
             <Progress
               percent={Math.round((pair.overallScore ?? 0) * 100)}
               size="small"
-              strokeColor={pair.overallScore >= 0.9 ? '#f87171' : pair.overallScore >= 0.8 ? '#fb923c' : '#facc15'}
+              strokeColor={pair.overallScore >= 0.9 ? 'var(--color-danger)' : pair.overallScore >= 0.8 ? 'var(--color-warning)' : 'var(--color-caution)'}
               format={(p) => `${p}%`}
               style={{ width: 200 }}
             />
@@ -178,7 +178,7 @@ export default function SimilarPairDetailPage() {
       ) : compareData ? (
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={12}>
-            <div style={{ background: '#13131f', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
               <SpecPanel
                 spec={compareData.specA}
                 categoryName={pair.specA.categoryName}
@@ -188,7 +188,7 @@ export default function SimilarPairDetailPage() {
             </div>
           </Col>
           <Col span={12}>
-            <div style={{ background: '#13131f', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
               <SpecPanel
                 spec={compareData.specB}
                 categoryName={pair.specB.categoryName}

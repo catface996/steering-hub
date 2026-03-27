@@ -412,7 +412,7 @@ export default function CategoryNavPage() {
             marginBottom: 2,
           }}
           onMouseEnter={(e) => {
-            if (!isSelected) e.currentTarget.style.background = '#13131f';
+            if (!isSelected) e.currentTarget.style.background = 'var(--bg-surface)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = isSelected ? 'rgba(var(--primary-rgb), 0.12)' : 'transparent';
@@ -429,7 +429,7 @@ export default function CategoryNavPage() {
           </span>
 
           {/* Icon */}
-          <GitBranch size={15} color="#4ade80" style={{ flexShrink: 0 }} />
+          <GitBranch size={15} color="var(--color-success-light)" style={{ flexShrink: 0 }} />
 
           {/* Name + code */}
           <Typography.Text
@@ -471,7 +471,7 @@ export default function CategoryNavPage() {
           overflow: 'auto',
           borderRadius: 12,
           border: '1px solid #1e1e2a',
-          background: '#0d0d14',
+          background: 'var(--bg-base)',
           padding: '8px 4px',
         }}
       >
@@ -479,7 +479,7 @@ export default function CategoryNavPage() {
           <Flex justify="center" style={{ padding: 64 }}><Spin /></Flex>
         ) : roots.length === 0 ? (
           <Flex justify="center" style={{ padding: 64 }}>
-            <Typography.Text style={{ color: '#52525b' }}>暂无分类数据</Typography.Text>
+            <Typography.Text style={{ color: 'var(--text-dimmed)' }}>暂无分类数据</Typography.Text>
           </Flex>
         ) : (
           roots.map((node) => renderNode(node))

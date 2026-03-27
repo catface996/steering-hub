@@ -168,9 +168,9 @@ export default function CompliancePage() {
             {/* Summary */}
             <div
               style={{
-                background: report.compliant ? 'rgba(50, 213, 131, 0.06)' : 'rgba(255, 181, 71, 0.06)',
+                background: report.compliant ? 'rgba(var(--color-success-rgb), 0.06)' : 'rgba(var(--color-warning-tag-rgb), 0.06)',
                 borderRadius: 10, padding: 12,
-                border: `1px solid ${report.compliant ? 'rgba(50, 213, 131, 0.2)' : 'rgba(255, 181, 71, 0.2)'}`,
+                border: `1px solid ${report.compliant ? 'rgba(var(--color-success-rgb), 0.2)' : 'rgba(var(--color-warning-tag-rgb), 0.2)'}`,
               }}
             >
               <Typography.Text style={{ color: report.compliant ? '#32D583' : '#FFB547', fontSize: 13 }}>

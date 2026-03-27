@@ -173,7 +173,7 @@ export default function RepoDetailPage() {
     fontSize: 12,
     color: '#a1a1aa',
     fontWeight: 500,
-    background: '#12121c',
+    background: 'var(--bg-elevated)',
     borderBottom: '1px solid #1e1e2a',
   };
 
@@ -214,7 +214,7 @@ export default function RepoDetailPage() {
             onChange={(e) => setSteeringSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearchSteerings()}
             style={{
-              background: '#12121c', border: '1px solid #27273a', borderRadius: 8,
+              background: 'var(--bg-elevated)', border: '1px solid #27273a', borderRadius: 8,
               padding: '6px 12px', color: '#e4e4e7', fontSize: 14, width: 260,
             }}
           />
@@ -227,7 +227,7 @@ export default function RepoDetailPage() {
                 setSelectedSteering(s ?? null);
               }}
               style={{
-                background: '#12121c', border: '1px solid #27273a', borderRadius: 8,
+                background: 'var(--bg-elevated)', border: '1px solid #27273a', borderRadius: 8,
                 padding: '6px 12px', color: '#e4e4e7', fontSize: 14,
               }}
             >
@@ -289,7 +289,7 @@ export default function RepoDetailPage() {
                   <td style={tdStyle}>
                     <Flex align="center" gap={8}>
                       <Typography.Text
-                        style={{ color: '#818cf8', cursor: 'pointer' }}
+                        style={{ color: '#818CF8', cursor: 'pointer' }}
                         onClick={() => navigate(`/steerings/${b.steeringId}`)}
                       >
                         {b.steeringTitle}

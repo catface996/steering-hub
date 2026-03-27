@@ -5,11 +5,13 @@ import { Search } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { searchService } from '../../services/searchService';
 import { categoryService } from '../../services/steeringService';
+import { useIsMobile } from '../../utils/deviceDetect';
 import type { SearchResult, SteeringCategory } from '../../types';
 import Pagination from '../../components/Pagination';
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { setBreadcrumbs, setActions } = useHeader();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<'hybrid' | 'semantic' | 'fulltext'>('hybrid');
@@ -62,16 +64,17 @@ export default function SearchPage() {
     categoryService.list().then(setCategories).catch(() => {});
   }, []);
 
+  // PC: search controls in header after first search; Mobile: never put controls in header
   useEffect(() => {
-    if (hasSearched) {
+    if (hasSearched && !isMobile) {
       setActions(
-        <Flex gap={10} align="center">
+        <Flex gap={10} align="center" style={{ width: '100%' }}>
           <Input
             ref={inputRef}
             placeholder="搜索规范..."
             defaultValue={query}
             onPressEnter={doSearch}
-            style={{ width: 320 }}
+            style={{ flex: 1, minWidth: 120 }}
             allowClear
           />
           <Select
@@ -114,7 +117,7 @@ export default function SearchPage() {
     } else {
       setActions(null);
     }
-  }, [setActions, hasSearched, mode, limit, categoryId, categories, searching, query]);
+  }, [setActions, hasSearched, isMobile, mode, limit, categoryId, categories, searching, query]);
 
   const pageSize = 6;
   const pagedResults = results.slice(page * pageSize, (page + 1) * pageSize);
@@ -125,85 +128,107 @@ export default function SearchPage() {
     fair: { color: '#a1a1aa' },
   };
 
-  return (
-    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', flex: 1 }}>
-      {/* Initial state: centered search box */}
-      {!hasSearched && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: 'calc(100vh - 200px)',
-            gap: 24,
-          }}
-        >
+  /* ---------- Shared search form (used for initial state + mobile results state) ---------- */
+  const searchForm = (centered: boolean) => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: centered ? 'center' : 'stretch',
+        justifyContent: centered ? 'center' : 'flex-start',
+        ...(centered ? { height: 'calc(100vh - 200px)' } : {}),
+        gap: centered ? 24 : 16,
+      }}
+    >
+      {centered && (
+        <>
           <Typography.Title level={3} style={{ color: '#fafaf9', margin: 0 }}>
             搜索规范
           </Typography.Title>
           <Typography.Text style={{ color: '#a1a1aa' }}>
             输入关键词，找到最相关的编码规范
           </Typography.Text>
-          <div style={{ display: 'flex', gap: 8, width: 850, alignItems: 'center' }}>
-            <Input
-              ref={inputRef}
-              placeholder="输入关键词或描述，如：Controller URL 命名规范..."
-              size="large"
-              style={{ flex: 1 }}
-              onPressEnter={doSearch}
-              allowClear
-            />
-            <Select
-              value={categoryId}
-              onChange={setCategoryId}
-              placeholder="规范类型"
-              size="large"
-              style={{ width: 150, flexShrink: 0 }}
-              allowClear
-              options={[
-                { label: '全部类型', value: undefined },
-                ...categories.map((cat) => ({ label: cat.name, value: cat.id }))
-              ]}
-            />
-            <Select
-              value={mode}
-              onChange={setMode}
-              size="large"
-              style={{ width: 130, flexShrink: 0 }}
-              options={[
-                { label: '混合检索', value: 'hybrid' },
-                { label: '语义检索', value: 'semantic' },
-                { label: '全文检索', value: 'fulltext' },
-              ]}
-            />
-            <Button type="primary" size="large" onClick={doSearch} icon={<Search size={16} />}>
-              搜索
-            </Button>
-          </div>
-        </div>
+        </>
       )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: centered ? 650 : undefined }}>
+        <Input
+          ref={inputRef}
+          placeholder="输入关键词或描述，如：Controller URL 命名规范..."
+          size="large"
+          defaultValue={centered ? undefined : query}
+          style={{ width: '100%' }}
+          onPressEnter={doSearch}
+          allowClear
+        />
+        <Flex gap={8}>
+          <Select
+            value={categoryId}
+            onChange={setCategoryId}
+            placeholder="规范类型"
+            size="large"
+            style={{ flex: 1 }}
+            allowClear
+            options={[
+              { label: '全部类型', value: undefined },
+              ...categories.map((cat) => ({ label: cat.name, value: cat.id }))
+            ]}
+          />
+          <Select
+            value={mode}
+            onChange={setMode}
+            size="large"
+            style={{ flex: 1 }}
+            options={[
+              { label: '混合检索', value: 'hybrid' },
+              { label: '语义检索', value: 'semantic' },
+              { label: '全文检索', value: 'fulltext' },
+            ]}
+          />
+          {!isMobile && (
+            <Select
+              value={limit}
+              onChange={setLimit}
+              size="large"
+              style={{ width: 120, flexShrink: 0 }}
+              options={[10, 20, 50].map((v) => ({ label: `前 ${v} 条`, value: v }))}
+            />
+          )}
+        </Flex>
+        <Button type="primary" size="large" block onClick={doSearch} loading={searching} icon={searching ? undefined : <Search size={16} />}>
+          搜索
+        </Button>
+      </div>
+    </div>
+  );
 
-      {/* Results */}
-      {hasSearched && results.length > 0 && (
+  return (
+    <div style={{ padding: isMobile ? 16 : 24, display: 'flex', flexDirection: 'column', flex: 1 }}>
+      {/* Initial state: centered search form (both PC & mobile) */}
+      {!hasSearched && searchForm(true)}
+
+      {/* Results state */}
+      {hasSearched && (
         <>
+          {/* Mobile: inline search form at top of results */}
+          {isMobile && searchForm(false)}
+
           <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, marginBottom: 16, display: 'block' }}>
             找到 {results.length} 条结果
           </Typography.Text>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
             {pagedResults.map((r) => (
               <Card
                 key={r.steeringId}
                 className="glow-card"
                 onClick={() => navigate(`/steerings/${r.steeringId}`)}
-                style={{ borderRadius: 12, cursor: 'pointer', minHeight: 200, display: 'flex', flexDirection: 'column' }}
+                style={{ borderRadius: 12, cursor: 'pointer', minHeight: isMobile ? 140 : 200, display: 'flex', flexDirection: 'column' }}
                 hoverable
               >
                 <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
-                  <Typography.Text style={{ fontWeight: 600, fontSize: 16 }} ellipsis>{r.title}</Typography.Text>
-                  <Flex gap={8} align="center">
+                  <Typography.Text style={{ fontWeight: 600, fontSize: isMobile ? 14 : 16 }} ellipsis>{r.title}</Typography.Text>
+                  <Flex gap={8} align="center" style={{ flexShrink: 0 }}>
                     <Tag className="tag-base tag-content">
-                      {r.matchType === 'semantic' ? '语义匹配' : r.matchType === 'fulltext' ? '全文匹配' : '混合匹配'}
+                      {r.matchType === 'semantic' ? '语义' : r.matchType === 'fulltext' ? '全文' : '混合'}
                     </Tag>
                     <Tag style={{
                       color: matchLevelConfig[r.matchLevel ?? 'fair'].color,
@@ -217,7 +242,7 @@ export default function SearchPage() {
                 </Flex>
                 <Typography.Paragraph
                   style={{ color: '#a1a1aa', fontSize: 13, lineHeight: 1.6, flex: 1 }}
-                  ellipsis={{ rows: 4 }}
+                  ellipsis={{ rows: isMobile ? 2 : 4 }}
                 >
                   {r.content.slice(0, 150)}
                 </Typography.Paragraph>

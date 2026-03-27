@@ -56,14 +56,14 @@ export default function DashboardPage() {
   const stats = [
     { label: '规范总数', value: totalCount, icon: <FileText size={20} />, color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
     { label: '已生效规范', value: activeCount, icon: <CheckCircle size={20} />, color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
-    { label: '本周检索次数', value: '-', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
+    { label: '本周检索次数', value: '-', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(var(--color-warning-tag-rgb), 0.12)' },
     { label: '合规检查次数', value: '-', icon: <ShieldCheck size={20} />, color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
   ];
 
   const quickActions = [
     { label: '新建规范', icon: <Plus size={16} />, onClick: () => navigate('/steerings/new'), color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
-    { label: '搜索规范', icon: <Search size={16} />, onClick: () => navigate('/search'), color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
-    { label: '合规检查', icon: <ShieldCheck size={16} />, onClick: () => navigate('/compliance'), color: '#FFB547', bgColor: 'rgba(255, 181, 71, 0.12)' },
+    { label: '搜索规范', icon: <Search size={16} />, onClick: () => navigate('/search'), color: '#32D583', bgColor: 'rgba(var(--color-success-rgb), 0.12)' },
+    { label: '合规检查', icon: <ShieldCheck size={16} />, onClick: () => navigate('/compliance'), color: '#FFB547', bgColor: 'rgba(var(--color-warning-tag-rgb), 0.12)' },
     { label: '分类管理', icon: <TagIcon size={16} />, onClick: () => navigate('/categories'), color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
   ];
 

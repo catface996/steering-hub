@@ -79,8 +79,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         width={420}
       >
         <Flex vertical align="center" gap={16} style={{ padding: '16px 0' }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(248, 113, 113, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <AlertTriangle size={24} color="#f87171" />
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(var(--color-danger-rgb), 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <AlertTriangle size={24} color="var(--color-danger)" />
           </div>
           <Typography.Title level={5} style={{ margin: 0 }}>
             {(opts.title as string) || '确认删除'}
@@ -132,8 +132,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         width={380}
       >
         <Flex vertical align="center" gap={16} style={{ padding: '16px 0' }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(74, 222, 128, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CheckCircle size={24} color="#4ade80" />
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(var(--color-success-light-rgb), 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle size={24} color="var(--color-success-light)" />
           </div>
           <Typography.Title level={5} style={{ margin: 0 }}>
             {(opts.title as string) || '操作成功'}
@@ -164,8 +164,8 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         width={380}
       >
         <Flex vertical align="center" gap={16} style={{ padding: '16px 0' }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(248, 113, 113, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <XCircle size={24} color="#f87171" />
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(var(--color-danger-rgb), 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <XCircle size={24} color="var(--color-danger)" />
           </div>
           <Typography.Title level={5} style={{ margin: 0 }}>
             {(opts.title as string) || '操作失败'}

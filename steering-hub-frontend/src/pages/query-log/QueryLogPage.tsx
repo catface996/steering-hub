@@ -19,7 +19,7 @@ function highlight(text: string, keyword: string) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === keyword.toLowerCase() ? (
-          <mark key={i} style={{ background: 'rgba(167,139,250,0.35)', color: '#e4e4e7', borderRadius: 2, padding: '0 1px' }}>
+          <mark key={i} style={{ background: 'rgba(var(--accent-purple-rgb), 0.35)', color: '#e4e4e7', borderRadius: 2, padding: '0 1px' }}>
             {part}
           </mark>
         ) : (
@@ -113,14 +113,14 @@ export default function QueryLogPage() {
     fontSize: 12,
     color: '#a1a1aa',
     fontWeight: 500,
-    background: '#12121c',
+    background: 'var(--bg-elevated)',
     borderBottom: '1px solid #1e1e2a',
     whiteSpace: 'nowrap',
   };
 
   return (
     <div style={{ padding: isMobile ? 12 : 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: '#0d0d14' }}>
+      <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: 'var(--bg-base)' }}>
         {loading ? (
           <Flex justify="center" style={{ padding: 64 }}><Spin /></Flex>
         ) : isMobile ? (
@@ -132,7 +132,7 @@ export default function QueryLogPage() {
               <div
                 key={log.id}
                 onClick={() => navigate(`/query-logs/${log.id}`)}
-                style={{ background: '#13131f', border: '1px solid #1e1e2a', borderRadius: 8, padding: '12px 14px', cursor: 'pointer' }}
+                style={{ background: 'var(--bg-surface)', border: '1px solid #1e1e2a', borderRadius: 8, padding: '12px 14px', cursor: 'pointer' }}
               >
                 <Typography.Text
                   ellipsis
@@ -182,7 +182,7 @@ export default function QueryLogPage() {
                   key={log.id}
                   onClick={() => navigate(`/query-logs/${log.id}`)}
                   style={{ cursor: 'pointer' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#13131f')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-surface)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = '')}
                 >
                   <td style={{ ...tdStyle, color: '#71717a', fontSize: 13 }}>{log.id}</td>
@@ -198,12 +198,12 @@ export default function QueryLogPage() {
                   <td style={{ ...tdStyle, fontSize: 13 }}>
                     {log.agentName
                       ? <Tag style={{ borderRadius: 100, fontSize: 11 }}>{log.agentName}</Tag>
-                      : <span style={{ color: '#52525b' }}>-</span>}
+                      : <span style={{ color: 'var(--text-dimmed)' }}>-</span>}
                   </td>
                   <td style={{ ...tdStyle, fontSize: 13 }}>
                     {log.modelName
                       ? <Tag color="purple" style={{ borderRadius: 100, fontSize: 11 }}>{log.modelName}</Tag>
-                      : <span style={{ color: '#52525b' }}>-</span>}
+                      : <span style={{ color: 'var(--text-dimmed)' }}>-</span>}
                   </td>
                   <td style={{ ...tdStyle, color: '#a1a1aa', fontSize: 13, whiteSpace: 'nowrap' }}>
                     {log.repo || '-'}

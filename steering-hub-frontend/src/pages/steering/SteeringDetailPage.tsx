@@ -335,7 +335,7 @@ export default function SteeringDetailPage() {
             <thead>
               <tr>
                 {['仓库名称', 'full_name', '强制', '状态', '绑定时间'].map((h) => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, color: '#a1a1aa', fontWeight: 500, background: '#12121c', borderBottom: '1px solid #1e1e2a' }}>{h}</th>
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 12, color: '#a1a1aa', fontWeight: 500, background: 'var(--bg-elevated)', borderBottom: '1px solid #1e1e2a' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -348,7 +348,7 @@ export default function SteeringDetailPage() {
                 <tr key={b.bindingId}>
                   <td style={{ padding: '12px 16px', borderBottom: '1px solid #1e1e2a', fontSize: 14, color: '#e4e4e7' }}>
                     <Typography.Text
-                      style={{ color: '#818cf8', cursor: 'pointer' }}
+                      style={{ color: '#818CF8', cursor: 'pointer' }}
                       onClick={() => navigate(`/repos/${b.repoId}`)}
                     >
                       {b.repoName}

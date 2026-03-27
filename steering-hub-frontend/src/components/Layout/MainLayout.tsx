@@ -78,7 +78,7 @@ function GlobalHeader({ isMobile, onHamburgerClick }: GlobalHeaderProps) {
           <div
             style={{
               position: 'absolute', top: 0, right: 24, zIndex: 1300,
-              width: 260, background: '#1a1a24',
+              width: 260, background: 'var(--bg-overlay)',
               border: '1px solid #27273a', borderRadius: 12, padding: '8px 0',
             }}
           >
@@ -140,8 +140,8 @@ function GlobalHeader({ isMobile, onHamburgerClick }: GlobalHeaderProps) {
                 padding: '8px 16px', margin: '0 8px', borderRadius: 8, cursor: 'pointer',
               }}
             >
-              <LogOut size={14} color="#f87171" />
-              <Typography.Text style={{ fontSize: 13, fontWeight: 500, color: '#f87171' }}>退出登录</Typography.Text>
+              <LogOut size={14} color="var(--color-danger)" />
+              <Typography.Text style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-danger)' }}>退出登录</Typography.Text>
             </Flex>
           </div>
         </div>
