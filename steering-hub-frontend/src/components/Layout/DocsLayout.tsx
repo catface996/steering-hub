@@ -36,13 +36,13 @@ function DocsHeader() {
 
 export default function DocsLayout() {
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)' }}>
-      <HeaderProvider>
+    <HeaderProvider>
+      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-base)' }}>
         <DocsHeader />
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </div>
-      </HeaderProvider>
-    </div>
+      </div>
+    </HeaderProvider>
   );
 }
