@@ -633,7 +633,7 @@ export default function CategoryNavPage() {
         title="确认删除分类"
         content={`确定要删除分类「${selectedNode?.name}」吗？此操作不可恢复。`}
         okText="确认删除"
-        okButtonProps={{ danger: true }}
+
       />
     </div>
   );
