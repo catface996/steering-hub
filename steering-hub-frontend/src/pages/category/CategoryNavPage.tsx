@@ -70,6 +70,34 @@ function updateNode(
   });
 }
 
+// ── localStorage persistence ──────────────────────────────────────────────
+const STORAGE_EXPANDED = 'steering-hub:category-expanded-ids';
+const STORAGE_SELECTED = 'steering-hub:category-selected-key';
+
+function saveExpandedIds(roots: TreeNode[]) {
+  const ids = roots.filter(n => n.expanded).map(n => n.categoryId);
+  localStorage.setItem(STORAGE_EXPANDED, JSON.stringify(ids));
+}
+function saveSelectedKey(node: TreeNode | null) {
+  if (node) localStorage.setItem(STORAGE_SELECTED, node.nodeKey);
+  else localStorage.removeItem(STORAGE_SELECTED);
+}
+function loadExpandedIds(): number[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_EXPANDED) || '[]'); } catch { return []; }
+}
+function loadSelectedKey(): string | null {
+  return localStorage.getItem(STORAGE_SELECTED);
+}
+function findNodeByKey(roots: TreeNode[], key: string): TreeNode | null {
+  for (const root of roots) {
+    if (root.nodeKey === key) return root;
+    for (const child of root.children) {
+      if (child.nodeKey === key) return child;
+    }
+  }
+  return null;
+}
+
 export default function CategoryNavPage() {
   const { setBreadcrumbs, setActions } = useHeader();
   const navigate = useNavigate();
@@ -101,7 +129,34 @@ export default function CategoryNavPage() {
     setLoading(true);
     try {
       const data = await categoryNavService.listCategories();
-      setRoots(data.map(buildRootNode));
+      const rawRoots = data.map(buildRootNode);
+
+      // Restore expanded state
+      const savedExpandedIds = loadExpandedIds();
+      let restoredRoots = rawRoots;
+      if (savedExpandedIds.length > 0) {
+        restoredRoots = await Promise.all(
+          rawRoots.map(async (root) => {
+            if (savedExpandedIds.includes(root.categoryId) && root.childCount > 0) {
+              try {
+                const children = await categoryNavService.listCategories(root.categoryId);
+                return { ...root, loaded: true, expanded: true, children: children.map(c => buildChildNode(c, root.categoryId)) };
+              } catch {
+                return root;
+              }
+            }
+            return root;
+          })
+        );
+      }
+      setRoots(restoredRoots);
+
+      // Restore selected node
+      const savedKey = loadSelectedKey();
+      if (savedKey) {
+        const found = findNodeByKey(restoredRoots, savedKey);
+        if (found) setSelectedNode(found);
+      }
     } catch {
       // request layer shows toast
     } finally {
@@ -118,9 +173,11 @@ export default function CategoryNavPage() {
 
       if (!parentId) {
         setRoots(newRoots);
+        saveExpandedIds(newRoots);
         const node = newRoots.find(n => n.categoryId === newId);
         if (node) {
           setSelectedNode(node);
+          saveSelectedKey(node);
           setTimeout(() => {
             document.querySelector(`[data-node-id="${node.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }, 100);
@@ -130,14 +187,17 @@ export default function CategoryNavPage() {
         if (parentInRoots) {
           const children = await categoryNavService.listCategories(parentId);
           const childNodes = children.map(c => buildChildNode(c, parentId));
-          setRoots(newRoots.map(n =>
+          const updatedRoots = newRoots.map(n =>
             n.categoryId === parentId
               ? { ...n, loaded: true, expanded: true, children: childNodes }
               : n
-          ));
+          );
+          setRoots(updatedRoots);
+          saveExpandedIds(updatedRoots);
           const childNode = childNodes.find(c => c.categoryId === newId);
           if (childNode) {
             setSelectedNode(childNode);
+            saveSelectedKey(childNode);
             setTimeout(() => {
               document.querySelector(`[data-node-id="${childNode.nodeKey}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
@@ -145,6 +205,7 @@ export default function CategoryNavPage() {
         } else {
           // Parent is a nested node — just reload without auto-select
           setRoots(newRoots);
+          saveExpandedIds(newRoots);
         }
       }
     } catch {
@@ -202,21 +263,25 @@ export default function CategoryNavPage() {
     if (!node.loaded) {
       try {
         const children = await categoryNavService.listCategories(node.categoryId);
-        setRoots((prev) =>
-          updateNode(prev, node.nodeKey, (n) => ({
+        setRoots((prev) => {
+          const updated = updateNode(prev, node.nodeKey, (n) => ({
             ...n,
             loaded: true,
             expanded: true,
             children: children.map((c) => buildChildNode(c, node.categoryId)),
-          }))
-        );
+          }));
+          saveExpandedIds(updated);
+          return updated;
+        });
       } catch {
         // toast from request layer
       }
     } else {
-      setRoots((prev) =>
-        updateNode(prev, node.nodeKey, (n) => ({ ...n, expanded: !n.expanded }))
-      );
+      setRoots((prev) => {
+        const updated = updateNode(prev, node.nodeKey, (n) => ({ ...n, expanded: !n.expanded }));
+        saveExpandedIds(updated);
+        return updated;
+      });
     }
   };
 
@@ -258,6 +323,7 @@ export default function CategoryNavPage() {
       setAddOpen(false);
       addForm.resetFields();
       setSelectedNode(null);
+      saveSelectedKey(null);
       loadRoots();
     } catch {
       // toast from request layer; CYCLE_DETECTED will show the backend message
@@ -278,6 +344,7 @@ export default function CategoryNavPage() {
       message.success('关系已删除');
       setDeleteConfirmOpen(false);
       setSelectedNode(null);
+      saveSelectedKey(null);
       loadRoots();
     } catch {
       // toast from request layer
@@ -296,7 +363,7 @@ export default function CategoryNavPage() {
         <Flex
           align="center"
           gap={8}
-          onClick={() => setSelectedNode(isSelected ? null : node)}
+          onClick={() => { const next = isSelected ? null : node; setSelectedNode(next); saveSelectedKey(next); }}
           style={{
             padding: `8px 16px 8px ${16 + depth * 24}px`,
             cursor: 'pointer',
