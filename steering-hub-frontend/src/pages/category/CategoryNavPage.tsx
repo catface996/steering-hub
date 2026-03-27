@@ -295,7 +295,7 @@ export default function CategoryNavPage() {
             setAddOpen(true);
           }}>添加子分类关系
         </Button>
-        <Button icon={<BookOpen size={14} />} onClick={() => navigate('/docs')}>文档模式</Button>
+        <Button icon={<BookOpen size={14} />} onClick={() => window.open('/docs', '_blank')}>文档模式</Button>
       </Flex>
     );
   }, [setBreadcrumbs, setActions, selectedNode]);
