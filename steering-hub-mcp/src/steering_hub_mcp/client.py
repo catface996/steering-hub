@@ -163,16 +163,14 @@ async def get_all_tags(category_code: Optional[str] = None) -> dict:
 
 async def submit_steering(title: str, content: str, category: str, tags: list[str]) -> dict:
     """Submit a new steering for human review (creates in DRAFT status)"""
-    # Resolve category id from code
-    category_id = await _resolve_category_id(category)
     payload = {
         "title": title,
         "content": content,
-        "categoryId": category_id,
+        "category": category,
         "tags": tags,
     }
     async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as client:
-        resp = await client.post("/api/v1/web/steerings", json=payload)
+        resp = await client.post("/api/v1/mcp/steerings", json=payload)
         resp.raise_for_status()
         return resp.json().get("data", {})
 
