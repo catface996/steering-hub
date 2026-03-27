@@ -284,13 +284,13 @@ export default function CategoryNavPage() {
         {selectedNode && selectedNode.childCount === 0 && (
           <Button
             danger
-            size="small"
+            icon={<Trash2 size={14} />}
             onClick={() => setDeleteCategoryModalOpen(true)}
           >
             删除分类
           </Button>
         )}
-        <Button icon={<Plus size={14} />} onClick={() => {
+        <Button type="primary" icon={<Plus size={14} />} onClick={() => {
             if (selectedNode) {
               createForm.setFieldValue('parentId', selectedNode.categoryId);
             }
