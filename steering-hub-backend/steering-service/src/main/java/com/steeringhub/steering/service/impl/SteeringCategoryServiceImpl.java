@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.ResultCode;
 import com.steeringhub.steering.entity.SteeringCategory;
+import com.steeringhub.steering.mapper.CategoryHierarchyMapper;
 import com.steeringhub.steering.mapper.SteeringCategoryMapper;
 import com.steeringhub.steering.service.SteeringCategoryService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SteeringCategoryServiceImpl extends ServiceImpl<SteeringCategoryMapper, SteeringCategory>
         implements SteeringCategoryService {
+
+    private final CategoryHierarchyMapper categoryHierarchyMapper;
 
     @Override
     public List<SteeringCategory> listTree() {
@@ -42,6 +45,9 @@ public class SteeringCategoryServiceImpl extends ServiceImpl<SteeringCategoryMap
         category.setSortOrder(0);
         category.setEnabled(true);
         save(category);
+        if (parentId != null) {
+            categoryHierarchyMapper.insertRelation(parentId, category.getId(), 0);
+        }
         return category;
     }
 
