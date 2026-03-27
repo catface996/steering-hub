@@ -5,7 +5,7 @@ import {
 } from 'antd';
 import { GitBranch, Plus, Trash2, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
-import { categoryNavService } from '../../services/categoryNavService';
+import { categoryNavService, deleteCategory } from '../../services/categoryNavService';
 import { categoryService } from '../../services/steeringService';
 import type { CategoryNavItem, SteeringCategory } from '../../types';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -131,6 +131,9 @@ export default function CategoryNavPage() {
   // Delete hierarchy modal (rule 230: use ConfirmModal, no Modal.confirm)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Delete category modal
+  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
 
   // ── Load top-level categories ──────────────────────────────────────────────
   const loadRoots = useCallback(async () => {
@@ -278,6 +281,15 @@ export default function CategoryNavPage() {
             删除关系
           </Button>
         )}
+        {selectedNode && selectedNode.childCount === 0 && (
+          <Button
+            danger
+            size="small"
+            onClick={() => setDeleteCategoryModalOpen(true)}
+          >
+            删除分类
+          </Button>
+        )}
         <Button icon={<Plus size={14} />} onClick={() => {
             if (selectedNode) {
               createForm.setFieldValue('parentId', selectedNode.categoryId);
@@ -369,6 +381,21 @@ export default function CategoryNavPage() {
       // toast from request layer; CYCLE_DETECTED will show the backend message
     } finally {
       setAddSubmitting(false);
+    }
+  };
+
+  // ── Delete category ───────────────────────────────────────────────────────
+  const handleDeleteCategory = async () => {
+    if (!selectedNode) return;
+    try {
+      await deleteCategory(selectedNode.categoryId);
+      message.success('分类已删除');
+      setDeleteCategoryModalOpen(false);
+      setSelectedNode(null);
+      saveSelectedKey(null);
+      await loadRoots();
+    } catch (e: any) {
+      message.error(e?.message || '删除失败');
     }
   };
 
@@ -596,6 +623,17 @@ export default function CategoryNavPage() {
         loading={deleting}
         onConfirm={handleDeleteHierarchy}
         onCancel={() => setDeleteConfirmOpen(false)}
+      />
+
+      {/* Delete category confirm (spec 230: ConfirmModal, no Modal.confirm) */}
+      <ConfirmModal
+        open={deleteCategoryModalOpen}
+        onCancel={() => setDeleteCategoryModalOpen(false)}
+        onConfirm={handleDeleteCategory}
+        title="确认删除分类"
+        content={`确定要删除分类「${selectedNode?.name}」吗？此操作不可恢复。`}
+        okText="确认删除"
+        okButtonProps={{ danger: true }}
       />
     </div>
   );

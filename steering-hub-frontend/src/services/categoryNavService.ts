@@ -1,4 +1,4 @@
-import { get, post } from '../utils/request';
+import { get, post, del } from '../utils/request';
 import type { CategoryNavItem, SteeringNavItem } from '../types';
 
 export const categoryNavService = {
@@ -21,3 +21,7 @@ export const categoryNavService = {
   createCategory: (data: { name: string; code?: string; description?: string; parentId?: number }) =>
     post<{ id: number; name: string; parentId?: number }>('/api/v1/web/categories', data).then(r => r.data),
 };
+
+export async function deleteCategory(categoryId: number): Promise<void> {
+  await del(`/api/v1/web/categories/${categoryId}`);
+}
