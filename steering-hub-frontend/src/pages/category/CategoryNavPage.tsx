@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Typography, Button, Flex, Spin, Tag, App, Modal, Select, Form, Input, InputNumber,
 } from 'antd';
-import { GitBranch, Plus, Trash2, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { GitBranch, Plus, Trash2, FileText, ChevronDown, ChevronRight, BookOpen } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { categoryNavService, deleteCategory } from '../../services/categoryNavService';
 import { categoryService } from '../../services/steeringService';
@@ -295,6 +295,7 @@ export default function CategoryNavPage() {
             setAddOpen(true);
           }}>添加子分类关系
         </Button>
+        <Button icon={<BookOpen size={14} />} onClick={() => navigate('/docs')}>文档模式</Button>
       </Flex>
     );
   }, [setBreadcrumbs, setActions, selectedNode]);

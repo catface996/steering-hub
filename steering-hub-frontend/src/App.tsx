@@ -26,6 +26,7 @@ import RepoListPage from './pages/repo/RepoListPage';
 import RepoDetailPage from './pages/repo/RepoDetailPage';
 import QueryLogPage from './pages/query-log/QueryLogPage';
 import QueryLogDetailPage from './pages/query-log/QueryLogDetailPage';
+import DocsPage from './pages/docs/DocsPage';
 
 function ThemedApp() {
   const { primaryColor } = useThemeColor();
@@ -60,6 +61,7 @@ function ThemedApp() {
             <Route path="repos/:id" element={<RepoDetailPage />} />
             <Route path="query-logs" element={<QueryLogPage />} />
             <Route path="query-logs/:id" element={<QueryLogDetailPage />} />
+            <Route path="docs" element={<DocsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
