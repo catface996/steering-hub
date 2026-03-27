@@ -65,7 +65,7 @@ export default function DocsPage() {
   const [roots, setRoots] = useState<DocTreeNode[]>([]);
   const [treeLoading, setTreeLoading] = useState(true);
   const [rightPanel, setRightPanel] = useState<RightPanel>({ kind: 'empty' });
-  const [searchQuery, setSearchQuery] = useState('');
+  
 
   // ── Load top-level categories ─────────────────────────────────────────────
   const loadRoots = useCallback(async () => {
@@ -118,14 +118,12 @@ export default function DocsPage() {
         placeholder="搜索规范..."
         allowClear
         style={{ width: isMobile ? 160 : 280 }}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
         onSearch={handleSearch}
       />
     );
     return () => setActions(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, isMobile]);
+  }, [isMobile]);
 
   // ── Load steerings for selected category ─────────────────────────────────
   const handleSelectCategory = useCallback(async (categoryId: number, categoryName: string) => {
