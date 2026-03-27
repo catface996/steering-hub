@@ -467,25 +467,6 @@ async def handle_record_usage(args: dict) -> list[types.ContentBlock]:
     )]
 
 
-# ============================================================
-# Entry point
-# ============================================================
-
-def main():
-    # Prevent stdout buffering issues in MCP stdio communication
-    sys.stdout.reconfigure(line_buffering=True)
-
-    async def run():
-        async with stdio_server() as (read_stream, write_stream):
-            await app.run(read_stream, write_stream, app.create_initialization_options())
-
-    asyncio.run(run())
-
-
-if __name__ == "__main__":
-    main()
-
-
 async def handle_list_categories(args: dict) -> list[types.ContentBlock]:
     parent_id = args.get("parent_id")
     categories = await client.list_categories(int(parent_id) if parent_id is not None else None)
@@ -539,3 +520,22 @@ async def handle_report_search_success(args: dict) -> list[types.ContentBlock]:
     query_id = int(args["log_id"])  # External API still uses log_id, but internally it's query_id
     await client.report_search_success(query_id)
     return [TextContent(type="text", text=f"Search success reported (query_id={query_id}).")]
+
+
+# ============================================================
+# Entry point
+# ============================================================
+
+def main():
+    # Prevent stdout buffering issues in MCP stdio communication
+    sys.stdout.reconfigure(line_buffering=True)
+
+    async def run():
+        async with stdio_server() as (read_stream, write_stream):
+            await app.run(read_stream, write_stream, app.create_initialization_options())
+
+    asyncio.run(run())
+
+
+if __name__ == "__main__":
+    main()
