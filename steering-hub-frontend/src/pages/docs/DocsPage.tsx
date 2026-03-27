@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Typography, Spin, Tag, Card, Flex, Empty, Button } from 'antd';
+import { Typography, Spin, Tag, Card, Flex, Empty, Button, Input } from 'antd';
 import { BookOpen, ChevronDown, ChevronRight, FolderOpen, Folder, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -55,15 +55,17 @@ const STATUS_COLOR: Record<string, string> = {
 type RightPanel =
   | { kind: 'empty' }
   | { kind: 'list'; categoryId: number; categoryName: string; steerings: Steering[]; loading: boolean }
-  | { kind: 'detail'; steering: Steering; fromCategoryId: number; fromCategoryName: string };
+  | { kind: 'detail'; steering: Steering; fromCategoryId: number; fromCategoryName: string; backPanel?: RightPanel }
+  | { kind: 'search'; query: string; results: Steering[]; loading: boolean };
 
 export default function DocsPage() {
   const isMobile = useIsMobile();
-  const { setBreadcrumbs } = useHeader();
+  const { setBreadcrumbs, setActions } = useHeader();
 
   const [roots, setRoots] = useState<DocTreeNode[]>([]);
   const [treeLoading, setTreeLoading] = useState(true);
   const [rightPanel, setRightPanel] = useState<RightPanel>({ kind: 'empty' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   // ── Load top-level categories ─────────────────────────────────────────────
   const loadRoots = useCallback(async () => {
@@ -80,6 +82,18 @@ export default function DocsPage() {
 
   useEffect(() => { loadRoots(); }, [loadRoots]);
 
+  // ── Search ────────────────────────────────────────────────────────────────
+  const handleSearch = useCallback(async (value: string) => {
+    if (!value.trim()) return;
+    setRightPanel({ kind: 'search', query: value, results: [], loading: true });
+    try {
+      const result = await steeringService.page({ keyword: value, status: 'active', size: 20, current: 1 });
+      setRightPanel({ kind: 'search', query: value, results: result.records, loading: false });
+    } catch {
+      setRightPanel({ kind: 'search', query: value, results: [], loading: false });
+    }
+  }, []);
+
   useEffect(() => {
     if (rightPanel.kind === 'list') {
       setBreadcrumbs(
@@ -89,10 +103,29 @@ export default function DocsPage() {
       setBreadcrumbs(
         <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>{rightPanel.steering.title}</Typography.Text>
       );
+    } else if (rightPanel.kind === 'search') {
+      setBreadcrumbs(
+        <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>搜索："{rightPanel.query}"</Typography.Text>
+      );
     } else {
       setBreadcrumbs(null);
     }
   }, [rightPanel, setBreadcrumbs]);
+
+  useEffect(() => {
+    setActions(
+      <Input.Search
+        placeholder="搜索规范..."
+        allowClear
+        style={{ width: isMobile ? 160 : 280 }}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onSearch={handleSearch}
+      />
+    );
+    return () => setActions(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, isMobile]);
 
   // ── Load steerings for selected category ─────────────────────────────────
   const handleSelectCategory = useCallback(async (categoryId: number, categoryName: string) => {
@@ -106,10 +139,10 @@ export default function DocsPage() {
   }, []);
 
   // ── Load steering detail ──────────────────────────────────────────────────
-  const handleSelectSteering = useCallback(async (steeringId: number, fromCategoryId: number, fromCategoryName: string) => {
+  const handleSelectSteering = useCallback(async (steeringId: number, fromCategoryId: number, fromCategoryName: string, backPanel?: RightPanel) => {
     try {
       const data = await steeringService.get(steeringId);
-      setRightPanel({ kind: 'detail', steering: data, fromCategoryId, fromCategoryName });
+      setRightPanel({ kind: 'detail', steering: data, fromCategoryId, fromCategoryName, backPanel });
     } catch {
       // toast from request layer
     }
@@ -201,13 +234,13 @@ export default function DocsPage() {
   };
 
   // ── Steering card ─────────────────────────────────────────────────────────
-  const renderCard = (s: Steering, fromCategoryId: number, fromCategoryName: string) => {
+  const renderCard = (s: Steering, fromCategoryId: number, fromCategoryName: string, backPanel?: RightPanel) => {
     const excerpt = s.content ? s.content.replace(/[#*`>\-]/g, '').trim().slice(0, 100) : '-';
     return (
       <Card
         key={s.id}
         hoverable
-        onClick={() => handleSelectSteering(s.id, fromCategoryId, fromCategoryName)}
+        onClick={() => handleSelectSteering(s.id, fromCategoryId, fromCategoryName, backPanel)}
         style={{
           background: 'var(--bg-surface)',
           border: '1px solid #1e1e2a',
@@ -253,7 +286,7 @@ export default function DocsPage() {
   };
 
   // ── Detail view ───────────────────────────────────────────────────────────
-  const renderDetail = (steering: Steering, fromCategoryId: number, fromCategoryName: string) => (
+  const renderDetail = (steering: Steering, fromCategoryId: number, fromCategoryName: string, backPanel?: RightPanel) => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Back bar */}
       <Flex align="center" gap={8} style={{ padding: '12px 20px', borderBottom: '1px solid #1e1e2a', flexShrink: 0 }}>
@@ -261,9 +294,9 @@ export default function DocsPage() {
           type="text"
           icon={<ArrowLeft size={14} />}
           style={{ color: '#a1a1aa', paddingLeft: 0 }}
-          onClick={() => handleSelectCategory(fromCategoryId, fromCategoryName)}
+          onClick={() => backPanel ? setRightPanel(backPanel) : handleSelectCategory(fromCategoryId, fromCategoryName)}
         >
-          返回列表
+          {backPanel?.kind === 'search' ? '返回搜索结果' : '返回列表'}
         </Button>
         <Typography.Text style={{ color: '#52525b' }}>/</Typography.Text>
         <Typography.Text style={{ color: '#e4e4e7', fontWeight: 600, fontSize: 14 }} ellipsis>
@@ -362,6 +395,24 @@ export default function DocsPage() {
           rightPanel.steering,
           rightPanel.fromCategoryId,
           rightPanel.fromCategoryName,
+          rightPanel.backPanel,
+        )}
+
+        {rightPanel.kind === 'search' && (
+          <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+            <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, display: 'block', marginBottom: 16 }}>
+              搜索："{rightPanel.query}"，共 {rightPanel.results.length} 条结果
+            </Typography.Text>
+            {rightPanel.loading ? (
+              <Flex justify="center" style={{ paddingTop: 48 }}><Spin /></Flex>
+            ) : rightPanel.results.length === 0 ? (
+              <Empty description={<span style={{ color: 'var(--text-dimmed)' }}>未找到相关规范</span>} />
+            ) : (
+              rightPanel.results.map((s) =>
+                renderCard(s, 0, '', { kind: 'search', query: rightPanel.query, results: rightPanel.results, loading: false })
+              )
+            )}
+          </div>
         )}
       </div>
     </div>
