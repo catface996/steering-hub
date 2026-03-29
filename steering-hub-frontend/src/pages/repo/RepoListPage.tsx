@@ -210,7 +210,7 @@ export default function RepoListPage() {
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: 'var(--bg-base)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 12, border: '1px solid #1e1e2a', background: 'var(--bg-base)' }}>
         <Table<Repo>
           rowKey="id"
           columns={columns}
