@@ -503,6 +503,69 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         steeringVersionMapper.insert(version);
     }
 
+    @Override
+    public IPage<com.steeringhub.steering.dto.response.ReviewQueueItemVO> listReviewQueue(long current, long size) {
+        long offset = (current - 1) * size;
+        int total = steeringVersionMapper.countReviewQueue();
+        List<com.steeringhub.steering.dto.response.ReviewQueueItemVO> rows = steeringVersionMapper.listReviewQueue(offset, size);
+
+        Page<com.steeringhub.steering.dto.response.ReviewQueueItemVO> page = new Page<>(current, size);
+        page.setTotal(total);
+        page.setRecords(rows);
+        return page;
+    }
+
+    @Override
+    public com.steeringhub.steering.dto.response.DiffVO getVersionDiff(Long steeringId) {
+        Steering steering = getById(steeringId);
+        if (steering == null) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
+        }
+
+        com.steeringhub.steering.dto.response.DiffVO diff = new com.steeringhub.steering.dto.response.DiffVO();
+        diff.setSteeringId(steeringId);
+        diff.setSteeringStatus(steering.getStatus() != null ? steering.getStatus().getCode() : null);
+
+        // Find current active version
+        SteeringVersion activeVersion = steeringVersionMapper.findVersionBySteeringIdAndStatus(steeringId, "active");
+        if (activeVersion != null) {
+            diff.setActiveVersion(toVersionSnapshot(activeVersion));
+        } else {
+            // No active version — use main table as baseline
+            com.steeringhub.steering.dto.response.DiffVO.VersionSnapshot baseline = new com.steeringhub.steering.dto.response.DiffVO.VersionSnapshot();
+            baseline.setVersionNumber(steering.getCurrentVersion());
+            baseline.setTitle(steering.getTitle());
+            baseline.setContent(steering.getContent());
+            baseline.setTags(steering.getTags());
+            baseline.setKeywords(steering.getKeywords());
+            baseline.setStatus(steering.getStatus() != null ? steering.getStatus().getCode() : null);
+            baseline.setCreatedAt(steering.getCreatedAt());
+            diff.setActiveVersion(baseline);
+        }
+
+        // Find pending_review version
+        SteeringVersion pendingVersion = steeringVersionMapper.findVersionBySteeringIdAndStatus(steeringId, "pending_review");
+        if (pendingVersion == null) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "该规范没有待审核版本");
+        }
+        diff.setPendingVersion(toVersionSnapshot(pendingVersion));
+
+        return diff;
+    }
+
+    private com.steeringhub.steering.dto.response.DiffVO.VersionSnapshot toVersionSnapshot(SteeringVersion v) {
+        com.steeringhub.steering.dto.response.DiffVO.VersionSnapshot snapshot = new com.steeringhub.steering.dto.response.DiffVO.VersionSnapshot();
+        snapshot.setVersionNumber(v.getVersion());
+        snapshot.setTitle(v.getTitle());
+        snapshot.setContent(v.getContent());
+        snapshot.setTags(v.getTags());
+        snapshot.setKeywords(v.getKeywords());
+        snapshot.setStatus(v.getStatus());
+        snapshot.setChangeLog(v.getChangeLog());
+        snapshot.setCreatedAt(v.getCreatedAt());
+        return snapshot;
+    }
+
     private SteeringDetailResponse toDetailResponse(Steering steering) {
         SteeringDetailResponse response = new SteeringDetailResponse();
         BeanUtils.copyProperties(steering, response);

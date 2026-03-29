@@ -59,10 +59,10 @@ Select tags that match these dimensions:
 ### Tag rules
 
 - **Prefer existing tags** — don't create new tags if an existing one fits
-- **2-5 tags per spec** — too few = hard to find, too many = noisy
+- **2-5 tags per steering** — too few = hard to find, too many = noisy
 - **Be specific** — `Spring Boot` is better than `Java` if the rule is Spring-specific
-- **Layer + Concern minimum** — every spec should have at least a layer tag and a concern tag
-- Tags are orthogonal to categories. A `coding` category spec can have `Controller` + `REST` + `Spring` tags
+- **Layer + Concern minimum** — every steering should have at least a layer tag and a concern tag
+- Tags are orthogonal to categories. A `coding` category steering can have `Controller` + `REST` + `Spring` tags
 
 ### Examples
 

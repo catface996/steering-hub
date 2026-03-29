@@ -17,6 +17,7 @@ import {
   Database,
   ScrollText,
   GitBranch,
+  ClipboardCheck,
 } from 'lucide-react';
 
 const drawerWidth = 280;
@@ -34,6 +35,7 @@ const mainItems: NavItem[] = [
   { icon: <Search size={20} />, label: '规范检索', path: '/search', iconColor: 'var(--accent-cyan)' },
   { icon: <ShieldCheck size={20} />, label: '合规审查', path: '/compliance', iconColor: 'var(--accent-orange)' },
   { icon: <GitBranch size={20} />, label: '分类导航', path: '/categories', iconColor: 'var(--color-success-light)' },
+  { icon: <ClipboardCheck size={20} />, label: '审批队列', path: '/review', iconColor: 'var(--accent-teal, #2DD4BF)' },
   { icon: <BarChart3 size={20} />, label: '使用分析', path: '/analytics', iconColor: 'var(--accent-pink)' },
   { icon: <Heart size={20} />, label: '规范健康度', path: '/health', iconColor: 'var(--accent-rose)' },
   { icon: <ScrollText size={20} />, label: '检索日志', path: '/query-logs', iconColor: 'var(--color-warning)' },

@@ -67,4 +67,14 @@ public interface SteeringService extends IService<Steering> {
      * 获取指定版本详情（只读）
      */
     SteeringVersionDetailVO getVersionDetail(Long id, int versionNumber);
+
+    /**
+     * 审批队列：查询所有含 pending_review 版本的规范（分页）
+     */
+    IPage<com.steeringhub.steering.dto.response.ReviewQueueItemVO> listReviewQueue(long current, long size);
+
+    /**
+     * 版本对比：返回当前 active 版本与待审版本的内容快照
+     */
+    com.steeringhub.steering.dto.response.DiffVO getVersionDiff(Long steeringId);
 }

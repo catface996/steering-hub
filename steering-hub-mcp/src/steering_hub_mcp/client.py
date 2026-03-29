@@ -246,6 +246,20 @@ async def list_steerings(category_id: int, limit: int = 10) -> list[dict]:
         return resp.json().get("data", [])
 
 
+async def revise_steering(steering_id: int, content: str, change_log: str, tags: Optional[list[str]] = None) -> dict:
+    """Submit a revision to an existing steering (creates draft version + auto-submit for review)"""
+    payload: dict[str, Any] = {
+        "content": content,
+        "changeLog": change_log,
+    }
+    if tags:
+        payload["tags"] = tags
+    async with httpx.AsyncClient(base_url=API_BASE_URL, headers=_get_headers(), timeout=30) as c:
+        resp = await c.put(f"/api/v1/mcp/steerings/{steering_id}", json=payload)
+        resp.raise_for_status()
+        return resp.json().get("data", {})
+
+
 async def report_search_failure(query_id: int, reason: str, expected_topic: str = "") -> None:
     """上报本次检索无效，帮助改进规范系统"""
     payload = {"queryId": query_id, "result": "failure", "reason": reason}

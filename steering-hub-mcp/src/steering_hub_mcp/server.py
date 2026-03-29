@@ -181,6 +181,39 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="submit_steering_revision",
+            description=(
+                "Submit a revision to an existing active steering. "
+                "Use this when you discover that an existing steering can be improved during coding "
+                "(e.g., missing edge cases, incomplete constraints, outdated patterns). "
+                "The revision will be created as a new draft version and automatically submitted for human review. "
+                "The current active version remains effective until the revision is approved and activated."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "steering_id": {
+                        "type": "integer",
+                        "description": "ID of the existing steering to revise",
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Full revised Markdown content of the steering",
+                    },
+                    "change_log": {
+                        "type": "string",
+                        "description": "Explanation of what was changed and why (e.g., 'Added concurrency lock granularity constraint discovered during Job implementation')",
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional updated tags",
+                    },
+                },
+                "required": ["steering_id", "content", "change_log"],
+            },
+        ),
+        Tool(
             name="record_usage",
             description=(
                 "Record that a steering was used in a coding task. "
@@ -288,6 +321,8 @@ async def call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             return await handle_get_steering(arguments)
         elif name == "submit_steering":
             return await handle_submit_steering(arguments)
+        elif name == "submit_steering_revision":
+            return await handle_submit_steering_revision(arguments)
         elif name == "record_usage":
             return await handle_record_usage(arguments)
         elif name == "list_categories":
@@ -447,6 +482,27 @@ async def handle_submit_steering(args: dict) -> list[types.ContentBlock]:
             f"**Title:** {result.get('title')}  \n"
             f"**Status:** draft (pending human review)  \n\n"
             f"The steering will become effective after it passes the review process."
+        )
+    )]
+
+
+async def handle_submit_steering_revision(args: dict) -> list[types.ContentBlock]:
+    steering_id = int(args["steering_id"])
+    content = args["content"]
+    change_log = args["change_log"]
+    tags = args.get("tags")
+
+    result = await client.revise_steering(steering_id, content, change_log, tags)
+
+    return [TextContent(
+        type="text",
+        text=(
+            f"Steering revision submitted successfully for human review.\n\n"
+            f"**Steering ID:** {result.get('id', steering_id)}  \n"
+            f"**Title:** {result.get('title', 'N/A')}  \n"
+            f"**Status:** {result.get('status', 'pending_review')}  \n"
+            f"**Message:** {result.get('message', 'Revision submitted, awaiting approval')}  \n\n"
+            f"The current active version remains effective until the revision is approved and activated."
         )
     )]
 

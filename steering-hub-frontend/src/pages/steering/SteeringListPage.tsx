@@ -186,7 +186,7 @@ export default function SteeringListPage() {
               <Spin size="large" />
             </Flex>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
               {data?.records?.map((record) => (
                 <Card
                   key={record.id}

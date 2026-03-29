@@ -48,7 +48,7 @@ mcp__steering-hub__report_search_failure(
 
 After calling `report_search_failure`:
 
-1. **Continue coding** — the absence of a spec does not block implementation
+1. **Continue coding** — the absence of a steering does not block implementation
 2. Apply project-wide defaults from Constitution:
    - Backend: `Result<T>` return · `@Valid` DTO · XML Mapper (no `QueryWrapper`) · `@Transactional` in Application layer
    - Frontend: `formatDateTime()` · null → `-` · `Pagination.tsx` for pagination
@@ -58,7 +58,7 @@ After calling `report_search_failure`:
    ```
    or for TypeScript:
    ```typescript
-   // No applicable Steering Hub spec found (reported). Following project best practices.
+   // No applicable Steering Hub steering found (reported). Following project best practices.
    ```
 
 ---
@@ -71,7 +71,7 @@ After calling `report_search_failure`:
 | ❌ 重复关键词算1次 | Each attempt must use a distinct keyword string |
 | ❌ 上报后停止编码 | Always continue implementation after reporting |
 | ❌ 上报后不加注释 | Must add the "无对应规范" comment in code |
-| ❌ 未到3次就认为无规范 | Even if confident there's no spec, still complete 3 attempts |
+| ❌ 未到3次就认为无规范 | Even if confident there's no steering, still complete 3 attempts |
 
 ---
 

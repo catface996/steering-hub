@@ -190,7 +190,14 @@ export default function SteeringDetailPage() {
         <Alert
           type="warning"
           showIcon
-          message="存在待审核的修订版本，当前搜索返回的仍为已生效版本内容"
+          message={
+            <Flex align="center" justify="space-between">
+              <span>存在待审核的修订版本，当前搜索返回的仍为已生效版本内容</span>
+              <Button type="link" size="small" onClick={() => navigate(`/review/${id}/diff`)} style={{ padding: 0 }}>
+                前往审批 →
+              </Button>
+            </Flex>
+          }
           style={{ marginBottom: 16 }}
         />
       )}

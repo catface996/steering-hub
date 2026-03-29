@@ -8,7 +8,9 @@ import com.steeringhub.steering.dto.request.CreateSteeringRequest;
 import com.steeringhub.steering.dto.request.ReviewSteeringRequest;
 import com.steeringhub.steering.dto.request.UpdateSteeringRequest;
 import com.steeringhub.steering.dto.response.CompareVO;
+import com.steeringhub.steering.dto.response.DiffVO;
 import com.steeringhub.steering.dto.response.RepoItem;
+import com.steeringhub.steering.dto.response.ReviewQueueItemVO;
 import com.steeringhub.steering.dto.response.SpecDetailVO;
 import com.steeringhub.steering.dto.response.SteeringDetailResponse;
 import com.steeringhub.steering.dto.response.SteeringVersionDetailVO;
@@ -108,6 +110,20 @@ public class SteeringController {
             @PathVariable Long id,
             @PathVariable int versionNumber) {
         return Result.ok(steeringService.getVersionDetail(id, versionNumber));
+    }
+
+    @Operation(summary = "审批队列：查询所有含待审版本的规范")
+    @GetMapping("/review-queue")
+    public Result<IPage<ReviewQueueItemVO>> listReviewQueue(
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "20") long size) {
+        return Result.ok(steeringService.listReviewQueue(current, size));
+    }
+
+    @Operation(summary = "版本对比：当前生效版 vs 待审版")
+    @GetMapping("/{id}/diff")
+    public Result<DiffVO> getVersionDiff(@PathVariable Long id) {
+        return Result.ok(steeringService.getVersionDiff(id));
     }
 
     @Operation(summary = "左右分屏对比两条规范内容")

@@ -1,8 +1,8 @@
-# Dedup Check Guide — How to Search Before Submitting a Spec
+# Dedup Check Guide — How to Search Before Submitting a Steering
 
 ## Purpose
 
-Before submitting any new spec, you must verify it doesn't already exist. This prevents duplicate or conflicting specs in the system.
+Before submitting any new steering, you must verify it doesn't already exist. This prevents duplicate or conflicting steerings in the system.
 
 ## Search Strategy
 
@@ -41,32 +41,32 @@ The goal is different from the usage skill — here you're checking for **overla
 
 | Result | Overlap level | Action |
 |--------|--------------|--------|
-| Spec covers the **exact same** convention | Full overlap | **Stop.** Do not submit. |
-| Spec covers **part** of the convention | Partial overlap | Consider: submit only the uncovered part as a new spec, OR suggest extending the existing spec. Ask user. |
-| Spec covers the **same layer** but different scenario | No overlap | Safe to submit. |
+| Steering covers the **exact same** convention | Full overlap | **Stop.** Do not submit. |
+| Steering covers **part** of the convention | Partial overlap | Consider: submit only the uncovered part as a new steering, OR suggest extending the existing steering. Ask user. |
+| Steering covers the **same layer** but different scenario | No overlap | Safe to submit. |
 | No results at all | No overlap | Safe to submit. |
 
 ### Key differences from usage-skill search:
 
 | Aspect | Usage skill (steering-hub-usage) | Contribute skill (this) |
 |--------|--------------------------------|------------------------|
-| Goal | Find a spec to **apply** to current Task | Check if a spec **already exists** for this convention |
+| Goal | Find a steering to **apply** to current Task | Check if a steering **already exists** for this convention |
 | Relevance | Must match Task's coding needs | Must match convention's content |
 | After miss | Change keywords, code by best practice | Confirmed gap, proceed to draft |
-| After hit | Apply spec to code | Stop, do not submit duplicate |
+| After hit | Apply steering to code | Stop, do not submit duplicate |
 
 ---
 
 ## Common Dedup Pitfalls
 
 ### 1. Different title, same rules
-A spec titled "Controller HTTP 接口规范" might already cover your "REST API 返回格式规范". Read the content, not just the title.
+A steering titled "Controller HTTP 接口规范" might already cover your "REST API 返回格式规范". Read the content, not just the title.
 
-### 2. Broader spec covers narrow convention
-"编码质量门禁" might already include your "Service 层异常处理规范" as a subsection. Check if the existing spec's `✅ 强制` items already cover yours.
+### 2. Broader steering covers narrow convention
+"编码质量门禁" might already include your "Service 层异常处理规范" as a subsection. Check if the existing steering's `✅ 强制` items already cover yours.
 
-### 3. Deprecated spec
-If you find a `deprecated` spec that covers your convention, it means the rule was intentionally retired. Do NOT submit a replacement without discussing with the user why the old one was deprecated.
+### 3. Deprecated steering
+If you find a `deprecated` steering that covers your convention, it means the rule was intentionally retired. Do NOT submit a replacement without discussing with the user why the old one was deprecated.
 
 ---
 
@@ -86,4 +86,4 @@ Also consider browsing by category:
 mcp__steering-hub__list_steerings(category_id=<id>, limit=20)
 ```
 
-This can reveal specs that semantic search might miss due to keyword mismatch.
+This can reveal steerings that semantic search might miss due to keyword mismatch.

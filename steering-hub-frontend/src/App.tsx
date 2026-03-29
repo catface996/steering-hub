@@ -26,6 +26,8 @@ import RepoListPage from './pages/repo/RepoListPage';
 import RepoDetailPage from './pages/repo/RepoDetailPage';
 import QueryLogPage from './pages/query-log/QueryLogPage';
 import QueryLogDetailPage from './pages/query-log/QueryLogDetailPage';
+import ReviewQueuePage from './pages/review/ReviewQueuePage';
+import ReviewDiffPage from './pages/review/ReviewDiffPage';
 import DocsPage from './pages/docs/DocsPage';
 import DocsLayout from './components/Layout/DocsLayout';
 
@@ -62,6 +64,8 @@ function ThemedApp() {
             <Route path="repos/:id" element={<RepoDetailPage />} />
             <Route path="query-logs" element={<QueryLogPage />} />
             <Route path="query-logs/:id" element={<QueryLogDetailPage />} />
+            <Route path="review" element={<ReviewQueuePage />} />
+            <Route path="review/:id/diff" element={<ReviewDiffPage />} />
           </Route>
           <Route path="/docs" element={<RequireAuth><DocsLayout /></RequireAuth>}>
             <Route index element={<DocsPage />} />

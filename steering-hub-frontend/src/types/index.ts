@@ -211,6 +211,39 @@ export interface SteeringNavItem {
   updatedAt: string
 }
 
+export interface ReviewQueueItem {
+  steeringId: number
+  steeringTitle: string
+  steeringStatus: string
+  categoryName?: string
+  currentActiveVersion?: number
+  versionId: number
+  pendingVersion: number
+  pendingTitle: string
+  changeLog?: string
+  versionStatus: string
+  submittedAt: string
+  isRevision: boolean
+}
+
+export interface DiffVO {
+  steeringId: number
+  steeringStatus: string
+  activeVersion: VersionSnapshot | null
+  pendingVersion: VersionSnapshot
+}
+
+export interface VersionSnapshot {
+  versionNumber: number
+  title: string
+  content: string
+  tags?: string
+  keywords?: string
+  status: string
+  changeLog?: string
+  createdAt: string
+}
+
 export interface ApiKeyItem {
   id: number
   name: string

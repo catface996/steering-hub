@@ -48,7 +48,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `HTTP 接口 Controller 返回格式` | ← same, no tech stack |
 | 3 | `接口规范` | ← broadest |
 
-**Spec checklist after hit:** Return `Result<T>` · Params via `@Valid` + DTO · No business logic in Controller
+**Steering checklist after hit:** Return `Result<T>` · Params via `@Valid` + DTO · No business logic in Controller
 
 ---
 
@@ -59,7 +59,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `Service 事务 领域事件` | ← same |
 | 3 | `事务` | ← same |
 
-**Spec checklist after hit:** Transaction annotation in Application layer only · Inject interface, not impl
+**Steering checklist after hit:** Transaction annotation in Application layer only · Inject interface, not impl
 
 ---
 
@@ -70,7 +70,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `Repository 动态SQL` | ← same |
 | 3 | `Repository 规范` | ← same |
 
-**Spec checklist after hit:** No `QueryWrapper` · No `SELECT *` · No N+1 loop queries
+**Steering checklist after hit:** No `QueryWrapper` · No `SELECT *` · No N+1 loop queries
 
 ---
 
@@ -110,7 +110,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `Domain Service 业务逻辑` |
 | 3 | `领域层 规范` |
 
-**Spec checklist after hit:** Domain layer must NOT import framework-specific annotations or ORM classes
+**Steering checklist after hit:** Domain layer must NOT import framework-specific annotations or ORM classes
 
 ---
 
@@ -130,7 +130,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `formatDateTime 空值 Typography` |
 | 3 | `前端规范` |
 
-**Spec checklist after hit (前端展示与交互规范):**
+**Steering checklist after hit (前端展示与交互规范):**
 - Time: `formatDateTime()` from `formatTime.ts`
 - Null/empty → `-` (not `--` or `N/A`)
 - Long text: `Typography.Text ellipsis={{ tooltip: text }}`
@@ -144,7 +144,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `ConfirmModal ConfigProvider 受控组件` |
 | 3 | `弹窗 确认 规范` |
 
-**Spec checklist after hit (前端二次确认弹窗规范):** Use `ConfirmModal` controlled component · Wrap with `ConfigProvider` dark theme · Never use `Modal.confirm()`
+**Steering checklist after hit (前端二次确认弹窗规范):** Use `ConfirmModal` controlled component · Wrap with `ConfigProvider` dark theme · Never use `Modal.confirm()`
 
 ---
 
@@ -155,7 +155,7 @@ The examples below show the pattern. Replace the tech stack part with what you a
 | 2 | `Pagination.tsx 前端分页` |
 | 3 | `分页规范` |
 
-**Spec checklist after hit:** Must use `src/components/Pagination.tsx` · Never implement pagination inline
+**Steering checklist after hit:** Must use `src/components/Pagination.tsx` · Never implement pagination inline
 
 ---
 

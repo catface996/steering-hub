@@ -31,4 +31,9 @@ public interface SteeringVersionMapper extends BaseMapper<SteeringVersion> {
 
     SteeringVersion findVersionByNumber(@Param("steeringId") Long steeringId,
                                         @Param("versionNumber") int versionNumber);
+
+    List<com.steeringhub.steering.dto.response.ReviewQueueItemVO> listReviewQueue(@Param("offset") long offset,
+                                                                                    @Param("size") long size);
+
+    int countReviewQueue();
 }

@@ -70,5 +70,47 @@
           AND version = #{versionNumber}
     </select>
 
+    <resultMap id="reviewQueueItemMap" type="com.steeringhub.steering.dto.response.ReviewQueueItemVO">
+        <result property="steeringId" column="steering_id"/>
+        <result property="steeringTitle" column="steering_title"/>
+        <result property="steeringStatus" column="steering_status"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="currentActiveVersion" column="current_version"/>
+        <result property="versionId" column="version_id"/>
+        <result property="pendingVersion" column="pending_version"/>
+        <result property="pendingTitle" column="pending_title"/>
+        <result property="changeLog" column="change_log"/>
+        <result property="versionStatus" column="version_status"/>
+        <result property="submittedAt" column="submitted_at"/>
+        <result property="isRevision" column="is_revision"/>
+    </resultMap>
+
+    <select id="listReviewQueue" resultMap="reviewQueueItemMap">
+        SELECT s.id AS steering_id,
+               s.title AS steering_title,
+               s.status AS steering_status,
+               c.name AS category_name,
+               s.current_version,
+               v.id AS version_id,
+               v.version AS pending_version,
+               v.title AS pending_title,
+               v.change_log,
+               v.status AS version_status,
+               v.updated_at AS submitted_at,
+               (s.status = 'active') AS is_revision
+        FROM steering_version v
+        JOIN steering s ON s.id = v.steering_id AND s.deleted = false
+        LEFT JOIN steering_category c ON c.id = s.category_id
+        WHERE v.status = 'pending_review'
+        ORDER BY v.updated_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countReviewQueue" resultType="int">
+        SELECT COUNT(*)
+        FROM steering_version v
+        JOIN steering s ON s.id = v.steering_id AND s.deleted = false
+        WHERE v.status = 'pending_review'
+    </select>
 
 </mapper>
