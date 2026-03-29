@@ -77,7 +77,7 @@ export default function SteeringAnalyticsPage() {
   ];
 
   const failureColumns = [
-    { title: '查询词', dataIndex: 'queryText', key: 'queryText', width: 200, ellipsis: true },
+    { title: '查询词', dataIndex: 'queryText', key: 'queryText', ellipsis: true },
     {
       title: '失败原因', dataIndex: 'failureReason', key: 'failureReason', width: 110,
       render: (r: string) => {
