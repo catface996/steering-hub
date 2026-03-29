@@ -30,12 +30,15 @@ export default function SteeringDetailPage() {
   const [deprecateOpen, setDeprecateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteDraftOpen, setDeleteDraftOpen] = useState(false);
   const [versions, setVersions] = useState<SteeringVersionVO[]>([]);
   const [versionsTotal, setVersionsTotal] = useState(0);
   const [versionsPage, setVersionsPage] = useState(0);
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<SteeringVersionDetailVO | null>(null);
   const [versionDetailOpen, setVersionDetailOpen] = useState(false);
+  const [selectedVersionTab, setSelectedVersionTab] = useState<string | null>(null);
+  const [selectedVersionDetail, setSelectedVersionDetail] = useState<SteeringVersionDetailVO | null>(null);
   const versionsPageSize = 20;
 
   const [repoBindings, setRepoBindings] = useState<RepoBindingItem[]>([]);
@@ -81,6 +84,16 @@ export default function SteeringDetailPage() {
         const result = await steeringService.listVersions(Number(id), versionsPage + 1, versionsPageSize);
         setVersions(result.records);
         setVersionsTotal(result.total);
+        // Auto-load first version detail
+        if (result.records.length > 0) {
+          const first = result.records[0];
+          setSelectedVersionTab(String(first.versionNumber));
+          const detail = await steeringService.getVersionDetail(Number(id), first.versionNumber);
+          setSelectedVersionDetail(detail);
+        } else {
+          setSelectedVersionTab(null);
+          setSelectedVersionDetail(null);
+        }
       } catch {
         // ignore
       } finally {
@@ -97,6 +110,17 @@ export default function SteeringDetailPage() {
       setVersionDetailOpen(true);
     } catch {
       // ignore
+    }
+  };
+
+  const handleVersionTabChange = async (key: string) => {
+    setSelectedVersionTab(key);
+    const versionNumber = Number(key);
+    try {
+      const detail = await steeringService.getVersionDetail(Number(id), versionNumber);
+      setSelectedVersionDetail(detail);
+    } catch {
+      message.error('加载版本失败');
     }
   };
 
@@ -143,7 +167,7 @@ export default function SteeringDetailPage() {
       </Flex>
     );
     setActions(actionButtons);
-  }, [steering, setBreadcrumbs, setActions, navigate, id]);
+  }, [steering, versions, selectedVersionDetail, setBreadcrumbs, setActions, navigate, id]);
 
   const handleReview = async (action: string) => {
     try {
@@ -172,6 +196,7 @@ export default function SteeringDetailPage() {
 
   if (loading) return <Flex justify="center" style={{ padding: 64 }}><Spin size="large" /></Flex>;
   if (!steering) return <Typography.Text type="secondary">规范不存在</Typography.Text>;
+
 
   const versionColumns = [
     { title: '版本号', dataIndex: 'versionNumber', key: 'versionNumber', width: 80, render: (v: number) => `v${v}` },
@@ -298,39 +323,89 @@ export default function SteeringDetailPage() {
           {
             key: 'versions',
             label: '版本历史',
-            children: (
+            children: versionsLoading ? (
+              <Flex justify="center" style={{ padding: 32 }}><Spin /></Flex>
+            ) : versions.length === 0 ? (
               <Card style={{ borderRadius: 12 }}>
-                {versionsLoading ? (
-                  <Flex justify="center" style={{ padding: 32 }}><Spin /></Flex>
-                ) : (
-                  <>
-                    <Table
-                      dataSource={versions}
-                      columns={versionColumns}
-                      rowKey="id"
-                      pagination={false}
-                      onRow={(record) => ({ onClick: () => handleVersionRowClick(record.versionNumber), style: { cursor: 'pointer' } })}
-                      size="small"
-                    />
-                    {versionsTotal > versionsPageSize && (
-                      <Pagination
-                        count={versionsTotal}
-                        page={versionsPage}
-                        rowsPerPage={versionsPageSize}
-                        onPageChange={setVersionsPage}
-                        label="个版本"
-                      />
-                    )}
-                  </>
-                )}
+                <Flex justify="center" style={{ padding: 32 }}>
+                  <Typography.Text style={{ color: '#71717a' }}>暂无版本记录</Typography.Text>
+                </Flex>
               </Card>
+            ) : (
+              <Tabs
+                tabPlacement="left"
+                activeKey={selectedVersionTab ?? String(versions[0]?.versionNumber)}
+                onChange={handleVersionTabChange}
+                items={versions.map((v) => ({
+                  key: String(v.versionNumber),
+                  label: (
+                    <Flex align="center" gap={6}>
+                      <span>v{v.versionNumber}</span>
+                      <Tag className={`tag-base ${STATUS_CLASS[v.status]}`} style={{ fontSize: 11, marginRight: 0 }}>
+                        {STATUS_LABEL[v.status]}
+                      </Tag>
+                    </Flex>
+                  ),
+                  children: selectedVersionDetail && selectedVersionDetail.versionNumber === v.versionNumber ? (
+                    <Flex gap={20} align="flex-start">
+                      <div style={{ flex: '0 0 70%' }}>
+                        <Card style={{ borderRadius: 12 }}>
+                          <Typography.Text style={{ fontWeight: 600, fontSize: 18, display: 'block', marginBottom: 16 }}>
+                            {selectedVersionDetail.title}
+                          </Typography.Text>
+                          <div className="markdown-body">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedVersionDetail.content}</ReactMarkdown>
+                          </div>
+                        </Card>
+                      </div>
+                      <div style={{ flex: '0 0 calc(30% - 20px)' }}>
+                        <Card style={{ borderRadius: 12 }}>
+                          <Typography.Text style={{ fontWeight: 600, fontSize: 16, display: 'block', marginBottom: 16 }}>版本信息</Typography.Text>
+                          {[
+                            { label: '状态', value: <Tag className={`tag-base ${STATUS_CLASS[selectedVersionDetail.status]}`}>{STATUS_LABEL[selectedVersionDetail.status]}</Tag> },
+                            { label: '版本号', value: `v${selectedVersionDetail.versionNumber}` },
+                            {
+                              label: '标签',
+                              value: selectedVersionDetail.tags
+                                ? <Flex wrap="wrap" gap={4}>{selectedVersionDetail.tags.split(',').filter(t => t.trim()).map((t, i) => <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t.trim()}</Tag>)}</Flex>
+                                : '-'
+                            },
+                            {
+                              label: '关键词',
+                              value: selectedVersionDetail.keywords
+                                ? <Flex wrap="wrap" gap={4}>{selectedVersionDetail.keywords.split(',').filter(k => k.trim()).map((kw, i) => <Tag key={kw} className={`tag-base tag-color-${i % 7}`} style={{ fontSize: 11 }}>{kw.trim()}</Tag>)}</Flex>
+                                : '-'
+                            },
+                            { label: '修改摘要', value: selectedVersionDetail.changeSummary || '-' },
+                            { label: '更新时间', value: formatDateTime(selectedVersionDetail.updatedAt) },
+                          ].map((item) => (
+                            <div key={item.label} style={{ marginBottom: 16 }}>
+                              <Typography.Text style={{ color: '#71717a', fontSize: 12, display: 'block', marginBottom: 4 }}>{item.label}</Typography.Text>
+                              {typeof item.value === 'string' ? (
+                                <Typography.Text style={{ fontSize: 14, fontWeight: 500 }}>{item.value}</Typography.Text>
+                              ) : item.value}
+                            </div>
+                          ))}
+                          {selectedVersionDetail.status === 'draft' && (
+                            <Button danger block onClick={() => setDeleteDraftOpen(true)} style={{ marginTop: 8 }}>
+                              删除草稿
+                            </Button>
+                          )}
+                        </Card>
+                      </div>
+                    </Flex>
+                  ) : (
+                    <Flex justify="center" style={{ padding: 32 }}><Spin /></Flex>
+                  ),
+                }))}
+              />
             ),
           },
         ]}
       />
 
       {/* Repos binding list */}
-      <Card style={{ borderRadius: 12, marginTop: 20, padding: 0, overflow: 'hidden' }} bodyStyle={{ padding: 0 }}>
+      <Card style={{ borderRadius: 12, marginTop: 20, padding: 0, overflow: 'hidden' }} styles={{ body: { padding: 0 } }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #1e1e2a' }}>
           <Typography.Text style={{ fontWeight: 600, fontSize: 16 }}>引用仓库</Typography.Text>
           <Typography.Text style={{ color: '#71717a', fontSize: 13, marginLeft: 8 }}>绑定了此规范的仓库列表</Typography.Text>
@@ -412,6 +487,43 @@ export default function SteeringDetailPage() {
       >
         <Typography.Text type="secondary">
           删除后数据不可恢复，确认删除规范「{steering.title}」？
+        </Typography.Text>
+      </Modal>
+
+      {/* Delete Draft Modal */}
+      <Modal
+        open={deleteDraftOpen}
+        onCancel={() => setDeleteDraftOpen(false)}
+        onOk={async () => {
+          if (!selectedVersionDetail) return;
+          try {
+            await steeringService.deleteDraftVersion(Number(id), selectedVersionDetail.versionNumber);
+            message.success('草稿已删除');
+            setDeleteDraftOpen(false);
+            // Reload versions list and auto-select first
+            const result = await steeringService.listVersions(Number(id), 1, versionsPageSize);
+            setVersions(result.records);
+            setVersionsTotal(result.total);
+            if (result.records.length > 0) {
+              const first = result.records[0];
+              setSelectedVersionTab(String(first.versionNumber));
+              const detail = await steeringService.getVersionDetail(Number(id), first.versionNumber);
+              setSelectedVersionDetail(detail);
+            } else {
+              setSelectedVersionTab(null);
+              setSelectedVersionDetail(null);
+            }
+          } catch {
+            message.error('删除失败');
+          }
+        }}
+        title="确认删除草稿"
+        okText="删除"
+        cancelText="取消"
+        okButtonProps={{ danger: true }}
+      >
+        <Typography.Text type="secondary">
+          确认删除草稿版本 v{selectedVersionDetail?.versionNumber}？删除后不可恢复。
         </Typography.Text>
       </Modal>
 

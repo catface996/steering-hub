@@ -77,4 +77,9 @@ public interface SteeringService extends IService<Steering> {
      * 版本对比：返回当前 active 版本与待审版本的内容快照
      */
     com.steeringhub.steering.dto.response.DiffVO getVersionDiff(Long steeringId);
+
+    /**
+     * 删除指定规范的草稿版本
+     */
+    void deleteDraftVersion(Long steeringId, int versionNumber);
 }

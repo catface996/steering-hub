@@ -41,89 +41,12 @@ public class SteeringController {
         return Result.ok(steeringService.createSteering(request));
     }
 
-    @Operation(summary = "更新规范")
-    @PutMapping("/{id}")
-    public Result<SteeringDetailResponse> updateSteering(@PathVariable Long id,
-                                                  @Valid @RequestBody UpdateSteeringRequest request) {
-        return Result.ok(steeringService.updateSteering(id, request));
-    }
-
-    @Operation(summary = "获取规范详情")
-    @GetMapping("/{id}")
-    public Result<SteeringDetailResponse> getSteering(@PathVariable Long id) {
-        return Result.ok(steeringService.getSteeringDetail(id));
-    }
-
-    @Operation(summary = "分页查询规范列表")
-    @GetMapping
-    public Result<IPage<SteeringDetailResponse>> pageSteerings(
-            @RequestParam(defaultValue = "1") long current,
-            @RequestParam(defaultValue = "20") long size,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String keyword) {
-        return Result.ok(steeringService.pageSteerings(new Page<>(current, size), categoryId, status, keyword));
-    }
-
-    @Operation(summary = "审核操作（提交/通过/驳回/生效/废弃）")
-    @PostMapping("/{id}/review")
-    public Result<Void> reviewSteering(@PathVariable Long id,
-                                    @Valid @RequestBody ReviewSteeringRequest request) {
-        // TODO: 从认证上下文获取 reviewerId/reviewerName
-        steeringService.reviewSteering(id, request.getAction(), request.getComment(), null, "system");
-        return Result.ok();
-    }
-
-    @Operation(summary = "回滚到指定历史版本")
-    @PostMapping("/{id}/rollback/{version}")
-    public Result<SteeringDetailResponse> rollback(@PathVariable Long id,
-                                                @PathVariable int version) {
-        return Result.ok(steeringService.rollbackSteering(id, version));
-    }
-
-    @Operation(summary = "删除规范")
-    @DeleteMapping("/{id}")
-    public Result<Void> deleteSteering(@PathVariable Long id) {
-        steeringService.deleteSteering(id);
-        return Result.ok();
-    }
-
-    @Operation(summary = "为规范生成 content_embedding 向量")
-    @PostMapping("/{id}/content-embedding")
-    public Result<Void> generateContentEmbedding(@PathVariable Long id) {
-        steeringService.generateContentEmbedding(id);
-        return Result.ok();
-    }
-
-    @Operation(summary = "分页查询规范版本历史")
-    @GetMapping("/{id}/versions")
-    public Result<IPage<SteeringVersionVO>> listVersions(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "1") long current,
-            @RequestParam(defaultValue = "20") long size) {
-        return Result.ok(steeringService.listVersions(id, current, size));
-    }
-
-    @Operation(summary = "获取指定版本详情（只读）")
-    @GetMapping("/{id}/versions/{versionNumber}")
-    public Result<SteeringVersionDetailVO> getVersionDetail(
-            @PathVariable Long id,
-            @PathVariable int versionNumber) {
-        return Result.ok(steeringService.getVersionDetail(id, versionNumber));
-    }
-
     @Operation(summary = "审批队列：查询所有含待审版本的规范")
     @GetMapping("/review-queue")
     public Result<IPage<ReviewQueueItemVO>> listReviewQueue(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "20") long size) {
         return Result.ok(steeringService.listReviewQueue(current, size));
-    }
-
-    @Operation(summary = "版本对比：当前生效版 vs 待审版")
-    @GetMapping("/{id}/diff")
-    public Result<DiffVO> getVersionDiff(@PathVariable Long id) {
-        return Result.ok(steeringService.getVersionDiff(id));
     }
 
     @Operation(summary = "左右分屏对比两条规范内容")
@@ -143,8 +66,93 @@ public class SteeringController {
         return Result.ok(vo);
     }
 
+    @Operation(summary = "更新规范")
+    @PutMapping("/{id:\\d+}")
+    public Result<SteeringDetailResponse> updateSteering(@PathVariable Long id,
+                                                  @Valid @RequestBody UpdateSteeringRequest request) {
+        return Result.ok(steeringService.updateSteering(id, request));
+    }
+
+    @Operation(summary = "获取规范详情")
+    @GetMapping("/{id:\\d+}")
+    public Result<SteeringDetailResponse> getSteering(@PathVariable Long id) {
+        return Result.ok(steeringService.getSteeringDetail(id));
+    }
+
+    @Operation(summary = "分页查询规范列表")
+    @GetMapping
+    public Result<IPage<SteeringDetailResponse>> pageSteerings(
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "20") long size,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword) {
+        return Result.ok(steeringService.pageSteerings(new Page<>(current, size), categoryId, status, keyword));
+    }
+
+    @Operation(summary = "审核操作（提交/通过/驳回/生效/废弃）")
+    @PostMapping("/{id:\\d+}/review")
+    public Result<Void> reviewSteering(@PathVariable Long id,
+                                    @Valid @RequestBody ReviewSteeringRequest request) {
+        // TODO: 从认证上下文获取 reviewerId/reviewerName
+        steeringService.reviewSteering(id, request.getAction(), request.getComment(), null, "system");
+        return Result.ok();
+    }
+
+    @Operation(summary = "回滚到指定历史版本")
+    @PostMapping("/{id:\\d+}/rollback/{version}")
+    public Result<SteeringDetailResponse> rollback(@PathVariable Long id,
+                                                @PathVariable int version) {
+        return Result.ok(steeringService.rollbackSteering(id, version));
+    }
+
+    @Operation(summary = "删除规范")
+    @DeleteMapping("/{id:\\d+}")
+    public Result<Void> deleteSteering(@PathVariable Long id) {
+        steeringService.deleteSteering(id);
+        return Result.ok();
+    }
+
+    @Operation(summary = "为规范生成 content_embedding 向量")
+    @PostMapping("/{id:\\d+}/content-embedding")
+    public Result<Void> generateContentEmbedding(@PathVariable Long id) {
+        steeringService.generateContentEmbedding(id);
+        return Result.ok();
+    }
+
+    @Operation(summary = "分页查询规范版本历史")
+    @GetMapping("/{id:\\d+}/versions")
+    public Result<IPage<SteeringVersionVO>> listVersions(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") long current,
+            @RequestParam(defaultValue = "20") long size) {
+        return Result.ok(steeringService.listVersions(id, current, size));
+    }
+
+    @Operation(summary = "获取指定版本详情（只读）")
+    @GetMapping("/{id:\\d+}/versions/{versionNumber}")
+    public Result<SteeringVersionDetailVO> getVersionDetail(
+            @PathVariable Long id,
+            @PathVariable int versionNumber) {
+        return Result.ok(steeringService.getVersionDetail(id, versionNumber));
+    }
+
+    @Operation(summary = "删除指定草稿版本")
+    @DeleteMapping("/{id:\\d+}/versions/{versionNumber}")
+    public Result<Void> deleteDraftVersion(@PathVariable Long id,
+                                           @PathVariable int versionNumber) {
+        steeringService.deleteDraftVersion(id, versionNumber);
+        return Result.ok();
+    }
+
+    @Operation(summary = "版本对比：当前生效版 vs 待审版")
+    @GetMapping("/{id:\\d+}/diff")
+    public Result<DiffVO> getVersionDiff(@PathVariable Long id) {
+        return Result.ok(steeringService.getVersionDiff(id));
+    }
+
     @Operation(summary = "反向查询：查看某规范被哪些仓库绑定（分页）")
-    @GetMapping("/{steeringId}/repos")
+    @GetMapping("/{steeringId:\\d+}/repos")
     public Result<PageResult<RepoItem>> listReposBySteering(
             @PathVariable Long steeringId,
             @RequestParam(defaultValue = "1") int page,

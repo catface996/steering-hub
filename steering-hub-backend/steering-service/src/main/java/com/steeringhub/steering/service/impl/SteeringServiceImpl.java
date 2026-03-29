@@ -105,23 +105,37 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         }
 
         if (steering.getStatus() == ACTIVE) {
-            // T010: When ACTIVE, do NOT overwrite main table content — insert new draft version only
-            Integer maxVersion = steeringVersionMapper.selectMaxVersionBySteeringId(id);
-            int newVersionNumber = (maxVersion == null ? 0 : maxVersion) + 1;
+            // T010: When ACTIVE, do NOT overwrite main table content — operate on draft version only
+            SteeringVersion existingDraft = steeringVersionMapper.findVersionBySteeringIdAndStatus(id, "draft");
+            if (existingDraft != null) {
+                // Update existing draft — only one draft allowed at a time
+                existingDraft.setTitle(request.getTitle());
+                existingDraft.setContent(request.getContent());
+                if (request.getTags() != null) {
+                    existingDraft.setTags(String.join(",", request.getTags()));
+                }
+                existingDraft.setKeywords(sanitizeKeywords(request.getKeywords()));
+                existingDraft.setChangeLog(request.getChangeLog());
+                steeringVersionMapper.updateById(existingDraft);
+            } else {
+                // Create new draft version
+                Integer maxVersion = steeringVersionMapper.selectMaxVersionBySteeringId(id);
+                int newVersionNumber = (maxVersion == null ? 0 : maxVersion) + 1;
 
-            SteeringVersion newDraftVersion = new SteeringVersion();
-            newDraftVersion.setSteeringId(id);
-            newDraftVersion.setVersion(newVersionNumber);
-            newDraftVersion.setTitle(request.getTitle());
-            newDraftVersion.setContent(request.getContent());
-            if (request.getTags() != null) {
-                newDraftVersion.setTags(String.join(",", request.getTags()));
+                SteeringVersion newDraftVersion = new SteeringVersion();
+                newDraftVersion.setSteeringId(id);
+                newDraftVersion.setVersion(newVersionNumber);
+                newDraftVersion.setTitle(request.getTitle());
+                newDraftVersion.setContent(request.getContent());
+                if (request.getTags() != null) {
+                    newDraftVersion.setTags(String.join(",", request.getTags()));
+                }
+                newDraftVersion.setKeywords(sanitizeKeywords(request.getKeywords()));
+                newDraftVersion.setChangeLog(request.getChangeLog());
+                newDraftVersion.setStatus("draft");
+                newDraftVersion.setCreatedBy(steering.getCreatedBy());
+                steeringVersionMapper.insert(newDraftVersion);
             }
-            newDraftVersion.setKeywords(sanitizeKeywords(request.getKeywords()));
-            newDraftVersion.setChangeLog(request.getChangeLog());
-            newDraftVersion.setStatus("draft");
-            newDraftVersion.setCreatedBy(steering.getCreatedBy());
-            steeringVersionMapper.insert(newDraftVersion);
 
             // Return unchanged steering detail (hot-cache stays as active)
             return toDetailResponse(steering);
@@ -564,6 +578,19 @@ public class SteeringServiceImpl extends ServiceImpl<SteeringMapper, Steering> i
         snapshot.setChangeLog(v.getChangeLog());
         snapshot.setCreatedAt(v.getCreatedAt());
         return snapshot;
+    }
+
+    @Override
+    @Transactional
+    public void deleteDraftVersion(Long steeringId, int versionNumber) {
+        SteeringVersion version = steeringVersionMapper.findVersionByNumber(steeringId, versionNumber);
+        if (version == null) {
+            throw new BusinessException(ResultCode.STEERING_NOT_FOUND.getCode(), "版本不存在");
+        }
+        if (!"draft".equals(version.getStatus())) {
+            throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只能删除草稿版本");
+        }
+        steeringVersionMapper.deleteById(version.getId());
     }
 
     private SteeringDetailResponse toDetailResponse(Steering steering) {

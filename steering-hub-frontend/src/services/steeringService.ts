@@ -68,6 +68,9 @@ export const steeringService = {
 
   getVersionDiff: (id: number): Promise<DiffVO> =>
     get<DiffVO>(`/api/v1/web/steerings/${id}/diff`).then((r) => r.data),
+
+  deleteDraftVersion: (id: number, versionNumber: number) =>
+    del(`/api/v1/web/steerings/${id}/versions/${versionNumber}`),
 };
 
 export const categoryService = {
