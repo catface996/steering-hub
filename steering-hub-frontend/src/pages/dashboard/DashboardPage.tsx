@@ -40,7 +40,7 @@ export default function DashboardPage() {
         const [total, active, recent, dashboardStats] = await Promise.all([
           steeringService.page({ current: 1, size: 1 }),
           steeringService.page({ current: 1, size: 1, status: 'active' }),
-          steeringService.page({ current: 1, size: 5 }),
+          steeringService.page({ current: 1, size: 10 }),
           fetch('/api/v1/web/dashboard/stats').then(r => r.json()),
         ]);
         setTotalCount(total.total);
