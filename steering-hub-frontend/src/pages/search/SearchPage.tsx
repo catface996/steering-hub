@@ -292,15 +292,13 @@ export default function SearchPage() {
           </div>
 
           {results.length > pageSize && (
-            <div style={{ marginTop: 'auto', paddingTop: 20 }}>
-              <Pagination
-                count={results.length}
-                page={page}
-                rowsPerPage={pageSize}
-                onPageChange={setPage}
-                label="条结果"
-              />
-            </div>
+            <Pagination
+              count={results.length}
+              page={page}
+              rowsPerPage={pageSize}
+              onPageChange={setPage}
+              label="条结果"
+            />
           )}
         </>
       )}

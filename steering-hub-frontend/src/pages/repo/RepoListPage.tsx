@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Typography, Button, Tag, Flex, Spin, Modal, App, Input, Select, Form, Switch,
+  Typography, Button, Tag, Flex, Modal, App, Input, Select, Form, Switch, Table,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { Plus, ExternalLink } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { repoService } from '../../services/repoService';
@@ -153,100 +154,84 @@ export default function RepoListPage() {
     }
   };
 
-  const tdStyle: React.CSSProperties = {
-    padding: '12px 16px',
-    borderBottom: '1px solid #1e1e2a',
-    fontSize: 14,
-    color: '#e4e4e7',
-    verticalAlign: 'middle',
-  };
-
-  const thStyle: React.CSSProperties = {
-    padding: '10px 16px',
-    textAlign: 'left',
-    fontSize: 12,
-    color: '#a1a1aa',
-    fontWeight: 500,
-    background: 'var(--bg-elevated)',
-    borderBottom: '1px solid #1e1e2a',
-  };
+  const columns: ColumnsType<Repo> = [
+    {
+      title: '名称',
+      dataIndex: 'name',
+      render: (v: string) => <Typography.Text style={{ fontWeight: 500, color: '#e4e4e7' }}>{v}</Typography.Text>,
+    },
+    {
+      title: 'full_name',
+      dataIndex: 'fullName',
+      render: (v: string, record) => (
+        <Flex align="center" gap={4}>
+          <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>{v}</Typography.Text>
+          {record.url && (
+            <a href={record.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+              <ExternalLink size={12} color="#71717a" />
+            </a>
+          )}
+        </Flex>
+      ),
+    },
+    {
+      title: '团队',
+      dataIndex: 'team',
+      width: 120,
+      render: (v: string) => <Typography.Text style={{ color: '#a1a1aa' }}>{v || '-'}</Typography.Text>,
+    },
+    {
+      title: '语言',
+      dataIndex: 'language',
+      width: 100,
+      render: (v: string) => <Typography.Text style={{ color: '#a1a1aa' }}>{v || '-'}</Typography.Text>,
+    },
+    {
+      title: '状态',
+      dataIndex: 'enabled',
+      width: 90,
+      render: (v: boolean) => (
+        <Tag style={{ borderRadius: 100, fontSize: 12 }} color={v ? 'success' : 'default'}>
+          {v ? '启用' : '停用'}
+        </Tag>
+      ),
+    },
+    {
+      title: '操作',
+      width: 140,
+      render: (_, record) => (
+        <Flex gap={8} align="center" onClick={(e) => e.stopPropagation()}>
+          <Switch checked={record.enabled} size="small" onChange={() => handleToggle(record)} />
+          <Button size="small" danger onClick={() => setDeleteTarget(record)}>删除</Button>
+        </Flex>
+      ),
+    },
+  ];
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Table */}
       <div style={{ flex: 1, overflow: 'auto', borderRadius: 12, border: '1px solid #1e1e2a', background: 'var(--bg-base)' }}>
-        {loading ? (
-          <Flex justify="center" style={{ padding: 64 }}><Spin /></Flex>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={thStyle}>名称</th>
-                <th style={thStyle}>full_name</th>
-                <th style={thStyle}>团队</th>
-                <th style={thStyle}>语言</th>
-                <th style={thStyle}>状态</th>
-                <th style={thStyle}>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {repos.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ ...tdStyle, textAlign: 'center', color: '#71717a' }}>暂无数据</td>
-                </tr>
-              ) : repos.map((repo) => (
-                <tr key={repo.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/repos/${repo.id}`)}>
-                  <td style={tdStyle}>
-                    <Typography.Text style={{ fontWeight: 500, color: '#e4e4e7' }}>{repo.name}</Typography.Text>
-                  </td>
-                  <td style={tdStyle}>
-                    <Flex align="center" gap={4}>
-                      <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>{repo.fullName}</Typography.Text>
-                      {repo.url && (
-                        <a href={repo.url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                          <ExternalLink size={12} color="#71717a" />
-                        </a>
-                      )}
-                    </Flex>
-                  </td>
-                  <td style={tdStyle}><Typography.Text style={{ color: '#a1a1aa' }}>{repo.team || '-'}</Typography.Text></td>
-                  <td style={tdStyle}><Typography.Text style={{ color: '#a1a1aa' }}>{repo.language || '-'}</Typography.Text></td>
-                  <td style={tdStyle}>
-                    <Tag style={{ borderRadius: 100, fontSize: 12 }}
-                      color={repo.enabled ? 'success' : 'default'}>
-                      {repo.enabled ? '启用' : '停用'}
-                    </Tag>
-                  </td>
-                  <td style={tdStyle} onClick={(e) => e.stopPropagation()}>
-                    <Flex gap={8} align="center">
-                      <Switch
-                        checked={repo.enabled}
-                        size="small"
-                        onChange={() => handleToggle(repo)}
-                      />
-                      <Button
-                        size="small"
-                        danger
-                        onClick={() => setDeleteTarget(repo)}
-                      >
-                        删除
-                      </Button>
-                    </Flex>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <Table<Repo>
+          rowKey="id"
+          columns={columns}
+          dataSource={repos}
+          loading={loading}
+          pagination={false}
+          style={{ background: 'transparent' }}
+          locale={{ emptyText: '暂无数据' }}
+          onRow={(record) => ({
+            onClick: () => navigate(`/repos/${record.id}`),
+            style: { cursor: 'pointer' },
+          })}
+        />
+        <Pagination
+          count={total}
+          page={page}
+          rowsPerPage={PAGE_SIZE}
+          onPageChange={setPage}
+          label="个仓库"
+        />
       </div>
-
-      <Pagination
-        count={total}
-        page={page}
-        rowsPerPage={PAGE_SIZE}
-        onPageChange={setPage}
-        label="个仓库"
-      />
 
       {/* Create modal */}
       <Modal
