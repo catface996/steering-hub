@@ -342,28 +342,33 @@ export default function SteeringListPage() {
             style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
             styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
           >
-            <Table
-              rowKey="id"
-              columns={columns}
-              dataSource={data?.records ?? []}
-              loading={loading}
-              size="middle"
-              scroll={{ x: 900 }}
-              pagination={{
-                current: page + 1,
-                pageSize,
-                total: data?.total ?? 0,
-                onChange: (p) => setPage(p - 1),
-                showTotal: (total) => `共 ${total} 条规范`,
-                showSizeChanger: false,
-                style: { padding: '12px 16px', margin: 0 },
-              }}
-              onRow={(record) => ({
-                onClick: () => navigate(`/steerings/${record.id}`),
-                style: { cursor: 'pointer' },
-              })}
-              style={{ flex: 1 }}
-            />
+            <div style={{ flex: 1, overflow: 'auto' }}>
+              <Table
+                rowKey="id"
+                columns={columns}
+                dataSource={data?.records ?? []}
+                loading={loading}
+                size="middle"
+                scroll={{ x: 900 }}
+                pagination={false}
+                onRow={(record) => ({
+                  onClick: () => navigate(`/steerings/${record.id}`),
+                  style: { cursor: 'pointer' },
+                })}
+                sticky
+              />
+            </div>
+            {/* 分页固定在底部 */}
+            <Flex justify="space-between" align="center" style={{ padding: '12px 16px', borderTop: '1px solid #27273a', flexShrink: 0 }}>
+              <Typography.Text style={{ color: '#71717a', fontSize: 13 }}>共 {data?.total ?? 0} 条规范</Typography.Text>
+              <Pagination
+                count={data?.total ?? 0}
+                page={page}
+                rowsPerPage={pageSize}
+                onPageChange={setPage}
+                label="条规范"
+              />
+            </Flex>
           </Card>
         );
       })()}
