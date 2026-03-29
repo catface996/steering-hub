@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Tag, Flex, Spin, Card, Button, App } from 'antd';
+import { Typography, Tag, Flex, Card, Button, App, Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { useHeader } from '../../contexts/HeaderContext';
 import { steeringService } from '../../services/steeringService';
 import type { ReviewQueueItem } from '../../types';
@@ -68,96 +69,126 @@ export default function ReviewQueuePage() {
     }
   };
 
+  const columns: ColumnsType<ReviewQueueItem> = [
+    {
+      title: '类型',
+      dataIndex: 'isRevision',
+      width: 80,
+      render: (isRevision: boolean) => (
+        <Tag className={`tag-base ${isRevision ? 'tag-status-pending' : 'tag-status-active'}`}>
+          {isRevision ? '修订' : '新建'}
+        </Tag>
+      ),
+    },
+    {
+      title: '规范标题',
+      dataIndex: 'steeringTitle',
+      ellipsis: true,
+      render: (title: string, item) => (
+        <Typography.Text
+          style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+          ellipsis={{ tooltip: true }}
+          onClick={() => navigate(`/steerings/${item.steeringId}`)}
+        >
+          {title}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: '分类',
+      dataIndex: 'categoryName',
+      width: 100,
+      render: (name: string) => (
+        <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>
+          {name || '-'}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: '版本',
+      width: 120,
+      render: (_, item) => (
+        <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>
+          {item.isRevision ? `v${item.currentActiveVersion} → v${item.pendingVersion}` : `v${item.pendingVersion}`}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: '状态',
+      dataIndex: 'versionStatus',
+      width: 90,
+      render: (status: string) => (
+        <Tag className={`tag-base ${status === 'approved' ? 'tag-status-approved' : 'tag-status-pending'}`} style={{ fontSize: 11 }}>
+          {status === 'approved' ? '待生效' : '待审核'}
+        </Tag>
+      ),
+    },
+    {
+      title: '修改说明',
+      dataIndex: 'changeLog',
+      width: 200,
+      ellipsis: true,
+      render: (text: string) => (
+        <Typography.Text style={{ color: '#a1a1aa', fontSize: 12 }} ellipsis={{ tooltip: true }}>
+          {text || '-'}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: '提交时间',
+      dataIndex: 'submittedAt',
+      width: 140,
+      render: (time: string) => (
+        <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>
+          {formatDateTime(time)}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: '操作',
+      width: 180,
+      render: (_, item) => (
+        <Flex gap={4}>
+          {item.isRevision && (
+            <Button type="link" size="small" onClick={() => navigate(`/review/${item.steeringId}/diff`)} style={{ fontSize: 12 }}>
+              查看对比
+            </Button>
+          )}
+          {item.versionStatus === 'pending_review' && (
+            <>
+              <Button type="link" size="small" onClick={() => handleApprove(item.steeringId)} style={{ color: '#32D583', fontSize: 12 }}>
+                通过
+              </Button>
+              <Button type="link" size="small" danger onClick={() => handleReject(item.steeringId)} style={{ fontSize: 12 }}>
+                驳回
+              </Button>
+            </>
+          )}
+          {item.versionStatus === 'approved' && (
+            <Button type="link" size="small" onClick={() => handleActivate(item.steeringId)} style={{ color: '#818CF8', fontSize: 12 }}>
+              生效
+            </Button>
+          )}
+        </Flex>
+      ),
+    },
+  ];
+
   return (
     <div className="list-page">
       <Card
         style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
       >
-        {loading ? (
-          <Flex justify="center" align="center" style={{ flex: 1, padding: 48 }}>
-            <Spin size="large" />
-          </Flex>
-        ) : data?.records?.length === 0 ? (
-          <Flex justify="center" align="center" style={{ flex: 1, padding: 48 }}>
-            <Typography.Text style={{ color: '#71717a' }}>暂无待审批项</Typography.Text>
-          </Flex>
-        ) : (
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80, flexShrink: 0 }}>类型</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1, minWidth: 0 }}>规范标题</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>分类</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>版本</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 90, flexShrink: 0 }}>状态</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200, flexShrink: 0 }}>修改说明</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 140, flexShrink: 0 }}>提交时间</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180, flexShrink: 0 }}>操作</Typography.Text>
-            </div>
-            {/* Rows */}
-            {data?.records?.map((item) => (
-              <div key={item.versionId} style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                <div style={{ width: 80, flexShrink: 0 }}>
-                  <Tag className={`tag-base ${item.isRevision ? 'tag-status-pending' : 'tag-status-active'}`}>
-                    {item.isRevision ? '修订' : '新建'}
-                  </Tag>
-                </div>
-                <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
-                  <Typography.Text
-                    style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
-                    ellipsis={{ tooltip: true }}
-                    onClick={() => navigate(`/steerings/${item.steeringId}`)}
-                  >
-                    {item.steeringTitle}
-                  </Typography.Text>
-                </div>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                  {item.categoryName || '-'}
-                </Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0 }}>
-                  {item.isRevision ? `v${item.currentActiveVersion} → v${item.pendingVersion}` : `v${item.pendingVersion}`}
-                </Typography.Text>
-                <div style={{ width: 90, flexShrink: 0 }}>
-                  <Tag className={`tag-base ${item.versionStatus === 'approved' ? 'tag-status-approved' : 'tag-status-pending'}`} style={{ fontSize: 11 }}>
-                    {item.versionStatus === 'approved' ? '待生效' : '待审核'}
-                  </Tag>
-                </div>
-                <Typography.Text
-                  style={{ color: '#a1a1aa', fontSize: 12, width: 200, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
-                  title={item.changeLog || '-'}
-                >
-                  {item.changeLog || '-'}
-                </Typography.Text>
-                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 140, flexShrink: 0 }}>
-                  {formatDateTime(item.submittedAt)}
-                </Typography.Text>
-                <Flex gap={4} style={{ width: 180, flexShrink: 0 }}>
-                  {item.isRevision && (
-                    <Button type="link" size="small" onClick={() => navigate(`/review/${item.steeringId}/diff`)} style={{ fontSize: 12 }}>
-                      查看对比
-                    </Button>
-                  )}
-                  {item.versionStatus === 'pending_review' && (
-                    <>
-                      <Button type="link" size="small" onClick={() => handleApprove(item.steeringId)} style={{ color: '#32D583', fontSize: 12 }}>
-                        通过
-                      </Button>
-                      <Button type="link" size="small" danger onClick={() => handleReject(item.steeringId)} style={{ fontSize: 12 }}>
-                        驳回
-                      </Button>
-                    </>
-                  )}
-                  {item.versionStatus === 'approved' && (
-                    <Button type="link" size="small" onClick={() => handleActivate(item.steeringId)} style={{ color: '#818CF8', fontSize: 12 }}>
-                      生效
-                    </Button>
-                  )}
-                </Flex>
-              </div>
-            ))}
-          </div>
-        )}
+        <Table<ReviewQueueItem>
+          rowKey="versionId"
+          columns={columns}
+          dataSource={data?.records ?? []}
+          loading={loading}
+          pagination={false}
+          style={{ background: 'transparent' }}
+          locale={{ emptyText: '暂无待审批项' }}
+        />
         <Pagination
           count={data?.total ?? 0}
           page={page}
