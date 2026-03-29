@@ -58,6 +58,16 @@ export default function ReviewQueuePage() {
     }
   };
 
+  const handleActivate = async (id: number) => {
+    try {
+      await steeringService.review(id, 'activate', '生效');
+      message.success('已生效');
+      setRefreshKey((k) => k + 1);
+    } catch {
+      message.error('操作失败');
+    }
+  };
+
   return (
     <div className="list-page">
       <Card
@@ -80,6 +90,7 @@ export default function ReviewQueuePage() {
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1, minWidth: 0 }}>规范标题</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>分类</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>版本</Typography.Text>
+              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 90, flexShrink: 0 }}>状态</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 200, flexShrink: 0 }}>修改说明</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 140, flexShrink: 0 }}>提交时间</Typography.Text>
               <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180, flexShrink: 0 }}>操作</Typography.Text>
@@ -107,6 +118,11 @@ export default function ReviewQueuePage() {
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0 }}>
                   {item.isRevision ? `v${item.currentActiveVersion} → v${item.pendingVersion}` : `v${item.pendingVersion}`}
                 </Typography.Text>
+                <div style={{ width: 90, flexShrink: 0 }}>
+                  <Tag className={`tag-base ${item.versionStatus === 'approved' ? 'tag-status-approved' : 'tag-status-pending'}`} style={{ fontSize: 11 }}>
+                    {item.versionStatus === 'approved' ? '待生效' : '待审核'}
+                  </Tag>
+                </div>
                 <Typography.Text
                   style={{ color: '#a1a1aa', fontSize: 12, width: 200, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
                   title={item.changeLog || '-'}
@@ -122,12 +138,21 @@ export default function ReviewQueuePage() {
                       查看对比
                     </Button>
                   )}
-                  <Button type="link" size="small" onClick={() => handleApprove(item.steeringId)} style={{ color: '#32D583', fontSize: 12 }}>
-                    通过
-                  </Button>
-                  <Button type="link" size="small" danger onClick={() => handleReject(item.steeringId)} style={{ fontSize: 12 }}>
-                    驳回
-                  </Button>
+                  {item.versionStatus === 'pending_review' && (
+                    <>
+                      <Button type="link" size="small" onClick={() => handleApprove(item.steeringId)} style={{ color: '#32D583', fontSize: 12 }}>
+                        通过
+                      </Button>
+                      <Button type="link" size="small" danger onClick={() => handleReject(item.steeringId)} style={{ fontSize: 12 }}>
+                        驳回
+                      </Button>
+                    </>
+                  )}
+                  {item.versionStatus === 'approved' && (
+                    <Button type="link" size="small" onClick={() => handleActivate(item.steeringId)} style={{ color: '#818CF8', fontSize: 12 }}>
+                      生效
+                    </Button>
+                  )}
                 </Flex>
               </div>
             ))}

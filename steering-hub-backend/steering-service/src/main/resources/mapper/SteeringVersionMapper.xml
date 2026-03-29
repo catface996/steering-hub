@@ -101,7 +101,7 @@
         FROM steering_version v
         JOIN steering s ON s.id = v.steering_id AND s.deleted = false
         LEFT JOIN steering_category c ON c.id = s.category_id
-        WHERE v.status = 'pending_review'
+        WHERE v.status IN ('pending_review', 'approved')
         ORDER BY v.updated_at DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
@@ -110,7 +110,7 @@
         SELECT COUNT(*)
         FROM steering_version v
         JOIN steering s ON s.id = v.steering_id AND s.deleted = false
-        WHERE v.status = 'pending_review'
+        WHERE v.status IN ('pending_review', 'approved')
     </select>
 
 </mapper>
