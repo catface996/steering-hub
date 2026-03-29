@@ -39,6 +39,7 @@ export default function SteeringDetailPage() {
   const [versionDetailOpen, setVersionDetailOpen] = useState(false);
   const [selectedVersionTab, setSelectedVersionTab] = useState<string | null>(null);
   const [selectedVersionDetail, setSelectedVersionDetail] = useState<SteeringVersionDetailVO | null>(null);
+  const [versionsRefreshKey, setVersionsRefreshKey] = useState(0);
   const versionsPageSize = 20;
 
   const [repoBindings, setRepoBindings] = useState<RepoBindingItem[]>([]);
@@ -101,7 +102,7 @@ export default function SteeringDetailPage() {
       }
     };
     loadVersions();
-  }, [id, versionsPage]);
+  }, [id, versionsPage, versionsRefreshKey]);
 
   const handleVersionRowClick = async (versionNumber: number) => {
     try {
@@ -175,6 +176,7 @@ export default function SteeringDetailPage() {
       message.success('操作成功');
       const data = await steeringService.get(Number(id));
       setSteering(data);
+      setVersionsRefreshKey(k => k + 1);
     } catch {
       message.error('操作失败');
     }
