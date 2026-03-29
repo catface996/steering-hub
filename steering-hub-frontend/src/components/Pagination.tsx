@@ -81,6 +81,7 @@ export default function Pagination({
     <Flex
       align="center"
       justify="space-between"
+      gap={16}
       style={{ height: 56, padding: '0 20px', borderTop: '1px solid #27273a', marginTop: 'auto', flexShrink: 0, ...containerStyle }}
     >
       <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>
