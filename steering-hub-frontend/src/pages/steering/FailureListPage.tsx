@@ -91,49 +91,49 @@ export default function FailureListPage() {
           <>
             <div style={{ flex: 1, overflow: 'auto' }}>
               {/* Header */}
-              <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 40 }}>#</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 260 }}>查询词</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 110 }}>失败原因</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>期望找到的规范</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180 }}>代码仓库</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180 }}>Agent</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 170 }}>时间</Typography.Text>
+              <Flex style={{ padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10, minWidth: 1100 }}>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 40, flexShrink: 0 }}>#</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 260, flexShrink: 0 }}>查询词</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 110, flexShrink: 0 }}>失败原因</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1, minWidth: 160, whiteSpace: 'nowrap' }}>期望找到的规范</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180, flexShrink: 0, whiteSpace: 'nowrap' }}>代码仓库</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180, flexShrink: 0, whiteSpace: 'nowrap' }}>Agent</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 170, flexShrink: 0, whiteSpace: 'nowrap' }}>时间</Typography.Text>
               </Flex>
               {/* Rows */}
               {paginatedData.map((item) => {
                 const reasonInfo = REASON_LABELS[item.failureReason] || { label: item.failureReason, color: 'tag-status-draft' };
                 return (
-                  <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                    <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 40 }}>{item.id}</Typography.Text>
+                  <Flex key={item.id} align="center" style={{ padding: '10px 20px', borderBottom: '1px solid #27273a', minWidth: 1100 }}>
+                    <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 40, flexShrink: 0 }}>{item.id}</Typography.Text>
                     <Typography.Text
                       ellipsis={{ tooltip: true }}
-                      style={{ color: '#f4f4f5', fontSize: 13, fontWeight: 500, width: 260, paddingRight: 8 }}
+                      style={{ color: '#f4f4f5', fontSize: 13, fontWeight: 500, width: 260, flexShrink: 0, paddingRight: 8 }}
                     >
                       {item.queryText}
                     </Typography.Text>
-                    <div style={{ width: 110 }}>
+                    <div style={{ width: 110, flexShrink: 0 }}>
                       <Tag className={`tag-base ${reasonInfo.color}`}>{reasonInfo.label}</Tag>
                     </div>
                     <Typography.Text
                       ellipsis={{ tooltip: true }}
-                      style={{ color: '#a1a1aa', fontSize: 13, flex: 1, paddingRight: 8 }}
+                      style={{ color: '#a1a1aa', fontSize: 13, flex: 1, minWidth: 160, paddingRight: 8 }}
                     >
                       {item.expectedTopic || '-'}
                     </Typography.Text>
                     <Typography.Text
                       ellipsis={{ tooltip: true }}
-                      style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180 }}
+                      style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180, flexShrink: 0 }}
                     >
                       {item.repo || '-'}
                     </Typography.Text>
                     <Typography.Text
                       ellipsis={{ tooltip: true }}
-                      style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180 }}
+                      style={{ color: '#a1a1aa', fontFamily: 'monospace', fontSize: 12, width: 180, flexShrink: 0 }}
                     >
                       {item.agentName || '-'}
                     </Typography.Text>
-                    <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 170 }}>
+                    <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 170, flexShrink: 0 }}>
                       {formatDateTime(item.createdAt)}
                     </Typography.Text>
                   </Flex>
