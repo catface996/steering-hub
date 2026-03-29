@@ -9,6 +9,7 @@ interface PaginationProps {
   onRowsPerPageChange?: (rowsPerPage: number) => void;
   label?: string;
   rowsPerPageOptions?: number[];
+  containerStyle?: React.CSSProperties;
 }
 
 function buildPageNumbers(current: number, total: number): (number | '...')[] {
@@ -31,6 +32,7 @@ export default function Pagination({
   onRowsPerPageChange,
   label = '条记录',
   rowsPerPageOptions = [10, 25, 50],
+  containerStyle,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(count / rowsPerPage));
   const currentPage = page + 1;
@@ -79,7 +81,7 @@ export default function Pagination({
     <Flex
       align="center"
       justify="space-between"
-      style={{ height: 56, padding: '0 20px', borderTop: '1px solid #27273a', marginTop: 'auto', flexShrink: 0 }}
+      style={{ height: 56, padding: '0 20px', borderTop: '1px solid #27273a', marginTop: 'auto', flexShrink: 0, ...containerStyle }}
     >
       <Typography.Text style={{ fontSize: 13, color: '#a1a1aa' }}>
         显示 {from}-{to} 共 {count.toLocaleString()} {label}

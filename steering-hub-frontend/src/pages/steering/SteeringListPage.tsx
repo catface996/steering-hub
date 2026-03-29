@@ -359,7 +359,7 @@ export default function SteeringListPage() {
               />
             </div>
             {/* 分页固定在底部 */}
-            <Flex justify="space-between" align="center" style={{ padding: '12px 16px', flexShrink: 0 }}>
+            <Flex justify="space-between" align="center" style={{ padding: '12px 16px', borderTop: '1px solid #27273a', flexShrink: 0 }}>
               <Typography.Text style={{ color: '#71717a', fontSize: 13 }}>共 {data?.total ?? 0} 条规范</Typography.Text>
               <Pagination
                 count={data?.total ?? 0}
@@ -367,6 +367,7 @@ export default function SteeringListPage() {
                 rowsPerPage={pageSize}
                 onPageChange={setPage}
                 label="条规范"
+                containerStyle={{ borderTop: 'none', height: 'auto', padding: 0, marginTop: 0 }}
               />
             </Flex>
           </Card>
