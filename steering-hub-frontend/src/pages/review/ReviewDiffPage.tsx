@@ -218,16 +218,8 @@ export default function ReviewDiffPage() {
         <MetaRow
           label="关键词"
           changed={keywordsChanged}
-          left={
-            <Typography.Text style={{ fontSize: 13, color: '#d4d4d8' }}>
-              {activeKeywords || '-'}
-            </Typography.Text>
-          }
-          right={
-            <Typography.Text style={{ fontSize: 13, color: keywordsChanged ? '#f59e0b' : '#d4d4d8' }}>
-              {pendingKeywords || '-'}
-            </Typography.Text>
-          }
+          left={<TagList tags={parseTags(activeKeywords)} changed={false} />}
+          right={<TagList tags={parseTags(pendingKeywords)} changed={keywordsChanged} />}
         />
       </Card>
 
