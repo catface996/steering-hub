@@ -8,6 +8,58 @@ import { steeringService } from '../../services/steeringService';
 import type { DiffVO } from '../../types';
 import { formatDateTime } from '../../utils/formatTime';
 
+/** 将逗号分隔的 tag 字符串转为数组 */
+const parseTags = (s?: string): string[] =>
+  s ? s.split(',').map((t) => t.trim()).filter(Boolean) : [];
+
+/** 渲染 tag 列表，changed=true 时高亮 */
+const TagList = ({ tags, changed }: { tags: string[]; changed: boolean }) => {
+  if (tags.length === 0) return <Typography.Text style={{ color: '#52525b', fontSize: 13 }}>-</Typography.Text>;
+  return (
+    <Flex wrap="wrap" gap={4}>
+      {tags.map((t, i) => (
+        <Tag
+          key={t}
+          className={`tag-base tag-color-${i % 7}`}
+          style={changed ? { outline: '1px solid #f59e0b', outlineOffset: 1 } : undefined}
+        >
+          {t}
+        </Tag>
+      ))}
+    </Flex>
+  );
+};
+
+/** 单个元数据行 */
+const MetaRow = ({
+  label,
+  left,
+  right,
+  changed,
+}: {
+  label: string;
+  left: React.ReactNode;
+  right: React.ReactNode;
+  changed: boolean;
+}) => (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '80px 1fr 1fr',
+      gap: 12,
+      alignItems: 'flex-start',
+      padding: '8px 0',
+      borderBottom: '1px solid #1e1e2a',
+      background: changed ? 'rgba(245,158,11,0.06)' : undefined,
+      borderRadius: 4,
+    }}
+  >
+    <Typography.Text style={{ color: '#71717a', fontSize: 12, paddingTop: 2 }}>{label}</Typography.Text>
+    <div>{left}</div>
+    <div>{right}</div>
+  </div>
+);
+
 export default function ReviewDiffPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -95,9 +147,91 @@ export default function ReviewDiffPage() {
     );
   }
 
+  const activeTitle = diff.activeVersion?.title ?? '';
+  const pendingTitle = diff.pendingVersion.title;
+  const activeTags = parseTags(diff.activeVersion?.tags);
+  const pendingTags = parseTags(diff.pendingVersion.tags);
+  const activeKeywords = diff.activeVersion?.keywords ?? '';
+  const pendingKeywords = diff.pendingVersion.keywords ?? '';
+
+  const titleChanged = activeTitle !== pendingTitle;
+  const tagsChanged = JSON.stringify([...activeTags].sort()) !== JSON.stringify([...pendingTags].sort());
+  const keywordsChanged = activeKeywords !== pendingKeywords;
+  const hasMetaChange = titleChanged || tagsChanged || keywordsChanged;
+
   return (
     <div className="list-page" style={{ gap: 16 }}>
-      {/* Side-by-side diff */}
+
+      {/* Metadata diff */}
+      <Card
+        title={
+          <Flex align="center" gap={8}>
+            <Typography.Text style={{ fontWeight: 600 }}>元数据对比</Typography.Text>
+            {hasMetaChange && (
+              <Tag style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)', fontSize: 11 }}>
+                有变更
+              </Tag>
+            )}
+          </Flex>
+        }
+        style={{ flexShrink: 0 }}
+      >
+        {/* Header row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 12, marginBottom: 4 }}>
+          <div />
+          <Flex align="center" gap={6}>
+            <Typography.Text style={{ fontSize: 12, color: '#71717a' }}>
+              当前生效版 {diff.activeVersion ? `(v${diff.activeVersion.versionNumber})` : ''}
+            </Typography.Text>
+            {diff.activeVersion && <Tag className="tag-base tag-status-active" style={{ fontSize: 11 }}>active</Tag>}
+          </Flex>
+          <Flex align="center" gap={6}>
+            <Typography.Text style={{ fontSize: 12, color: '#71717a' }}>
+              待审版 (v{diff.pendingVersion.versionNumber})
+            </Typography.Text>
+            <Tag className="tag-base tag-status-pending" style={{ fontSize: 11 }}>pending_review</Tag>
+          </Flex>
+        </div>
+
+        <MetaRow
+          label="标题"
+          changed={titleChanged}
+          left={
+            <Typography.Text style={{ fontSize: 14, fontWeight: 500, color: diff.activeVersion ? '#f4f4f5' : '#52525b' }}>
+              {activeTitle || '（新建规范）'}
+            </Typography.Text>
+          }
+          right={
+            <Typography.Text style={{ fontSize: 14, fontWeight: 500, color: titleChanged ? '#f59e0b' : '#f4f4f5' }}>
+              {pendingTitle}
+            </Typography.Text>
+          }
+        />
+
+        <MetaRow
+          label="标签"
+          changed={tagsChanged}
+          left={<TagList tags={activeTags} changed={false} />}
+          right={<TagList tags={pendingTags} changed={tagsChanged} />}
+        />
+
+        <MetaRow
+          label="关键词"
+          changed={keywordsChanged}
+          left={
+            <Typography.Text style={{ fontSize: 13, color: '#d4d4d8' }}>
+              {activeKeywords || '-'}
+            </Typography.Text>
+          }
+          right={
+            <Typography.Text style={{ fontSize: 13, color: keywordsChanged ? '#f59e0b' : '#d4d4d8' }}>
+              {pendingKeywords || '-'}
+            </Typography.Text>
+          }
+        />
+      </Card>
+
+      {/* Side-by-side content diff */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* Active version (left) */}
         <Card
@@ -145,7 +279,6 @@ export default function ReviewDiffPage() {
       {/* Bottom action bar */}
       <Card style={{ flexShrink: 0 }}>
         <Flex vertical gap={12}>
-          {/* Metadata */}
           <Flex gap={24} wrap="wrap">
             <div>
               <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>修改说明</Typography.Text>
@@ -157,7 +290,6 @@ export default function ReviewDiffPage() {
             </div>
           </Flex>
 
-          {/* Comment + Actions */}
           <Flex gap={12} align="end">
             <Input.TextArea
               placeholder="审批意见（可选）"
