@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Button, Tag, Input, Select, Flex, Spin, Modal, App, Progress, Tooltip, Card } from 'antd';
+import { Typography, Button, Tag, Input, Select, Flex, Spin, Modal, App, Progress, Tooltip, Card, Table } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { useIsMobile } from '../../utils/deviceDetect';
 import { Plus, LayoutList, LayoutGrid } from 'lucide-react';
 import { useHeader } from '../../contexts/HeaderContext';
@@ -227,120 +228,145 @@ export default function SteeringListPage() {
           />
         </>
       )}
-      {effectiveViewMode === 'list' && <Card
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
-        styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
-      >
-        {loading ? (
-          <Flex justify="center" align="center" style={{ flex: 1, padding: 48 }}>
-            <Spin size="large" />
-          </Flex>
-        ) : (
-          <div style={{ flex: 1, overflow: 'auto', minWidth: 900 }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #27273a', background: '#1e1e2a', position: 'sticky', top: 0, zIndex: 10 }}>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 50, flexShrink: 0 }}>ID</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1, minWidth: 0 }}>标题</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>分类</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 80, flexShrink: 0 }}>状态</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 60, flexShrink: 0 }}>版本</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 120, flexShrink: 0 }}>可检索性</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>更新时间</Typography.Text>
-              <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 100, flexShrink: 0 }}>操作</Typography.Text>
-            </div>
-            {/* Rows */}
-            {data?.records?.map((record) => (
-              <div key={record.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '10px 20px', borderBottom: '1px solid #27273a' }}>
-                <Typography.Text style={{ color: '#71717a', fontSize: 13, width: 50, flexShrink: 0 }}>{record.id}</Typography.Text>
-                <div style={{ flex: 1, minWidth: 0, paddingRight: 8, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                  <span
-                    onClick={() => navigate(`/steerings/${record.id}`)}
-                    style={{ flex: '0 1 auto', minWidth: 0, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                    title={record.title}
-                  >
-                    {record.title}
-                  </span>
-                  {record.tags && record.tags.length > 0 && (
-                    <div style={{ flexShrink: 0, display: 'flex', flexWrap: 'nowrap', gap: 4, overflow: 'hidden' }}>
-                      {record.tags.map((t, i) => (
-                        <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 100, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{record.categoryName}</Typography.Text>
-                <div style={{ width: 80, flexShrink: 0 }}>
-                  <Tag className={`tag-base ${STATUS_CLASS[record.status]}`}>
-                    {STATUS_LABEL[record.status]}
-                  </Tag>
-                </div>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 13, width: 60, flexShrink: 0 }}>v{record.currentVersion}</Typography.Text>
-                <div style={{ width: 120, flexShrink: 0, alignSelf: 'center' }}>
-                  {(() => {
-                    const q = qualityData[record.id];
-                    if (!q) return <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>-</Typography.Text>;
-                    return (
-                      <Tooltip
-                        title={
-                          <div>
-                            <div>自检索排名: {q.scores.selfRetrievalRank}</div>
-                            <div>标签数: {q.scores.tagCount}</div>
-                            <div>关键词数: {q.scores.keywordCount}</div>
-                          </div>
-                        }
-                      >
-                        <Flex
-                          align="center"
-                          gap={6}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => setQualityDetail(q)}
-                        >
-                          <Progress
-                            percent={q.scores.overallScore * 100}
-                            showInfo={false}
-                            size="small"
-                            strokeColor={getScoreColor(q.scores.overallScore)}
-                            style={{ width: 60, margin: 0 }}
-                          />
-                          <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600 }}>
-                            {(q.scores.overallScore * 100).toFixed(0)}%
-                          </Typography.Text>
-                        </Flex>
-                      </Tooltip>
-                    );
-                  })()}
-                </div>
-                <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 100, flexShrink: 0, alignSelf: 'center' }}>{formatDate(record.updatedAt)}</Typography.Text>
-                <Flex gap={4} style={{ width: 100, flexShrink: 0 }}>
-                  <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12 }}>编辑</Button>
-                  {record.status === 'draft' && (
-                    <Button type="link" size="small" onClick={() => handleReview(record.id, 'submit')} style={{ fontSize: 12 }}>提交审核</Button>
-                  )}
-                  {record.status === 'pending_review' && (
-                    <Button type="link" size="small" onClick={() => handleWithdraw(record.id)} style={{ fontSize: 12 }}>撤回</Button>
-                  )}
-                  {record.status === 'approved' && (
-                    <Button type="link" size="small" onClick={() => handleReview(record.id, 'activate')} style={{ color: '#32D583', fontSize: 12 }}>生效</Button>
-                  )}
-                  {record.status === 'active' && (
-                    <Button type="link" size="small" danger onClick={() => handleDeprecate(record.id)} style={{ fontSize: 12 }}>废弃</Button>
-                  )}
-                  {(record.status === 'draft' || record.status === 'deprecated') && (
-                    <Button type="link" size="small" danger onClick={() => setDeleteId(record.id)} style={{ fontSize: 12 }}>删除</Button>
-                  )}
-                </Flex>
+      {effectiveViewMode === 'list' && (() => {
+        const columns: ColumnsType<Steering> = [
+          {
+            title: 'ID',
+            dataIndex: 'id',
+            width: 60,
+            render: (v: number) => <Typography.Text style={{ color: '#71717a', fontSize: 13 }}>{v}</Typography.Text>,
+          },
+          {
+            title: '标题',
+            dataIndex: 'title',
+            render: (title: string, record) => (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <span style={{ fontWeight: 500, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 280 }} title={title}>
+                  {title}
+                </span>
+                {record.tags && record.tags.length > 0 && (
+                  <Flex gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+                    {record.tags.slice(0, 3).map((t, i) => (
+                      <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t}</Tag>
+                    ))}
+                  </Flex>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-        <Pagination
-          count={data?.total ?? 0}
-          page={page}
-          rowsPerPage={pageSize}
-          onPageChange={setPage}
-          label="条规范"
-        />
-      </Card>}
+            ),
+          },
+          {
+            title: '分类',
+            dataIndex: 'categoryName',
+            width: 110,
+            ellipsis: true,
+            render: (v: string) => <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>{v || '-'}</Typography.Text>,
+          },
+          {
+            title: '状态',
+            dataIndex: 'status',
+            width: 90,
+            render: (v: SteeringStatus) => (
+              <Tag className={`tag-base ${STATUS_CLASS[v]}`}>{STATUS_LABEL[v]}</Tag>
+            ),
+          },
+          {
+            title: '版本',
+            dataIndex: 'currentVersion',
+            width: 60,
+            render: (v: number) => <Typography.Text style={{ color: '#a1a1aa', fontSize: 13 }}>v{v}</Typography.Text>,
+          },
+          {
+            title: '可检索性',
+            width: 130,
+            render: (_: unknown, record) => {
+              const q = qualityData[record.id];
+              if (!q) return <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>-</Typography.Text>;
+              return (
+                <Tooltip title={
+                  <div>
+                    <div>自检索排名: {q.scores.selfRetrievalRank}</div>
+                    <div>标签数: {q.scores.tagCount}</div>
+                    <div>关键词数: {q.scores.keywordCount}</div>
+                  </div>
+                }>
+                  <Flex align="center" gap={6} style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setQualityDetail(q); }}>
+                    <Progress
+                      percent={q.scores.overallScore * 100}
+                      showInfo={false}
+                      size="small"
+                      strokeColor={getScoreColor(q.scores.overallScore)}
+                      style={{ width: 60, margin: 0 }}
+                    />
+                    <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600 }}>
+                      {(q.scores.overallScore * 100).toFixed(0)}%
+                    </Typography.Text>
+                  </Flex>
+                </Tooltip>
+              );
+            },
+          },
+          {
+            title: '更新时间',
+            dataIndex: 'updatedAt',
+            width: 100,
+            render: (v: string) => <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>{formatDate(v)}</Typography.Text>,
+          },
+          {
+            title: '操作',
+            width: 120,
+            render: (_: unknown, record) => (
+              <Flex gap={4} onClick={(e) => e.stopPropagation()}>
+                <Button type="link" size="small" onClick={() => navigate(`/steerings/${record.id}/edit`)} style={{ color: '#a1a1aa', fontSize: 12, padding: '0 4px' }}>编辑</Button>
+                {record.status === 'draft' && (
+                  <Button type="link" size="small" onClick={() => handleReview(record.id, 'submit')} style={{ fontSize: 12, padding: '0 4px' }}>提交</Button>
+                )}
+                {record.status === 'pending_review' && (
+                  <Button type="link" size="small" onClick={() => handleWithdraw(record.id)} style={{ fontSize: 12, padding: '0 4px' }}>撤回</Button>
+                )}
+                {record.status === 'approved' && (
+                  <Button type="link" size="small" onClick={() => handleReview(record.id, 'activate')} style={{ color: '#32D583', fontSize: 12, padding: '0 4px' }}>生效</Button>
+                )}
+                {record.status === 'active' && (
+                  <Button type="link" size="small" danger onClick={() => handleDeprecate(record.id)} style={{ fontSize: 12, padding: '0 4px' }}>废弃</Button>
+                )}
+                {(record.status === 'draft' || record.status === 'deprecated') && (
+                  <Button type="link" size="small" danger onClick={() => setDeleteId(record.id)} style={{ fontSize: 12, padding: '0 4px' }}>删除</Button>
+                )}
+              </Flex>
+            ),
+          },
+        ];
+
+        return (
+          <Card
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
+          >
+            <Table
+              rowKey="id"
+              columns={columns}
+              dataSource={data?.records ?? []}
+              loading={loading}
+              size="middle"
+              scroll={{ x: 900 }}
+              pagination={{
+                current: page + 1,
+                pageSize,
+                total: data?.total ?? 0,
+                onChange: (p) => setPage(p - 1),
+                showTotal: (total) => `共 ${total} 条规范`,
+                showSizeChanger: false,
+                style: { padding: '12px 16px', margin: 0 },
+              }}
+              onRow={(record) => ({
+                onClick: () => navigate(`/steerings/${record.id}`),
+                style: { cursor: 'pointer' },
+              })}
+              style={{ flex: 1 }}
+            />
+          </Card>
+        );
+      })()}
 
       {/* Delete Modal */}
       <Modal
