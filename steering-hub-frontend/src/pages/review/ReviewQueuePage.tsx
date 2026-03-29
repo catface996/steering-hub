@@ -137,7 +137,7 @@ export default function ReviewQueuePage() {
     {
       title: '提交时间',
       dataIndex: 'submittedAt',
-      width: 140,
+      width: 180,
       render: (time: string) => (
         <Typography.Text style={{ color: '#71717a', fontSize: 12 }}>
           {formatDateTime(time)}
