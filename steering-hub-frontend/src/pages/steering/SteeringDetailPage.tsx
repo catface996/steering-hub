@@ -333,7 +333,7 @@ export default function SteeringDetailPage() {
               </Card>
             ) : (
               <Tabs
-                tabPlacement="left"
+                tabPosition="left"
                 activeKey={selectedVersionTab ?? String(versions[0]?.versionNumber)}
                 onChange={handleVersionTabChange}
                 items={versions.map((v) => ({
@@ -387,9 +387,16 @@ export default function SteeringDetailPage() {
                             </div>
                           ))}
                           {selectedVersionDetail.status === 'draft' && (
-                            <Button danger block onClick={() => setDeleteDraftOpen(true)} style={{ marginTop: 8 }}>
-                              删除草稿
-                            </Button>
+                            <Flex vertical gap={8} style={{ marginTop: 8 }}>
+                              {!hasPendingReviewVersion && (
+                                <Button type="primary" block onClick={() => handleReview('submit')}>
+                                  提交审核
+                                </Button>
+                              )}
+                              <Button danger block onClick={() => setDeleteDraftOpen(true)}>
+                                删除草稿
+                              </Button>
+                            </Flex>
                           )}
                         </Card>
                       </div>
