@@ -88,7 +88,7 @@ export default function SteeringAnalyticsPage() {
     { title: '期望找到的规范', dataIndex: 'expectedTopic', key: 'expectedTopic', ellipsis: true },
     { title: 'Agent', dataIndex: 'agentName', key: 'agentName', width: 140, ellipsis: true },
     {
-      title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 140,
+      title: '时间', dataIndex: 'createdAt', key: 'createdAt', width: 180,
       render: (t: string) => formatDateTime(t)
     },
   ];

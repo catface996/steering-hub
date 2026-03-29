@@ -98,7 +98,7 @@ export default function FailureListPage() {
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, flex: 1 }}>期望找到的规范</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180 }}>代码仓库</Typography.Text>
                 <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 180 }}>Agent</Typography.Text>
-                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 130 }}>时间</Typography.Text>
+                <Typography.Text style={{ color: '#a1a1aa', fontSize: 12, fontWeight: 600, width: 170 }}>时间</Typography.Text>
               </Flex>
               {/* Rows */}
               {paginatedData.map((item) => {
@@ -133,7 +133,7 @@ export default function FailureListPage() {
                     >
                       {item.agentName || '-'}
                     </Typography.Text>
-                    <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 130 }}>
+                    <Typography.Text style={{ color: '#71717a', fontSize: 12, width: 170 }}>
                       {formatDateTime(item.createdAt)}
                     </Typography.Text>
                   </Flex>
