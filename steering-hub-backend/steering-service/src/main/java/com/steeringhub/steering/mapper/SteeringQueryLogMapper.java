@@ -9,4 +9,9 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface SteeringQueryLogMapper extends BaseMapper<SteeringQueryLog> {
+
+    /**
+     * 统计最近 7 天的检索次数
+     */
+    int countWeeklySearches();
 }

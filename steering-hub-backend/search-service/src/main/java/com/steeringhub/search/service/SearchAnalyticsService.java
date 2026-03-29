@@ -1,6 +1,7 @@
 package com.steeringhub.search.service;
 
 import com.steeringhub.common.response.PageResult;
+import com.steeringhub.search.dto.DashboardStatsVO;
 import com.steeringhub.search.dto.QueryLogDetailVO;
 import com.steeringhub.steering.entity.SteeringQueryLog;
 
@@ -8,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface SearchAnalyticsService {
+
+    /**
+     * Dashboard 统计数据（本周检索次数 + 已生效规范数）
+     */
+    DashboardStatsVO getDashboardStats();
 
     /**
      * 查询分析统计（最近 N 天）

@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const isMobile = useIsMobile();
   const [totalCount, setTotalCount] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
+  const [weeklySearchCount, setWeeklySearchCount] = useState<number | null>(null);
   const [recentSteerings, setRecentSteerings] = useState<Steering[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,14 +37,18 @@ export default function DashboardPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [total, active, recent] = await Promise.all([
+        const [total, active, recent, dashboardStats] = await Promise.all([
           steeringService.page({ current: 1, size: 1 }),
           steeringService.page({ current: 1, size: 1, status: 'active' }),
           steeringService.page({ current: 1, size: 5 }),
+          fetch('/api/v1/web/dashboard/stats').then(r => r.json()),
         ]);
         setTotalCount(total.total);
         setActiveCount(active.total);
         setRecentSteerings(recent.records);
+        if (dashboardStats?.data != null) {
+          setWeeklySearchCount(dashboardStats.data.weeklySearchCount);
+        }
       } catch {
         // ignore
       } finally {
@@ -56,7 +61,7 @@ export default function DashboardPage() {
   const stats = [
     { label: '规范总数', value: totalCount, icon: <FileText size={20} />, color: 'var(--primary-color)', bgColor: 'rgba(var(--primary-rgb), 0.1)' },
     { label: '已生效规范', value: activeCount, icon: <CheckCircle size={20} />, color: '#32D583', bgColor: 'rgba(50, 213, 131, 0.12)' },
-    { label: '本周检索次数', value: '-', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(var(--color-warning-tag-rgb), 0.12)' },
+    { label: '本周检索次数', value: weeklySearchCount ?? '-', icon: <Search size={20} />, color: '#FFB547', bgColor: 'rgba(var(--color-warning-tag-rgb), 0.12)' },
     { label: '合规检查次数', value: '-', icon: <ShieldCheck size={20} />, color: '#E85A4F', bgColor: 'rgba(232, 90, 79, 0.12)' },
   ];
 

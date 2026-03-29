@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.steeringhub.common.response.PageResult;
+import com.steeringhub.search.dto.DashboardStatsVO;
 import com.steeringhub.search.dto.HitSteeringVO;
 import com.steeringhub.search.dto.QueryLogDetailVO;
 import com.steeringhub.search.service.SearchAnalyticsService;
@@ -30,6 +31,13 @@ public class SearchAnalyticsServiceImpl implements SearchAnalyticsService {
     private final SteeringQueryLogMapper steeringQueryLogMapper;
     private final SteeringMapper steeringMapper;
     private final ObjectMapper objectMapper;
+
+    @Override
+    public DashboardStatsVO getDashboardStats() {
+        int weeklySearchCount = steeringQueryLogMapper.countWeeklySearches();
+        int activeSteeringCount = steeringMapper.countActiveSpecs();
+        return new DashboardStatsVO(weeklySearchCount, activeSteeringCount);
+    }
 
     @Override
     public Map<String, Object> queryAnalytics(int days) {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.steering.mapper.SteeringQueryLogMapper">
+
+    <!-- 统计最近 7 天的检索次数 -->
+    <select id="countWeeklySearches" resultType="int">
+        SELECT COUNT(*) FROM steering_query_log
+        WHERE created_at >= NOW() - INTERVAL '7 days'
+    </select>
+
+</mapper>
