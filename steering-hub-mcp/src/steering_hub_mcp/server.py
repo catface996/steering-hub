@@ -440,7 +440,6 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
             f"- Tags: {tags_str or 'N/A'}\n"
             f"- Score: {r.get('score', 0):.2f}\n"
             f"- Version: {r.get('currentVersion', 1)}\n\n"
-            f"{r.get('content', '')[:500]}{'...' if len(r.get('content','')) > 500 else ''}\n"
             f"---\n"
         )
     if log_id:
