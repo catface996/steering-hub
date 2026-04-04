@@ -442,7 +442,7 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
             f"- Tags: {tags_str or 'N/A'}\n"
             f"- Score: {r.get('score', 0):.2f}\n"
             f"- Version: {r.get('currentVersion', 1)}\n"
-            f"- Preview: {preview}\n\n"
+            (f"- Preview: {preview}\n\n" if preview else "\n")
             f"---\n"
         )
     if log_id:
