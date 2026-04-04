@@ -434,12 +434,15 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
     for r in filtered_results:
         tags_str = ", ".join(r.get("tags") or [])
         tag_match_info = f" (matched {r['_tag_matches']} tags)" if r["_tag_matches"] > 0 else ""
+        content = r.get("content") or ""
+        preview = (content[:200] + "...") if len(content) > 200 else content
         lines.append(
             f"## [{r['steeringId']}] {r['title']}{tag_match_info}\n"
             f"- Category: {r.get('categoryName', 'N/A')}\n"
             f"- Tags: {tags_str or 'N/A'}\n"
             f"- Score: {r.get('score', 0):.2f}\n"
-            f"- Version: {r.get('currentVersion', 1)}\n\n"
+            f"- Version: {r.get('currentVersion', 1)}\n"
+            f"- Preview: {preview}\n\n"
             f"---\n"
         )
     if log_id:
