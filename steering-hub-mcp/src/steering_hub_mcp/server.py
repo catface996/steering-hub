@@ -441,9 +441,9 @@ async def handle_search_steering(args: dict) -> list[types.ContentBlock]:
             f"- Category: {r.get('categoryName', 'N/A')}\n"
             f"- Tags: {tags_str or 'N/A'}\n"
             f"- Score: {r.get('score', 0):.2f}\n"
-            f"- Version: {r.get('currentVersion', 1)}\n"
-            (f"- Preview: {preview}\n\n" if preview else "\n")
-            f"---\n"
+            f"- Version: {r.get('currentVersion', 1)}\n" +
+            (f"- Preview: {preview}\n\n" if preview else "\n") +
+            "---\n"
         )
     if log_id:
         lines.append(f"\n---\n*Search log ID: {log_id} — Call report_search_failure(log_id={log_id}, reason=...) if results are not helpful.*")
