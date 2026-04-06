@@ -3,10 +3,10 @@ package com.steeringhub.application.api.service;
 import com.steeringhub.application.api.dto.request.SearchRequest;
 import com.steeringhub.application.api.dto.response.DashboardStatsVO;
 import com.steeringhub.application.api.dto.response.QueryLogDetailVO;
+import com.steeringhub.application.api.dto.response.QueryLogVO;
 import com.steeringhub.application.api.dto.response.SearchResponse;
 import com.steeringhub.application.api.dto.response.SteeringQualityReport;
 import com.steeringhub.common.response.PageResult;
-import com.steeringhub.domain.model.search.SteeringQueryLog;
 
 import java.util.List;
 import java.util.Map;
@@ -26,9 +26,9 @@ public interface SearchApplicationService {
 
     Map<String, Object> queryAnalytics(int days);
 
-    PageResult<SteeringQueryLog> getQueryLogs(String query, String startDate, String endDate, int page, int size);
+    PageResult<QueryLogVO> getQueryLogs(String query, String startDate, String endDate, int page, int size);
 
-    List<SteeringQueryLog> getFailureLogs(int days, int limit);
+    List<QueryLogVO> getFailureLogs(int days, int limit);
 
     QueryLogDetailVO getQueryLogById(Long id);
 }

@@ -14,7 +14,7 @@ public interface SteeringDomainService {
      * 执行审批动作（submit/approve/reject/activate/deprecate/withdraw）。
      * 校验当前状态是否允许该动作，执行状态流转并持久化。
      */
-    void executeReview(Long steeringId, ReviewAction action, String comment, Long reviewerId, String reviewerName);
+    void executeReview(Long steeringId, ReviewAction action, String comment, Long reviewerId);
 
     /**
      * 校验 Steering 是否可删除（仅 DRAFT / DEPRECATED 允许）。

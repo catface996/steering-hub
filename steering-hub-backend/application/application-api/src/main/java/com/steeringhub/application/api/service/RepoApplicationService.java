@@ -7,25 +7,25 @@ import com.steeringhub.application.api.dto.request.RepoUpdateRequest;
 import com.steeringhub.application.api.dto.response.BindingResultResponse;
 import com.steeringhub.application.api.dto.response.RepoItem;
 import com.steeringhub.application.api.dto.response.RepoSteeringItem;
+import com.steeringhub.application.api.dto.response.RepoVO;
 import com.steeringhub.common.response.PageResult;
-import com.steeringhub.domain.model.repo.Repo;
 
 /**
  * 仓库管理应用服务
  */
 public interface RepoApplicationService {
 
-    Repo createRepo(RepoCreateRequest request);
+    RepoVO createRepo(RepoCreateRequest request);
 
-    PageResult<Repo> listRepos(RepoQueryRequest request);
+    PageResult<RepoVO> listRepos(RepoQueryRequest request);
 
-    Repo getRepo(Long id);
+    RepoVO getRepo(Long id);
 
-    Repo getByFullName(String fullName);
+    RepoVO getByFullName(String fullName);
 
-    Repo updateRepo(Long id, RepoUpdateRequest request);
+    RepoVO updateRepo(Long id, RepoUpdateRequest request);
 
-    Repo toggleRepo(Long id);
+    RepoVO toggleRepo(Long id);
 
     void deleteRepo(Long id);
 

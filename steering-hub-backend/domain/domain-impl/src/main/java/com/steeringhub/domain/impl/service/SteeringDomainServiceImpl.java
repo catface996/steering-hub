@@ -37,19 +37,19 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
     private final EmbeddingService embeddingService;
 
     @Override
-    public void executeReview(Long steeringId, ReviewAction action, String comment, Long reviewerId, String reviewerName) {
+    public void executeReview(Long steeringId, ReviewAction action, String comment, Long reviewerId) {
         Steering steering = steeringRepository.getById(steeringId);
         if (steering == null) {
             throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
         }
 
         switch (action) {
-            case SUBMIT -> handleSubmit(steeringId, steering, comment, reviewerId, reviewerName);
-            case APPROVE -> handleApprove(steeringId, steering, comment, reviewerId, reviewerName);
-            case REJECT -> handleReject(steeringId, steering, comment, reviewerId, reviewerName);
-            case ACTIVATE -> handleActivate(steeringId, steering, comment, reviewerId, reviewerName);
-            case DEPRECATE -> handleDeprecate(steeringId, steering, comment, reviewerId, reviewerName);
-            case WITHDRAW -> handleWithdraw(steeringId, steering, comment, reviewerId, reviewerName);
+            case SUBMIT -> handleSubmit(steeringId, steering, comment, reviewerId);
+            case APPROVE -> handleApprove(steeringId, steering, comment, reviewerId);
+            case REJECT -> handleReject(steeringId, steering, comment, reviewerId);
+            case ACTIVATE -> handleActivate(steeringId, steering, comment, reviewerId);
+            case DEPRECATE -> handleDeprecate(steeringId, steering, comment, reviewerId);
+            case WITHDRAW -> handleWithdraw(steeringId, steering, comment, reviewerId);
             default -> throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "不支持的审核动作: " + action);
         }
     }
@@ -110,7 +110,7 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
 
     // --- private state machine handlers ---
 
-    private void handleSubmit(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+    private void handleSubmit(Long id, Steering steering, String comment, Long reviewerId) {
         if (steering.getStatus() != DRAFT && steering.getStatus() != REJECTED && steering.getStatus() != ACTIVE) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不允许提交审核");
         }
@@ -119,10 +119,10 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
             steering.setStatus(PENDING_REVIEW);
             steeringRepository.update(steering);
         }
-        saveReview(id, steering.getCurrentVersion(), ReviewAction.SUBMIT, comment, reviewerId, reviewerName);
+        saveReview(id, steering.getCurrentVersion(), ReviewAction.SUBMIT, comment, reviewerId);
     }
 
-    private void handleApprove(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+    private void handleApprove(Long id, Steering steering, String comment, Long reviewerId) {
         if (steering.getStatus() != PENDING_REVIEW && steering.getStatus() != ACTIVE) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不是待审核");
         }
@@ -131,10 +131,10 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
             steering.setStatus(APPROVED);
             steeringRepository.update(steering);
         }
-        saveReview(id, steering.getCurrentVersion(), ReviewAction.APPROVE, comment, reviewerId, reviewerName);
+        saveReview(id, steering.getCurrentVersion(), ReviewAction.APPROVE, comment, reviewerId);
     }
 
-    private void handleReject(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+    private void handleReject(Long id, Steering steering, String comment, Long reviewerId) {
         if (steering.getStatus() != PENDING_REVIEW && steering.getStatus() != ACTIVE) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "当前状态不是待审核");
         }
@@ -143,10 +143,10 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
             steering.setStatus(REJECTED);
             steeringRepository.update(steering);
         }
-        saveReview(id, steering.getCurrentVersion(), ReviewAction.REJECT, comment, reviewerId, reviewerName);
+        saveReview(id, steering.getCurrentVersion(), ReviewAction.REJECT, comment, reviewerId);
     }
 
-    private void handleActivate(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+    private void handleActivate(Long id, Steering steering, String comment, Long reviewerId) {
         boolean locked = steeringRepository.compareAndSetStatus(id, steering.getStatus(), ACTIVE);
         if (!locked) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "并发冲突，请刷新后重试");
@@ -167,36 +167,35 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
         steeringRepository.commitActivate(id, approvedVersion.getTitle(), approvedVersion.getContent(),
                 approvedVersion.getTags(), approvedVersion.getVersion(), embeddingStr, embeddingStr);
 
-        saveReview(id, approvedVersion.getVersion(), ReviewAction.ACTIVATE, comment, reviewerId, reviewerName);
+        saveReview(id, approvedVersion.getVersion(), ReviewAction.ACTIVATE, comment, reviewerId);
     }
 
-    private void handleDeprecate(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+    private void handleDeprecate(Long id, Steering steering, String comment, Long reviewerId) {
         if (steering.getStatus() != ACTIVE) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只有已生效的规范才能废弃");
         }
         steeringVersionRepository.updateVersionStatus(id, "active", "deprecated");
         steering.setStatus(DEPRECATED);
         steeringRepository.update(steering);
-        saveReview(id, steering.getCurrentVersion(), ReviewAction.DEPRECATE, comment, reviewerId, reviewerName);
+        saveReview(id, steering.getCurrentVersion(), ReviewAction.DEPRECATE, comment, reviewerId);
     }
 
-    private void handleWithdraw(Long id, Steering steering, String comment, Long reviewerId, String reviewerName) {
+    private void handleWithdraw(Long id, Steering steering, String comment, Long reviewerId) {
         steeringVersionRepository.updateVersionStatus(id, "pending_review", "draft");
         if (steering.getStatus() == PENDING_REVIEW) {
             steering.setStatus(DRAFT);
             steeringRepository.update(steering);
         }
-        saveReview(id, steering.getCurrentVersion(), ReviewAction.WITHDRAW, comment, reviewerId, reviewerName);
+        saveReview(id, steering.getCurrentVersion(), ReviewAction.WITHDRAW, comment, reviewerId);
     }
 
-    private void saveReview(Long steeringId, Integer version, ReviewAction action, String comment, Long reviewerId, String reviewerName) {
+    private void saveReview(Long steeringId, Integer version, ReviewAction action, String comment, Long reviewerId) {
         SteeringReview review = new SteeringReview();
         review.setSteeringId(steeringId);
         review.setSteeringVersion(version);
         review.setAction(action);
         review.setComment(comment);
         review.setReviewerId(reviewerId);
-        review.setReviewerName(reviewerName);
         steeringReviewRepository.save(review);
     }
 
