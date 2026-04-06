@@ -2,6 +2,7 @@ package com.steeringhub.repository.postgres;
 
 import com.steeringhub.common.response.PageResult;
 import com.steeringhub.domain.model.steering.Steering;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import com.steeringhub.repository.SteeringRepository;
 import com.steeringhub.repository.postgres.mapper.SteeringPOMapper;
 import com.steeringhub.repository.postgres.po.SteeringPO;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,10 +30,11 @@ public class SteeringRepositoryImpl implements SteeringRepository {
     @Override
     public PageResult<Steering> page(SteeringQuery query, int page, int size) {
         int offset = (page - 1) * size;
+        String statusCode = query.getStatus() != null ? query.getStatus().getCode() : null;
         long total = mapper.countByCondition(
-                query.getStatus(), query.getCategoryId(), query.getKeyword());
+                statusCode, query.getCategoryId(), query.getKeyword());
         List<SteeringPO> list = mapper.listByCondition(
-                query.getStatus(), query.getCategoryId(), query.getKeyword(), offset, size);
+                statusCode, query.getCategoryId(), query.getKeyword(), offset, size);
         return PageResult.of(list.stream().map(this::toEntity).collect(Collectors.toList()),
                 total, page, size);
     }
@@ -54,7 +57,8 @@ public class SteeringRepositoryImpl implements SteeringRepository {
     }
 
     @Override
-    public List<Steering> vectorSearch(String embeddingStr, int limit, Long categoryId) {
+    public List<Steering> vectorSearch(float[] embedding, int limit, Long categoryId) {
+        String embeddingStr = toVectorString(embedding);
         return mapper.vectorSearch(embeddingStr, limit, categoryId)
                 .stream().map(this::toEntity).collect(Collectors.toList());
     }
@@ -104,14 +108,23 @@ public class SteeringRepositoryImpl implements SteeringRepository {
     }
 
     @Override
-    public int claimActivateLock(Long id, Integer lockVersion) {
-        return mapper.claimActivateLock(id, lockVersion);
+    public boolean compareAndSetStatus(Long id, SteeringStatus expected, SteeringStatus target) {
+        return mapper.compareAndSetStatus(id, expected.getCode(), target.getCode()) > 0;
     }
 
     @Override
     public int commitActivate(Long id, String title, String content, String tags,
                               Integer currentVersion, String embeddingStr, String contentEmbeddingStr) {
         return mapper.commitActivate(id, title, content, tags, currentVersion, embeddingStr, contentEmbeddingStr);
+    }
+
+    private String toVectorString(float[] embedding) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        return sb.append("]").toString();
     }
 
     private Steering toEntity(SteeringPO po) {

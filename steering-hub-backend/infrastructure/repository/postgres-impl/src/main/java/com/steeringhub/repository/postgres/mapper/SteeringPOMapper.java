@@ -37,7 +37,9 @@ public interface SteeringPOMapper extends BaseMapper<SteeringPO> {
 
     List<SteeringPO> findAllActiveWithEmbedding();
 
-    int claimActivateLock(@Param("id") Long id, @Param("lockVersion") Integer lockVersion);
+    int compareAndSetStatus(@Param("id") Long id,
+                            @Param("expectedStatus") String expectedStatus,
+                            @Param("targetStatus") String targetStatus);
 
     int commitActivate(@Param("id") Long id,
                        @Param("title") String title,
