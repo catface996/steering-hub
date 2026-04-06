@@ -1,6 +1,6 @@
 package com.steeringhub.search.dto;
 
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import lombok.Data;
 
 import java.time.OffsetDateTime;

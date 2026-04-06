@@ -1,14 +1,14 @@
 package com.steeringhub.steering.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.steeringhub.common.enums.ReviewAction;
+import com.steeringhub.domain.model.steering.ReviewAction;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 @Data
-@TableName("steering_review")
+@TableName(value = "steering_review", autoResultMap = true)
 public class SteeringReview implements Serializable {
 
     @TableId(type = IdType.AUTO)

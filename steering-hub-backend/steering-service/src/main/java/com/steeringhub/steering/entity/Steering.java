@@ -1,7 +1,7 @@
 package com.steeringhub.steering.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import lombok.Data;
 
 import java.io.Serializable;

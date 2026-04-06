@@ -1,6 +1,6 @@
 package com.steeringhub.steering.dto.request;
 
-import com.steeringhub.common.enums.ReviewAction;
+import com.steeringhub.domain.model.steering.ReviewAction;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

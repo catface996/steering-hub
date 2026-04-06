@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.steeringhub.common.enums.ReviewAction;
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.ReviewAction;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.ResultCode;
 import com.steeringhub.steering.dto.request.CreateSteeringRequest;
@@ -46,7 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.steeringhub.common.enums.SteeringStatus.*;
+import static com.steeringhub.domain.model.steering.SteeringStatus.*;
 
 @Slf4j
 @Service

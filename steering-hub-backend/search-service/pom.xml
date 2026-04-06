@@ -20,6 +20,10 @@
         </dependency>
         <dependency>
             <groupId>com.steeringhub</groupId>
+            <artifactId>domain-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
             <artifactId>steering-hub-steering-service</artifactId>
         </dependency>
         <dependency>

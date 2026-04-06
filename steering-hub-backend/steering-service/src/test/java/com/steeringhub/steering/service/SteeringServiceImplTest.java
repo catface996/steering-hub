@@ -1,7 +1,7 @@
 package com.steeringhub.steering.service;
 
-import com.steeringhub.common.enums.ReviewAction;
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.ReviewAction;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.ResultCode;
 import com.steeringhub.steering.dto.request.UpdateSteeringRequest;

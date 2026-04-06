@@ -1,6 +1,6 @@
 package com.steeringhub.steering.controller;
 
-import com.steeringhub.common.enums.ReviewAction;
+import com.steeringhub.domain.model.steering.ReviewAction;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.Result;
 import com.steeringhub.common.response.ResultCode;

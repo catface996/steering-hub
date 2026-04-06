@@ -1,6 +1,6 @@
 package com.steeringhub.search.service;
 
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import com.steeringhub.search.dto.SearchRequest;
 import com.steeringhub.search.dto.SearchResult;
 import com.steeringhub.search.service.impl.SearchServiceImpl;

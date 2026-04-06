@@ -1,7 +1,8 @@
 package com.steeringhub.repository.postgres.po;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.SteeringStatus;
+import com.steeringhub.repository.postgres.typehandler.SteeringStatusTypeHandler;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
@@ -20,6 +21,7 @@ public class SteeringPO {
 
     private Long categoryId;
 
+    @TableField(typeHandler = SteeringStatusTypeHandler.class)
     private SteeringStatus status;
 
     private Integer currentVersion;

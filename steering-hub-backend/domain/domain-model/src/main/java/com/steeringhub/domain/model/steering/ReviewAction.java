@@ -20,4 +20,13 @@ public enum ReviewAction {
         this.code = code;
         this.description = description;
     }
+
+    public static ReviewAction fromCode(String code) {
+        for (ReviewAction action : values()) {
+            if (action.code.equals(code)) {
+                return action;
+            }
+        }
+        throw new IllegalArgumentException("Unknown ReviewAction code: " + code);
+    }
 }

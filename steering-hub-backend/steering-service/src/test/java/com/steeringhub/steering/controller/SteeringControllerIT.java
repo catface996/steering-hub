@@ -2,8 +2,8 @@ package com.steeringhub.steering.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.steeringhub.common.enums.ReviewAction;
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.ReviewAction;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.exception.GlobalExceptionHandler;
 import com.steeringhub.common.response.ResultCode;

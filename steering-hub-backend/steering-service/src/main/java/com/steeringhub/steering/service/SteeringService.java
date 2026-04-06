@@ -3,7 +3,7 @@ package com.steeringhub.steering.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.steeringhub.common.enums.ReviewAction;
+import com.steeringhub.domain.model.steering.ReviewAction;
 import com.steeringhub.steering.dto.request.CreateSteeringRequest;
 import com.steeringhub.steering.dto.request.UpdateSteeringRequest;
 import com.steeringhub.steering.dto.response.SteeringDetailResponse;

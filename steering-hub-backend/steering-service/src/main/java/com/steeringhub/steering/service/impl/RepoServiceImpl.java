@@ -1,7 +1,7 @@
 package com.steeringhub.steering.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.steeringhub.common.enums.SteeringStatus;
+import com.steeringhub.domain.model.steering.SteeringStatus;
 import com.steeringhub.common.exception.BusinessException;
 import com.steeringhub.common.response.PageResult;
 import com.steeringhub.steering.dto.request.RepoCreateRequest;
