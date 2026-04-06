@@ -222,22 +222,4 @@ claude -r steering-hub-review-$(date +%Y%m%d) \
   --permission-mode bypassPermissions --print "继续..."
 ```
 
----
-
-## 第七条：任务派发异步铁律（水滴-CC/KC 协作规范）
-
-> 约束对象：水滴（任务派发方），CC/KC 无需遵守此条
-
-### 铁律
-水滴向 CC/KC 派发耗时任务时，**必须异步后台执行**，不得同步阻塞等待。
-
-### 强制规则
-1. 所有 KC/CC 任务用 `nohup ... &` 后台启动，立即返回
-2. 启动后设置**一次性监控 cron**（isolated agentTurn），完成后发通知 + `cron remove` 自删
-3. 禁止在主会话中使用 `process poll timeout=长时间` 同步等待
-4. 单次进度查询（`tail log` / 单次 poll）允许，循环阻塞不允许
-
-### 违规后果
-主会话锁死，大猫无法发消息，视为严重错误。
-
-**Version**: 1.4.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-04-06
+**Version**: 1.3.0 | **Ratified**: 2026-03-22 | **Last Amended**: 2026-03-25
