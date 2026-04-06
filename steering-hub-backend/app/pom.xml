@@ -24,6 +24,39 @@
         </dependency>
         <dependency>
             <groupId>com.steeringhub</groupId>
+            <artifactId>application-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
+            <artifactId>domain-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
+            <artifactId>interface-http</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
+            <artifactId>postgres-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
+            <artifactId>bedrock-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
+            <artifactId>jwt-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.steeringhub</groupId>
             <artifactId>steering-hub-steering-service</artifactId>
         </dependency>
         <dependency>

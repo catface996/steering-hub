@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.repository.postgres.mapper.SteeringCategoryPOMapper">
+
+    <select id="selectTreeByParentId" resultType="com.steeringhub.repository.postgres.po.SteeringCategoryPO">
+        SELECT id, name, code, description, parent_id, sort_order, enabled, created_at, updated_at, deleted
+        FROM steering_category
+        WHERE deleted = false AND enabled = true
+        <if test="parentId != null">AND parent_id = #{parentId}</if>
+        <if test="parentId == null">AND parent_id IS NULL</if>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectAllEnabled" resultType="com.steeringhub.repository.postgres.po.SteeringCategoryPO">
+        SELECT id, name, code, description, parent_id, sort_order, enabled, created_at, updated_at, deleted
+        FROM steering_category
+        WHERE deleted = false AND enabled = true
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="countByCode" resultType="int">
+        SELECT COUNT(*) FROM steering_category WHERE code = #{code} AND deleted = false
+    </select>
+
+    <select id="selectByCode" resultType="com.steeringhub.repository.postgres.po.SteeringCategoryPO">
+        SELECT id, name, code, description, parent_id, sort_order, enabled, created_at, updated_at, deleted
+        FROM steering_category
+        WHERE code = #{code} AND deleted = false
+        LIMIT 1
+    </select>
+
+    <select id="countDirectChildren" resultType="int">
+        SELECT COUNT(*)
+        FROM category_hierarchy ch
+        JOIN steering_category sc ON sc.id = ch.child_category_id
+        WHERE ch.parent_category_id = #{categoryId}
+          AND sc.enabled = TRUE AND sc.deleted = FALSE
+    </select>
+
+</mapper>
