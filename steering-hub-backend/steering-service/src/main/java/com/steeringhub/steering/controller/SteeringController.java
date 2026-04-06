@@ -54,15 +54,9 @@ public class SteeringController {
     public Result<CompareVO> compare(@RequestParam Long idA, @RequestParam Long idB) {
         Steering specA = steeringService.getById(idA);
         Steering specB = steeringService.getById(idB);
-        if (specA == null || specA.getDeleted()) {
-            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
-        }
-        if (specB == null || specB.getDeleted()) {
-            throw new BusinessException(ResultCode.STEERING_NOT_FOUND);
-        }
         CompareVO vo = new CompareVO();
-        vo.setSpecA(toSpecDetailVO(specA));
-        vo.setSpecB(toSpecDetailVO(specB));
+        vo.setSpecA(specA != null && !specA.getDeleted() ? toSpecDetailVO(specA) : null);
+        vo.setSpecB(specB != null && !specB.getDeleted() ? toSpecDetailVO(specB) : null);
         return Result.ok(vo);
     }
 

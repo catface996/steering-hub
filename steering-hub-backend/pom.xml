@@ -12,11 +12,18 @@
     <description>AI Coding Agent 规范管理平台</description>
 
     <modules>
+        <!-- Legacy modules (kept for now) -->
         <module>common</module>
         <module>steering-service</module>
         <module>search-service</module>
         <module>compliance-service</module>
         <module>app</module>
+        <!-- DDD modules -->
+        <module>domain</module>
+        <module>application</module>
+        <module>interface</module>
+        <module>infrastructure</module>
+        <module>bootstrap</module>
     </modules>
 
     <properties>
@@ -34,6 +41,8 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <knife4j.version>4.4.0</knife4j.version>
         <hutool.version>5.8.26</hutool.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <springdoc.version>2.7.0</springdoc.version>
     </properties>
 
     <dependencyManagement>
@@ -63,7 +72,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Internal modules -->
+            <!-- Internal modules (legacy) -->
             <dependency>
                 <groupId>com.steeringhub</groupId>
                 <artifactId>steering-hub-common</artifactId>
@@ -82,6 +91,68 @@
             <dependency>
                 <groupId>com.steeringhub</groupId>
                 <artifactId>steering-hub-compliance-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Internal modules (DDD) -->
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>domain-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>domain-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>domain-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>repository-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>embedding-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>security-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>application-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>application-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>interface-http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>postgres-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>bedrock-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.steeringhub</groupId>
+                <artifactId>jwt-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -137,6 +208,32 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+
+            <!-- JWT -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <!-- SpringDoc OpenAPI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+                <version>${springdoc.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

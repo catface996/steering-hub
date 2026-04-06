@@ -42,8 +42,8 @@ export interface SpecDetailVO {
 }
 
 export interface CompareVO {
-  specA: SpecDetailVO;
-  specB: SpecDetailVO;
+  specA: SpecDetailVO | null;
+  specB: SpecDetailVO | null;
 }
 
 export interface PageResult<T> {

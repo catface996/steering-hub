@@ -2,11 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Col, Flex, Progress, Row, Spin, Tag, Typography, message as antMessage } from 'antd';
 import ConfirmModal from '../../components/ConfirmModal';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileX, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useHeader } from '../../contexts/HeaderContext';
-import { healthService, type CompareVO, type SimilarPairVO } from '../../services/healthService';
+import { healthService, type CompareVO, type SimilarPairVO, type SpecDetailVO } from '../../services/healthService';
 import { steeringService } from '../../services/steeringService';
 import { formatDateTime } from '../../utils/formatTime';
 import type { ReviewAction } from '../../types';
@@ -43,17 +43,47 @@ export default function SimilarPairDetailPage() {
   const [deprecatingId, setDeprecatingId] = useState<number | null>(null);
   const [deprecateTarget, setDeprecateTarget] = useState<{ id: number; title: string } | null>(null);
   const [dismissConfirmOpen, setDismissConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!pair) { setLoading(false); return; }
     setLoading(true);
+    setLoadError(false);
     healthService.compareSpecs(pair.specA.id, pair.specB.id)
       .then(setCompareData)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [pair]);
 
   const handleDeprecate = (specId: number, title: string) => {
     setDeprecateTarget({ id: specId, title });
+  };
+
+  const handleDelete = (specId: number, title: string) => {
+    setDeleteTarget({ id: specId, title });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    try {
+      await steeringService.delete(deleteTarget.id);
+      antMessage.success('删除成功');
+      setDeleteTarget(null);
+      if (pair) {
+        setLoading(true);
+        healthService.compareSpecs(pair.specA.id, pair.specB.id)
+          .then(setCompareData)
+          .catch(() => setLoadError(true))
+          .finally(() => setLoading(false));
+      }
+    } catch {
+      // error toasted by request layer
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleConfirmDeprecate = async () => {
@@ -67,7 +97,7 @@ export default function SimilarPairDetailPage() {
       setCompareData((prev) => {
         if (!prev) return prev;
         const update = (s: typeof prev.specA) =>
-          s.id === specId ? { ...s, status: 'deprecated' } : s;
+          s && s.id === specId ? { ...s, status: 'deprecated' } : s;
         return { specA: update(prev.specA), specB: update(prev.specB) };
       });
     } catch {
@@ -175,26 +205,43 @@ export default function SimilarPairDetailPage() {
       {/* Spec comparison */}
       {loading ? (
         <Flex justify="center" style={{ padding: 64 }}><Spin size="large" /></Flex>
+      ) : loadError ? (
+        <Flex justify="center" align="center" vertical gap={12} style={{ padding: 64 }}>
+          <FileX size={40} color="#71717a" />
+          <Typography.Text style={{ color: '#71717a' }}>规范已不存在，可标记为已处理</Typography.Text>
+        </Flex>
       ) : compareData ? (
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={12}>
             <div style={{ background: 'var(--bg-surface)', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
-              <SpecPanel
-                spec={compareData.specA}
-                categoryName={pair.specA.categoryName}
-                onDeprecate={() => handleDeprecate(compareData.specA.id, compareData.specA.title)}
-                deprecating={deprecatingId === compareData.specA.id}
-              />
+              {compareData.specA ? (
+                <SpecPanel
+                  spec={compareData.specA}
+                  categoryName={pair.specA.categoryName}
+                  onDeprecate={() => handleDeprecate(compareData.specA!.id, compareData.specA!.title)}
+                  deprecating={deprecatingId === compareData.specA.id}
+                  onDelete={() => handleDelete(compareData.specA!.id, compareData.specA!.title)}
+                  deleting={deletingId === compareData.specA.id}
+                />
+              ) : (
+                <DeletedSpecPlaceholder />
+              )}
             </div>
           </Col>
           <Col span={12}>
             <div style={{ background: 'var(--bg-surface)', border: '1px solid #1e1e2a', borderRadius: 8, padding: 24 }}>
-              <SpecPanel
-                spec={compareData.specB}
-                categoryName={pair.specB.categoryName}
-                onDeprecate={() => handleDeprecate(compareData.specB.id, compareData.specB.title)}
-                deprecating={deprecatingId === compareData.specB.id}
-              />
+              {compareData.specB ? (
+                <SpecPanel
+                  spec={compareData.specB}
+                  categoryName={pair.specB.categoryName}
+                  onDeprecate={() => handleDeprecate(compareData.specB!.id, compareData.specB!.title)}
+                  deprecating={deprecatingId === compareData.specB.id}
+                  onDelete={() => handleDelete(compareData.specB!.id, compareData.specB!.title)}
+                  deleting={deletingId === compareData.specB.id}
+                />
+              ) : (
+                <DeletedSpecPlaceholder />
+              )}
             </div>
           </Col>
         </Row>
@@ -221,7 +268,27 @@ export default function SimilarPairDetailPage() {
         onConfirm={handleConfirmDeprecate}
         onCancel={() => setDeprecateTarget(null)}
       />
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        open={deleteTarget !== null}
+        title="确认删除"
+        content={`确定要删除规范「${deleteTarget?.title}」吗？此操作不可撤销。`}
+        okText="删除"
+        loading={deletingId !== null}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
+  );
+}
+
+function DeletedSpecPlaceholder() {
+  return (
+    <Flex vertical align="center" justify="center" style={{ minHeight: 200, color: '#71717a' }} gap={12}>
+      <FileX size={36} />
+      <Typography.Text style={{ color: '#71717a' }}>该规范已被删除</Typography.Text>
+    </Flex>
   );
 }
 
@@ -230,15 +297,20 @@ function SpecPanel({
   categoryName,
   onDeprecate,
   deprecating,
+  onDelete,
+  deleting,
 }: {
-  spec: NonNullable<CompareVO>['specA'];
+  spec: SpecDetailVO;
   categoryName?: string | null;
   onDeprecate?: () => void;
   deprecating?: boolean;
+  onDelete?: () => void;
+  deleting?: boolean;
 }) {
   const tags = spec.tags ? spec.tags.split(',').filter(Boolean) : [];
   const statusKey = spec.status?.toLowerCase() ?? '';
   const canDeprecate = statusKey === 'active' || statusKey === 'approved';
+  const canDelete = statusKey === 'deprecated';
 
   return (
     <div>
@@ -256,6 +328,11 @@ function SpecPanel({
           {canDeprecate && onDeprecate && (
             <Button type="primary" danger size="small" loading={deprecating} onClick={onDeprecate}>
               禁用
+            </Button>
+          )}
+          {canDelete && onDelete && (
+            <Button type="primary" danger size="small" icon={<Trash2 size={14} />} loading={deleting} onClick={onDelete}>
+              删除
             </Button>
           )}
         </Flex>
