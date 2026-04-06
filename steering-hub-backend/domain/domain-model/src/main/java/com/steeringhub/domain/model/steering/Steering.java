@@ -24,6 +24,9 @@ public class Steering {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
+    /** Transient: populated by vector similarity queries */
+    private Double similarityScore;
+
     public boolean isActive() {
         return status != null && status.isActive();
     }
