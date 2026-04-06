@@ -73,6 +73,26 @@ public class SteeringVersionRepositoryImpl implements SteeringVersionRepository 
         return mapper.countVersionsBySteeringId(steeringId);
     }
 
+    @Override
+    public List<SteeringVersion> findBySteeringIdIn(List<Long> steeringIds) {
+        if (steeringIds == null || steeringIds.isEmpty()) {
+            return List.of();
+        }
+        return mapper.selectBySteeringIdIn(steeringIds)
+                .stream().map(this::toEntity).collect(Collectors.toList());
+    }
+
+    @Override
+    public void update(SteeringVersion version) {
+        SteeringVersionPO po = toPO(version);
+        mapper.updateVersion(po);
+    }
+
+    @Override
+    public void updateStatusByVersion(Long steeringId, Integer versionNumber, String newStatus) {
+        mapper.updateStatusByVersion(steeringId, versionNumber, newStatus);
+    }
+
     private SteeringVersion toEntity(SteeringVersionPO po) {
         SteeringVersion entity = new SteeringVersion();
         BeanUtils.copyProperties(po, entity);

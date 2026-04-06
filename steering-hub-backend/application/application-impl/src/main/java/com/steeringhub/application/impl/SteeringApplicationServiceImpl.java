@@ -30,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -200,33 +203,54 @@ public class SteeringApplicationServiceImpl implements SteeringApplicationServic
         if (!"draft".equals(version.getStatus())) {
             throw new BusinessException(ResultCode.STEERING_STATUS_INVALID.getCode(), "只能删除草稿版本");
         }
-        // Use version status update to mark as deleted (no direct delete on version repo)
-        steeringVersionRepository.updateVersionStatus(steeringId, "draft", "deleted");
+        // Use precise version-based status update (not by status which affects all drafts)
+        steeringVersionRepository.updateStatusByVersion(steeringId, versionNumber, "deleted");
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResult<ReviewQueueItemVO> listReviewQueue(int page, int size) {
-        // Query all steerings, filter those with pending_review versions
+        // Step 1: paginated query for steerings
         SteeringQuery query = new SteeringQuery();
-        PageResult<Steering> allSteerings = steeringRepository.page(query, 1, Integer.MAX_VALUE);
+        PageResult<Steering> steeringPage = steeringRepository.page(query, page, size);
+        List<Steering> steerings = steeringPage.getRecords();
+        if (steerings.isEmpty()) {
+            return PageResult.of(List.of(), 0, page, size);
+        }
 
-        List<ReviewQueueItemVO> items = allSteerings.getRecords().stream()
+        // Step 2: batch load all versions for this page's steeringIds (avoid N+1)
+        List<Long> steeringIds = steerings.stream().map(Steering::getId).collect(Collectors.toList());
+        List<SteeringVersion> allVersions = steeringVersionRepository.findBySteeringIdIn(steeringIds);
+        Map<Long, List<SteeringVersion>> versionsBySteeringId = allVersions.stream()
+                .collect(Collectors.groupingBy(SteeringVersion::getSteeringId));
+
+        // Step 3: batch load categories
+        Set<Long> categoryIds = steerings.stream()
+                .map(Steering::getCategoryId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, String> categoryNameMap = categoryIds.isEmpty()
+                ? Map.of()
+                : categoryIds.stream()
+                    .map(categoryRepository::getById)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(c -> c.getId(), c -> c.getName(), (a, b) -> a));
+
+        // Step 4: assemble in memory
+        List<ReviewQueueItemVO> items = steerings.stream()
                 .map(s -> {
-                    SteeringVersion pending = steeringVersionRepository.findBySteeringIdAndStatus(s.getId(), "pending_review");
+                    List<SteeringVersion> versions = versionsBySteeringId.getOrDefault(s.getId(), List.of());
+                    SteeringVersion pending = versions.stream()
+                            .filter(v -> "pending_review".equals(v.getStatus())).findFirst().orElse(null);
                     if (pending == null) return null;
+
+                    SteeringVersion active = versions.stream()
+                            .filter(v -> "active".equals(v.getStatus())).findFirst().orElse(null);
 
                     ReviewQueueItemVO vo = new ReviewQueueItemVO();
                     vo.setSteeringId(s.getId());
                     vo.setSteeringTitle(s.getTitle());
                     vo.setSteeringStatus(s.getStatus() != null ? s.getStatus().getCode() : null);
-
-                    var cat = categoryRepository.getById(s.getCategoryId());
-                    vo.setCategoryName(cat != null ? cat.getName() : null);
-
-                    SteeringVersion active = steeringVersionRepository.findBySteeringIdAndStatus(s.getId(), "active");
+                    vo.setCategoryName(categoryNameMap.get(s.getCategoryId()));
                     vo.setCurrentActiveVersion(active != null ? active.getVersion() : null);
-
                     vo.setVersionId(pending.getId());
                     vo.setPendingVersion(pending.getVersion());
                     vo.setPendingTitle(pending.getTitle());
@@ -236,13 +260,10 @@ public class SteeringApplicationServiceImpl implements SteeringApplicationServic
                     vo.setIsRevision(active != null);
                     return vo;
                 })
-                .filter(v -> v != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        int total = items.size();
-        int from = Math.min((page - 1) * size, total);
-        int to = Math.min(from + size, total);
-        return PageResult.of(items.subList(from, to), total, page, size);
+        return PageResult.of(items, steeringPage.getTotal(), page, size);
     }
 
     @Override
@@ -291,7 +312,6 @@ public class SteeringApplicationServiceImpl implements SteeringApplicationServic
     private void handleActiveUpdate(Long id, Steering steering, UpdateSteeringRequest request) {
         SteeringVersion existingDraft = steeringVersionRepository.findBySteeringIdAndStatus(id, "draft");
         if (existingDraft != null) {
-            // Update existing draft version in-place via save
             existingDraft.setTitle(request.getTitle());
             existingDraft.setContent(request.getContent());
             if (request.getTags() != null) {
@@ -299,8 +319,7 @@ public class SteeringApplicationServiceImpl implements SteeringApplicationServic
             }
             existingDraft.setKeywords(steeringDomainService.sanitizeKeywords(request.getKeywords()));
             existingDraft.setChangeLog(request.getChangeLog());
-            // Re-save as new version (repository has no update method for versions)
-            steeringVersionRepository.updateVersionStatus(id, "draft", "draft");
+            steeringVersionRepository.update(existingDraft);
         } else {
             Integer maxVersion = steeringVersionRepository.findMaxVersionBySteeringId(id);
             int newVersionNumber = (maxVersion == null ? 0 : maxVersion) + 1;

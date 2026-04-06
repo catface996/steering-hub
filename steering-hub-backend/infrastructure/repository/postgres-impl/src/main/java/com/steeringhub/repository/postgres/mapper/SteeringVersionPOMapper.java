@@ -28,4 +28,12 @@ public interface SteeringVersionPOMapper extends BaseMapper<SteeringVersionPO> {
                                                       @Param("size") long size);
 
     int countVersionsBySteeringId(@Param("steeringId") Long steeringId);
+
+    List<SteeringVersionPO> selectBySteeringIdIn(@Param("steeringIds") List<Long> steeringIds);
+
+    void updateVersion(SteeringVersionPO po);
+
+    int updateStatusByVersion(@Param("steeringId") Long steeringId,
+                              @Param("versionNumber") Integer versionNumber,
+                              @Param("newStatus") String newStatus);
 }

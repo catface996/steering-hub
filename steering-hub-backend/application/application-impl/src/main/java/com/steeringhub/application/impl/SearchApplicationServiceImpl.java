@@ -32,7 +32,7 @@ public class SearchApplicationServiceImpl implements SearchApplicationService {
     private final SteeringQueryLogRepository steeringQueryLogRepository;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(rollbackFor = Exception.class)
     public SearchResponse search(SearchRequest request) {
         log.info("search start query={} mode={}", request.getQuery(), request.getMode());
 

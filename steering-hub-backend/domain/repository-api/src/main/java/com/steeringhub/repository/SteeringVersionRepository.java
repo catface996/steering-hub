@@ -24,4 +24,10 @@ public interface SteeringVersionRepository {
     PageResult<SteeringVersion> page(Long steeringId, int page, int size);
 
     int countBySteeringId(Long steeringId);
+
+    List<SteeringVersion> findBySteeringIdIn(List<Long> steeringIds);
+
+    void update(SteeringVersion version);
+
+    void updateStatusByVersion(Long steeringId, Integer versionNumber, String newStatus);
 }

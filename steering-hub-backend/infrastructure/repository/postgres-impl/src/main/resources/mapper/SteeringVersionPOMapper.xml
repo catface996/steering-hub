@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.repository.postgres.mapper.SteeringVersionPOMapper">
+
+    <select id="selectBySteeringId" resultType="com.steeringhub.repository.postgres.po.SteeringVersionPO">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+        ORDER BY version DESC
+    </select>
+
+    <select id="selectBySteeringIdAndVersion" resultType="com.steeringhub.repository.postgres.po.SteeringVersionPO">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+          AND version = #{version}
+    </select>
+
+    <select id="selectMaxVersionBySteeringId" resultType="java.lang.Integer">
+        SELECT MAX(version) FROM steering_version WHERE steering_id = #{steeringId}
+    </select>
+
+    <update id="updateVersionStatus">
+        UPDATE steering_version
+        SET status = #{toStatus}, updated_at = NOW()
+        WHERE steering_id = #{steeringId}
+          AND status = #{fromStatus}
+    </update>
+
+    <select id="findVersionBySteeringIdAndStatus" resultType="com.steeringhub.repository.postgres.po.SteeringVersionPO">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+          AND status = #{status}
+        LIMIT 1
+    </select>
+
+    <select id="listVersionsBySteeringId" resultType="com.steeringhub.repository.postgres.po.SteeringVersionPO">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id = #{steeringId}
+        ORDER BY version DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countVersionsBySteeringId" resultType="int">
+        SELECT COUNT(*) FROM steering_version WHERE steering_id = #{steeringId}
+    </select>
+
+    <select id="selectBySteeringIdIn" resultType="com.steeringhub.repository.postgres.po.SteeringVersionPO">
+        SELECT id, steering_id, version, title, content, tags, keywords, change_log, status, created_by, created_at, updated_at
+        FROM steering_version
+        WHERE steering_id IN
+        <foreach collection="steeringIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="updateVersion">
+        UPDATE steering_version
+        SET title = #{title}, content = #{content}, tags = #{tags}, keywords = #{keywords},
+            change_log = #{changeLog}, status = #{status}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatusByVersion">
+        UPDATE steering_version
+        SET status = #{newStatus}, updated_at = NOW()
+        WHERE steering_id = #{steeringId}
+          AND version = #{versionNumber}
+    </update>
+
+</mapper>
