@@ -31,4 +31,8 @@ public interface SearchApplicationService {
     List<QueryLogVO> getFailureLogs(int days, int limit);
 
     QueryLogDetailVO getQueryLogById(Long id);
+
+    void submitFeedback(Long queryId, String result, String reason, String expectedTopic);
+
+    void triggerEmbeddingUpdate(Long steeringId);
 }

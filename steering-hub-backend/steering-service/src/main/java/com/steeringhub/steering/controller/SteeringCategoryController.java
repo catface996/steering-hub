@@ -1,9 +1,9 @@
 package com.steeringhub.steering.controller;
 
+import com.steeringhub.application.api.dto.request.CreateCategoryRequest;
+import com.steeringhub.application.api.dto.response.CategoryVO;
+import com.steeringhub.application.api.service.CategoryApplicationService;
 import com.steeringhub.common.response.Result;
-import com.steeringhub.steering.dto.request.CreateCategoryRequest;
-import com.steeringhub.steering.entity.SteeringCategory;
-import com.steeringhub.steering.service.SteeringCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,33 +18,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SteeringCategoryController {
 
-    private final SteeringCategoryService steeringCategoryService;
+    private final CategoryApplicationService categoryApplicationService;
 
     @Operation(summary = "获取分类树")
     @GetMapping
-    public Result<List<SteeringCategory>> listCategories() {
-        return Result.ok(steeringCategoryService.listTree());
+    public Result<List<CategoryVO>> listCategories() {
+        return Result.ok(categoryApplicationService.listTree());
     }
 
     @Operation(summary = "创建分类")
     @PostMapping
-    public Result<SteeringCategory> createCategory(@RequestBody @Valid CreateCategoryRequest req) {
-        return Result.ok(steeringCategoryService.createCategory(
-                req.getName(), req.getCode(), req.getDescription(), req.getParentId()));
+    public Result<CategoryVO> createCategory(@RequestBody @Valid CreateCategoryRequest req) {
+        return Result.ok(categoryApplicationService.createCategory(req));
     }
 
     @Operation(summary = "更新分类")
     @PutMapping("/{id}")
-    public Result<SteeringCategory> updateCategory(@PathVariable Long id,
-                                               @RequestParam String name,
-                                               @RequestParam(required = false) String description) {
-        return Result.ok(steeringCategoryService.updateCategory(id, name, description));
+    public Result<CategoryVO> updateCategory(@PathVariable Long id,
+                                             @RequestParam String name,
+                                             @RequestParam(required = false) String description) {
+        return Result.ok(categoryApplicationService.updateCategory(id, name, description));
     }
 
     @Operation(summary = "删除分类")
     @DeleteMapping("/{id}")
     public Result<Void> deleteCategory(@PathVariable Long id) {
-        steeringCategoryService.deleteCategory(id);
+        categoryApplicationService.deleteCategory(id);
         return Result.ok();
     }
 }

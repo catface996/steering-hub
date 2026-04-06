@@ -10,6 +10,9 @@ import com.steeringhub.application.api.dto.response.RepoSteeringItem;
 import com.steeringhub.application.api.dto.response.RepoVO;
 import com.steeringhub.common.response.PageResult;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 仓库管理应用服务
  */
@@ -36,4 +39,6 @@ public interface RepoApplicationService {
     PageResult<RepoSteeringItem> listSteeringsByRepo(Long repoId, int page, int size);
 
     PageResult<RepoItem> listReposBySteering(Long steeringId, int page, int size);
+
+    List<Map<String, Object>> getUsageStats(int limit);
 }

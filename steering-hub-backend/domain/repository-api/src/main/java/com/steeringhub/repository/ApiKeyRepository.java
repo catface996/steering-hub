@@ -13,4 +13,8 @@ public interface ApiKeyRepository {
     void save(ApiKey apiKey);
 
     void update(ApiKey apiKey);
+
+    ApiKey getById(Long id);
+
+    void deleteById(Long id);
 }

@@ -9,6 +9,8 @@ public interface SteeringQueryLogRepository {
 
     void save(SteeringQueryLog log);
 
+    void update(SteeringQueryLog log);
+
     int countWeeklySearches();
 
     SteeringQueryLog getById(Long id);

@@ -41,6 +41,17 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
         mapper.updateById(toPO(apiKey));
     }
 
+    @Override
+    public ApiKey getById(Long id) {
+        ApiKeyPO po = mapper.selectById(id);
+        return po == null ? null : toEntity(po);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        mapper.deleteById(id);
+    }
+
     private ApiKey toEntity(ApiKeyPO po) {
         ApiKey entity = new ApiKey();
         BeanUtils.copyProperties(po, entity);

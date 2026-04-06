@@ -3,8 +3,10 @@ package com.steeringhub.application.impl;
 import com.steeringhub.application.api.dto.request.CreateSteeringRequest;
 import com.steeringhub.application.api.dto.request.ReviewSteeringRequest;
 import com.steeringhub.application.api.dto.request.UpdateSteeringRequest;
+import com.steeringhub.application.api.dto.response.CompareVO;
 import com.steeringhub.application.api.dto.response.DiffVO;
 import com.steeringhub.application.api.dto.response.ReviewQueueItemVO;
+import com.steeringhub.application.api.dto.response.SpecDetailVO;
 import com.steeringhub.application.api.dto.response.SteeringDetailResponse;
 import com.steeringhub.application.api.dto.response.SteeringVersionDetailVO;
 import com.steeringhub.application.api.dto.response.SteeringVersionVO;
@@ -299,6 +301,76 @@ public class SteeringApplicationServiceImpl implements SteeringApplicationServic
         return diff;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public CompareVO compare(Long idA, Long idB) {
+        Steering specA = steeringRepository.getById(idA);
+        Steering specB = steeringRepository.getById(idB);
+        CompareVO vo = new CompareVO();
+        vo.setSpecA(specA != null ? toSpecDetailVO(specA) : null);
+        vo.setSpecB(specB != null ? toSpecDetailVO(specB) : null);
+        return vo;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void generateContentEmbedding(Long steeringId) {
+        log.info("generateContentEmbedding steeringId={}", steeringId);
+        Steering steering = getSteeringOrThrow(steeringId);
+        float[] embedding = embeddingService.embedSteering(steering.getTitle(), steering.getKeywords(), steering.getTags());
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        sb.append("]");
+        steeringRepository.updateContentEmbedding(steeringId, sb.toString());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> mcpCreateSteering(String title, String content, String categoryCode, List<String> tags) {
+        log.info("mcpCreateSteering title={} categoryCode={}", title, categoryCode);
+
+        com.steeringhub.domain.model.category.SteeringCategory category = categoryRepository.findByCode(categoryCode);
+        if (category == null || !category.getEnabled()) {
+            throw new BusinessException(ResultCode.CATEGORY_NOT_FOUND);
+        }
+
+        CreateSteeringRequest createReq = new CreateSteeringRequest();
+        createReq.setTitle(title);
+        createReq.setContent(content);
+        createReq.setCategoryId(category.getId());
+        createReq.setTags(tags);
+
+        SteeringDetailResponse detail = createSteering(createReq);
+        return Map.of("id", detail.getId(), "title", detail.getTitle(), "status", detail.getStatus().getCode());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> mcpReviseSteering(Long id, String content, String changeLog, List<String> tags) {
+        log.info("mcpReviseSteering id={}", id);
+
+        Steering steering = getSteeringOrThrow(id);
+
+        UpdateSteeringRequest updateReq = new UpdateSteeringRequest();
+        updateReq.setTitle(steering.getTitle());
+        updateReq.setContent(content);
+        updateReq.setTags(tags);
+        updateReq.setChangeLog(changeLog);
+
+        updateSteering(id, updateReq);
+
+        // Auto-submit for review
+        ReviewSteeringRequest reviewReq = new ReviewSteeringRequest();
+        reviewReq.setAction(com.steeringhub.domain.model.steering.ReviewAction.SUBMIT);
+        reviewReq.setComment("MCP agent 提交修订: " + changeLog);
+        reviewSteering(id, reviewReq, null, "mcp-agent");
+
+        return Map.of("id", id, "title", steering.getTitle(), "status", "pending_review", "message", "修订已提交，等待审批");
+    }
+
     // --- private helpers ---
 
     private Steering getSteeringOrThrow(Long id) {
@@ -403,6 +475,18 @@ public class SteeringApplicationServiceImpl implements SteeringApplicationServic
         vo.setChangeSummary(v.getChangeLog());
         vo.setCreatedAt(v.getCreatedAt());
         vo.setUpdatedAt(v.getUpdatedAt());
+        return vo;
+    }
+
+    private SpecDetailVO toSpecDetailVO(Steering s) {
+        SpecDetailVO vo = new SpecDetailVO();
+        vo.setId(s.getId());
+        vo.setTitle(s.getTitle());
+        vo.setTags(s.getTags());
+        vo.setKeywords(s.getKeywords());
+        vo.setContent(s.getContent());
+        vo.setStatus(s.getStatus() != null ? s.getStatus().getCode() : null);
+        vo.setUpdatedAt(s.getUpdatedAt());
         return vo;
     }
 

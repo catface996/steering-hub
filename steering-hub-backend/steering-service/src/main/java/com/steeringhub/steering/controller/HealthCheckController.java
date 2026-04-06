@@ -1,16 +1,15 @@
 package com.steeringhub.steering.controller;
 
+import com.steeringhub.application.api.dto.response.HealthCheckTaskVO;
+import com.steeringhub.application.api.dto.response.SimilarPairVO;
+import com.steeringhub.application.api.dto.response.TriggerVO;
+import com.steeringhub.application.api.service.HealthCheckApplicationService;
 import com.steeringhub.common.response.PageResult;
 import com.steeringhub.common.response.Result;
-import com.steeringhub.steering.dto.response.HealthCheckTaskVO;
-import com.steeringhub.steering.dto.response.SimilarPairVO;
-import com.steeringhub.steering.dto.response.TriggerVO;
-import com.steeringhub.steering.service.HealthCheckService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Tag(name = "规范健康度")
 @RestController
@@ -18,30 +17,24 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 public class HealthCheckController {
 
-    private final HealthCheckService healthCheckService;
+    private final HealthCheckApplicationService healthCheckApplicationService;
 
     @Operation(summary = "触发相似性检测任务")
     @PostMapping("/trigger")
     public Result<TriggerVO> trigger() {
-        return Result.ok(healthCheckService.triggerCheck());
-    }
-
-    @Operation(summary = "SSE 事件流（任务状态推送）")
-    @GetMapping("/events")
-    public SseEmitter events() {
-        return healthCheckService.subscribeEvents();
+        return Result.ok(healthCheckApplicationService.triggerCheck());
     }
 
     @Operation(summary = "获取最新检测任务状态")
     @GetMapping("/latest")
     public Result<HealthCheckTaskVO> latest() {
-        return Result.ok(healthCheckService.getLatestTask().orElse(null));
+        return Result.ok(healthCheckApplicationService.getLatestTask().orElse(null));
     }
 
     @Operation(summary = "标记相似对已处理（删除记录）")
     @PostMapping("/pairs/{pairId}/dismiss")
     public Result<Void> dismissPair(@PathVariable Long pairId) {
-        healthCheckService.dismissPair(pairId);
+        healthCheckApplicationService.dismissPair(pairId);
         return Result.ok();
     }
 
@@ -53,6 +46,6 @@ public class HealthCheckController {
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) String specTitle,
             @RequestParam(required = false) Long categoryId) {
-        return Result.ok(healthCheckService.getSimilarPairs(taskId, page, pageSize, specTitle, categoryId));
+        return Result.ok(healthCheckApplicationService.getSimilarPairs(taskId, page, pageSize, specTitle, categoryId));
     }
 }

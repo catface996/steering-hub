@@ -1,9 +1,9 @@
 package com.steeringhub.compliance.controller;
 
+import com.steeringhub.application.api.dto.request.ComplianceCheckRequest;
+import com.steeringhub.application.api.dto.response.ComplianceCheckResponse;
+import com.steeringhub.application.api.service.ComplianceApplicationService;
 import com.steeringhub.common.response.Result;
-import com.steeringhub.compliance.dto.ComplianceCheckRequest;
-import com.steeringhub.compliance.dto.ComplianceCheckResponse;
-import com.steeringhub.compliance.service.ComplianceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,12 +18,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ComplianceController {
 
-    private final ComplianceService complianceService;
+    private final ComplianceApplicationService complianceApplicationService;
 
     @Operation(summary = "提交代码合规检查")
     @PostMapping("/check")
     public Result<ComplianceCheckResponse> check(@Valid @RequestBody ComplianceCheckRequest request) {
-        return Result.ok(complianceService.checkCompliance(request));
+        return Result.ok(complianceApplicationService.checkCompliance(request));
     }
 
     @Operation(summary = "获取仓库历史合规报告")
@@ -31,12 +31,12 @@ public class ComplianceController {
     public Result<List<ComplianceCheckResponse>> listReports(
             @RequestParam String repoFullName,
             @RequestParam(defaultValue = "20") int limit) {
-        return Result.ok(complianceService.listReports(repoFullName, limit));
+        return Result.ok(complianceApplicationService.listReports(repoFullName, limit));
     }
 
     @Operation(summary = "获取合规报告详情")
     @GetMapping("/reports/{reportId}")
     public Result<ComplianceCheckResponse> getReport(@PathVariable Long reportId) {
-        return Result.ok(complianceService.getReport(reportId));
+        return Result.ok(complianceApplicationService.getReport(reportId));
     }
 }

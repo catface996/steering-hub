@@ -29,9 +29,38 @@ public class StopWordRepositoryImpl implements StopWordRepository {
                 .stream().map(this::toEntity).collect(Collectors.toList());
     }
 
+    @Override
+    public void save(StopWord stopWord) {
+        StopWordPO po = toPO(stopWord);
+        mapper.insert(po);
+        stopWord.setId(po.getId());
+    }
+
+    @Override
+    public StopWord getById(Long id) {
+        StopWordPO po = mapper.selectById(id);
+        return po == null ? null : toEntity(po);
+    }
+
+    @Override
+    public void update(StopWord stopWord) {
+        mapper.updateById(toPO(stopWord));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        mapper.deleteById(id);
+    }
+
     private StopWord toEntity(StopWordPO po) {
         StopWord entity = new StopWord();
         BeanUtils.copyProperties(po, entity);
         return entity;
+    }
+
+    private StopWordPO toPO(StopWord entity) {
+        StopWordPO po = new StopWordPO();
+        BeanUtils.copyProperties(entity, po);
+        return po;
     }
 }

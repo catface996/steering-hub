@@ -17,6 +17,7 @@ import com.steeringhub.domain.model.steering.Steering;
 import com.steeringhub.repository.RepoRepository;
 import com.steeringhub.repository.RepoSteeringRepository;
 import com.steeringhub.repository.SteeringRepository;
+import com.steeringhub.repository.SteeringUsageRepository;
 import com.steeringhub.repository.query.RepoQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,6 +36,7 @@ public class RepoApplicationServiceImpl implements RepoApplicationService {
     private final RepoRepository repoRepository;
     private final RepoSteeringRepository repoSteeringRepository;
     private final SteeringRepository steeringRepository;
+    private final SteeringUsageRepository steeringUsageRepository;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -194,6 +197,15 @@ public class RepoApplicationServiceImpl implements RepoApplicationService {
         // For now, return a simplified result
         List<RepoItem> items = List.of();
         return PageResult.of(items, total, page, size);
+    }
+
+    // --- new methods for Controller migration ---
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getUsageStats(int limit) {
+        log.info("getUsageStats limit={}", limit);
+        return steeringUsageRepository.findUsageStats(limit);
     }
 
     // --- private helpers ---

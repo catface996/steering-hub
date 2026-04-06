@@ -30,6 +30,11 @@ public class SteeringQueryLogRepositoryImpl implements SteeringQueryLogRepositor
     }
 
     @Override
+    public void update(SteeringQueryLog log) {
+        mapper.updateById(toPO(log));
+    }
+
+    @Override
     public int countWeeklySearches() {
         return mapper.countWeeklySearches();
     }

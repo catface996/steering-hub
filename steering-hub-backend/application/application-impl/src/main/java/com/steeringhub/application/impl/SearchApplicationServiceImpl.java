@@ -230,6 +230,42 @@ public class SearchApplicationServiceImpl implements SearchApplicationService {
         return vo;
     }
 
+    // --- new methods for Controller migration ---
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void submitFeedback(Long queryId, String result, String reason, String expectedTopic) {
+        log.info("submitFeedback queryId={} result={}", queryId, result);
+        SteeringQueryLog logEntry = steeringQueryLogRepository.getById(queryId);
+        if (logEntry == null) return;
+
+        if ("success".equals(result)) {
+            logEntry.setIsEffective(true);
+        } else if ("failure".equals(result)) {
+            logEntry.setIsEffective(false);
+            logEntry.setFailureReason(reason);
+            logEntry.setExpectedTopic(expectedTopic);
+        }
+        steeringQueryLogRepository.update(logEntry);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void triggerEmbeddingUpdate(Long steeringId) {
+        log.info("triggerEmbeddingUpdate steeringId={}", steeringId);
+        Steering steering = steeringRepository.getById(steeringId);
+        if (steering == null) return;
+
+        float[] embedding = embeddingService.embed(steering.getTitle() + " " + steering.getKeywords());
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < embedding.length; i++) {
+            if (i > 0) sb.append(",");
+            sb.append(embedding[i]);
+        }
+        sb.append("]");
+        steeringRepository.updateEmbedding(steeringId, sb.toString());
+    }
+
     // --- private helpers ---
 
     private List<SearchResult> doHybridSearch(String query, Long categoryId, int limit) {

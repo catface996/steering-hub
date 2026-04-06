@@ -5,7 +5,7 @@
       "args": ["-m", "steering_hub_mcp.server"],
       "env": {
         "STEERING_HUB_API_URL": "http://localhost:8080",
-        "STEERING_HUB_API_KEY": "sh_48b742f5c0dc4059bde0fe65ac7f172f"
+        "STEERING_HUB_API_KEY": "sh_7eac427d6f874feda22072ca8685475c"
       }
     }
   }
