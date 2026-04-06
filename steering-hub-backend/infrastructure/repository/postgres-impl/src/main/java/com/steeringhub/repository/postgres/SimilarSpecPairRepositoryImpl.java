@@ -24,13 +24,30 @@ public class SimilarSpecPairRepositoryImpl implements SimilarSpecPairRepository 
     }
 
     @Override
+    public List<SimilarSpecPair> findByTaskIdPaged(Long taskId, int offset, int pageSize, String specTitle, Long categoryId) {
+        return mapper.findByTaskIdPaged(taskId, offset, pageSize, specTitle, categoryId)
+                .stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public long countByTaskIdFiltered(Long taskId, String specTitle, Long categoryId) {
         return mapper.countByTaskIdFiltered(taskId, specTitle, categoryId);
+    }
+
+    @Override
+    public void deleteById(Long pairId) {
+        mapper.deleteById(pairId);
     }
 
     private SimilarSpecPairPO toPO(SimilarSpecPair entity) {
         SimilarSpecPairPO po = new SimilarSpecPairPO();
         BeanUtils.copyProperties(entity, po);
         return po;
+    }
+
+    private SimilarSpecPair toDomain(SimilarSpecPairPO po) {
+        SimilarSpecPair entity = new SimilarSpecPair();
+        BeanUtils.copyProperties(po, entity);
+        return entity;
     }
 }

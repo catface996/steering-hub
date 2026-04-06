@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.repository.postgres.mapper.SimilarSpecPairPOMapper">
+
+    <insert id="batchInsert">
+        INSERT INTO similar_spec_pair
+            (task_id, spec_a_id, spec_b_id, overall_score, vector_score, title_score, tags_score, keywords_score, reason_tags)
+        VALUES
+        <foreach collection="list" item="p" separator=",">
+            (#{p.taskId}, #{p.specAId}, #{p.specBId}, #{p.overallScore}, #{p.vectorScore},
+             #{p.titleScore}, #{p.tagsScore}, #{p.keywordsScore}, #{p.reasonTags})
+        </foreach>
+    </insert>
+
+    <sql id="filterConditions">
+        <if test="specTitle != null and specTitle != ''">
+            AND (sa.title LIKE CONCAT('%', #{specTitle}, '%') OR sb.title LIKE CONCAT('%', #{specTitle}, '%'))
+        </if>
+        <if test="categoryId != null">
+            AND sa.category_id = #{categoryId}
+        </if>
+    </sql>
+
+    <select id="findByTaskIdPaged" resultType="com.steeringhub.repository.postgres.po.SimilarSpecPairPO">
+        SELECT ssp.*
+        FROM similar_spec_pair ssp
+        JOIN steering sa ON sa.id = ssp.spec_a_id
+        JOIN steering sb ON sb.id = ssp.spec_b_id
+        WHERE ssp.task_id = #{taskId}
+        <include refid="filterConditions"/>
+        ORDER BY ssp.overall_score DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByTaskIdFiltered" resultType="long">
+        SELECT COUNT(*)
+        FROM similar_spec_pair ssp
+        JOIN steering sa ON sa.id = ssp.spec_a_id
+        JOIN steering sb ON sb.id = ssp.spec_b_id
+        WHERE ssp.task_id = #{taskId}
+        <include refid="filterConditions"/>
+    </select>
+
+</mapper>
