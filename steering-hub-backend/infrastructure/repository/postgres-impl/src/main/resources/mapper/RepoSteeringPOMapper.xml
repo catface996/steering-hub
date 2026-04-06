@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.repository.postgres.mapper.RepoSteeringPOMapper">
+
+    <insert id="upsertBinding">
+        INSERT INTO repo_steering (repo_id, steering_id, mandatory, created_at, updated_at)
+        VALUES (#{repoId}, #{steeringId}, #{mandatory}, NOW(), NOW())
+        ON CONFLICT (repo_id, steering_id)
+        DO UPDATE SET mandatory = #{mandatory}, updated_at = NOW()
+    </insert>
+
+    <delete id="deleteByPair">
+        DELETE FROM repo_steering
+        WHERE repo_id = #{repoId} AND steering_id = #{steeringId}
+    </delete>
+
+    <delete id="deleteByRepoId">
+        DELETE FROM repo_steering WHERE repo_id = #{repoId}
+    </delete>
+
+    <select id="findByPair" resultType="com.steeringhub.repository.postgres.po.RepoSteeringPO">
+        SELECT id, repo_id, steering_id, mandatory, created_at, updated_at
+        FROM repo_steering
+        WHERE repo_id = #{repoId} AND steering_id = #{steeringId}
+        LIMIT 1
+    </select>
+
+    <select id="listAllByRepoId" resultType="com.steeringhub.repository.postgres.po.RepoSteeringPO">
+        SELECT id, repo_id, steering_id, mandatory, created_at, updated_at
+        FROM repo_steering
+        WHERE repo_id = #{repoId}
+    </select>
+
+    <select id="countByRepoId" resultType="long">
+        SELECT COUNT(*) FROM repo_steering WHERE repo_id = #{repoId}
+    </select>
+
+    <select id="countBySteeringId" resultType="long">
+        SELECT COUNT(*) FROM repo_steering WHERE steering_id = #{steeringId}
+    </select>
+
+</mapper>

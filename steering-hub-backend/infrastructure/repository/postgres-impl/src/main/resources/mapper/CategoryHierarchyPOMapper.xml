@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.steeringhub.repository.postgres.mapper.CategoryHierarchyPOMapper">
+
+    <insert id="insertRelation">
+        INSERT INTO category_hierarchy (parent_category_id, child_category_id, sort_order)
+        VALUES (#{parentId}, #{childId}, #{sortOrder})
+        ON CONFLICT DO NOTHING
+    </insert>
+
+    <delete id="deleteRelation">
+        DELETE FROM category_hierarchy
+        WHERE parent_category_id = #{parentId}
+          AND child_category_id = #{childId}
+    </delete>
+
+    <select id="selectChildIds" resultType="Long">
+        SELECT ch.child_category_id
+        FROM category_hierarchy ch
+        JOIN steering_category sc ON sc.id = ch.child_category_id
+        WHERE ch.parent_category_id = #{parentId}
+          AND sc.enabled = TRUE AND sc.deleted = FALSE
+    </select>
+
+    <select id="selectAllDescendantIds" resultType="Long">
+        WITH RECURSIVE descendants AS (
+            SELECT child_category_id
+            FROM category_hierarchy
+            WHERE parent_category_id = #{rootId}
+            UNION ALL
+            SELECT ch.child_category_id
+            FROM category_hierarchy ch
+            JOIN descendants d ON ch.parent_category_id = d.child_category_id
+        )
+        SELECT child_category_id FROM descendants
+    </select>
+
+</mapper>

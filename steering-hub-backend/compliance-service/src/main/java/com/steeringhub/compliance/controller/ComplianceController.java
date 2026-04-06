@@ -14,7 +14,7 @@ import java.util.List;
 
 @Tag(name = "合规审查")
 @RestController
-@RequestMapping("/api/v1/web/compliance")
+@RequestMapping("/api/v1/compliance")
 @RequiredArgsConstructor
 public class ComplianceController {
 
