@@ -45,6 +45,7 @@ public interface SteeringPOMapper extends BaseMapper<SteeringPO> {
                        @Param("title") String title,
                        @Param("content") String content,
                        @Param("tags") String tags,
+                       @Param("keywords") String keywords,
                        @Param("currentVersion") Integer currentVersion,
                        @Param("embeddingStr") String embeddingStr,
                        @Param("contentEmbeddingStr") String contentEmbeddingStr);

@@ -148,11 +148,15 @@ public class SearchApplicationServiceImpl implements SearchApplicationService {
     @Transactional(readOnly = true)
     public Map<String, Object> queryAnalytics(int days) {
         log.info("queryAnalytics days={}", days);
-        // Delegate to dashboard stats as a simplified analytics view
         Map<String, Object> analytics = new HashMap<>();
-        analytics.put("weeklySearchCount", steeringQueryLogRepository.countWeeklySearches());
-        analytics.put("activeSteeringCount", steeringRepository.countActiveSpecs());
-        analytics.put("days", days);
+        analytics.put("totalQueries", steeringQueryLogRepository.countByDays(days));
+        analytics.put("effectiveQueries", steeringQueryLogRepository.countEffectiveByDays(days));
+        analytics.put("ineffectiveQueries", steeringQueryLogRepository.countIneffectiveByDays(days));
+        analytics.put("pendingQueries", steeringQueryLogRepository.countPendingByDays(days));
+        analytics.put("topQueries", steeringQueryLogRepository.findTopQueriesByDays(days, 10));
+        analytics.put("activeAgents", steeringQueryLogRepository.findActiveAgentsByDays(days, 10));
+        Double avg = steeringQueryLogRepository.avgResponseTimeByDays(days);
+        analytics.put("avgResponseTimeMs", avg != null ? avg.longValue() : 0);
         return analytics;
     }
 

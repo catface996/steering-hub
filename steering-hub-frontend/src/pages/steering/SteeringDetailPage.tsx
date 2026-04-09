@@ -261,12 +261,6 @@ export default function SteeringDetailPage() {
                           ? <Flex wrap="wrap" gap={4}>{steering.tags.map((t, index) => <Tag key={t} className={`tag-base tag-color-${index % 7}`}>{t}</Tag>)}</Flex>
                           : '-'
                       },
-                      {
-                        label: '关键词',
-                        value: steering.keywords
-                          ? <Flex wrap="wrap" gap={4}>{steering.keywords.split(',').filter(k => k.trim()).map((kw, index) => <Tag key={kw} className={`tag-base tag-color-${index % 7}`} style={{ fontSize: 11 }}>{kw.trim()}</Tag>)}</Flex>
-                          : '-'
-                      },
                       { label: '作者', value: steering.author || '-' },
                       { label: '更新时间', value: formatDateTime(steering.updatedAt) },
                       { label: '创建时间', value: formatDateTime(steering.createdAt) },
@@ -370,12 +364,6 @@ export default function SteeringDetailPage() {
                               label: '标签',
                               value: selectedVersionDetail.tags
                                 ? <Flex wrap="wrap" gap={4}>{selectedVersionDetail.tags.split(',').filter(t => t.trim()).map((t, i) => <Tag key={t} className={`tag-base tag-color-${i % 7}`}>{t.trim()}</Tag>)}</Flex>
-                                : '-'
-                            },
-                            {
-                              label: '关键词',
-                              value: selectedVersionDetail.keywords
-                                ? <Flex wrap="wrap" gap={4}>{selectedVersionDetail.keywords.split(',').filter(k => k.trim()).map((kw, i) => <Tag key={kw} className={`tag-base tag-color-${i % 7}`} style={{ fontSize: 11 }}>{kw.trim()}</Tag>)}</Flex>
                                 : '-'
                             },
                             { label: '修改摘要', value: selectedVersionDetail.changeSummary || '-' },

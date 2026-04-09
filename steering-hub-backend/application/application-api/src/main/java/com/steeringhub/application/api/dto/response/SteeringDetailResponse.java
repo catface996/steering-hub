@@ -17,6 +17,8 @@ public class SteeringDetailResponse {
     private SteeringStatus status;
     private Integer currentVersion;
     private List<String> tags;
+    /** @deprecated Use tags instead. Keywords have been merged into tags. */
+    @Deprecated
     private String keywords;
     private List<String> agentQueries;
     private String author;

@@ -165,7 +165,7 @@ public class SteeringDomainServiceImpl implements SteeringDomainService {
         steeringVersionRepository.updateVersionStatus(id, "approved", "active");
 
         steeringRepository.commitActivate(id, approvedVersion.getTitle(), approvedVersion.getContent(),
-                approvedVersion.getTags(), approvedVersion.getVersion(), embeddingStr, embeddingStr);
+                approvedVersion.getTags(), approvedVersion.getKeywords(), approvedVersion.getVersion(), embeddingStr, embeddingStr);
 
         saveReview(id, approvedVersion.getVersion(), ReviewAction.ACTIVATE, comment, reviewerId);
     }

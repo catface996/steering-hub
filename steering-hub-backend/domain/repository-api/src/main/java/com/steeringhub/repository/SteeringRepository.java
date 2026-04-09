@@ -39,6 +39,6 @@ public interface SteeringRepository {
 
     boolean compareAndSetStatus(Long id, SteeringStatus expected, SteeringStatus target);
 
-    int commitActivate(Long id, String title, String content, String tags,
+    int commitActivate(Long id, String title, String content, String tags, String keywords,
                        Integer currentVersion, String embeddingStr, String contentEmbeddingStr);
 }

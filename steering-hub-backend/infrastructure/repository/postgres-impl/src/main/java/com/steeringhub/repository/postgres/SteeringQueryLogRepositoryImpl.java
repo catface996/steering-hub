@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Repository
@@ -81,6 +82,27 @@ public class SteeringQueryLogRepositoryImpl implements SteeringQueryLogRepositor
                         .last("LIMIT " + limit))
                 .stream().map(this::toEntity).collect(Collectors.toList());
     }
+
+    @Override
+    public int countByDays(int days) { return mapper.countByDays(days); }
+
+    @Override
+    public int countEffectiveByDays(int days) { return mapper.countEffectiveByDays(days); }
+
+    @Override
+    public int countIneffectiveByDays(int days) { return mapper.countIneffectiveByDays(days); }
+
+    @Override
+    public int countPendingByDays(int days) { return mapper.countPendingByDays(days); }
+
+    @Override
+    public List<Map<String, Object>> findTopQueriesByDays(int days, int limit) { return mapper.findTopQueriesByDays(days, limit); }
+
+    @Override
+    public List<Map<String, Object>> findActiveAgentsByDays(int days, int limit) { return mapper.findActiveAgentsByDays(days, limit); }
+
+    @Override
+    public Double avgResponseTimeByDays(int days) { return mapper.avgResponseTimeByDays(days); }
 
     private SteeringQueryLogPO toPO(SteeringQueryLog entity) {
         SteeringQueryLogPO po = new SteeringQueryLogPO();

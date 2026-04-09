@@ -8,4 +8,41 @@
         WHERE created_at >= NOW() - INTERVAL '7 days'
     </select>
 
+    <select id="countByDays" resultType="int">
+        SELECT COUNT(*) FROM steering_query_log
+        WHERE created_at >= NOW() - (#{days} || ' days')::INTERVAL
+    </select>
+
+    <select id="countEffectiveByDays" resultType="int">
+        SELECT COUNT(*) FROM steering_query_log
+        WHERE is_effective = true AND created_at >= NOW() - (#{days} || ' days')::INTERVAL
+    </select>
+
+    <select id="countIneffectiveByDays" resultType="int">
+        SELECT COUNT(*) FROM steering_query_log
+        WHERE is_effective = false AND created_at >= NOW() - (#{days} || ' days')::INTERVAL
+    </select>
+
+    <select id="countPendingByDays" resultType="int">
+        SELECT COUNT(*) FROM steering_query_log
+        WHERE is_effective IS NULL AND created_at >= NOW() - (#{days} || ' days')::INTERVAL
+    </select>
+
+    <select id="findTopQueriesByDays" resultType="map">
+        SELECT query_text, COUNT(*) as count FROM steering_query_log
+        WHERE created_at >= NOW() - (#{days} || ' days')::INTERVAL
+        GROUP BY query_text ORDER BY count DESC LIMIT #{limit}
+    </select>
+
+    <select id="findActiveAgentsByDays" resultType="map">
+        SELECT agent_name as agent_id, COUNT(*) as count FROM steering_query_log
+        WHERE agent_name IS NOT NULL AND created_at >= NOW() - (#{days} || ' days')::INTERVAL
+        GROUP BY agent_name ORDER BY count DESC LIMIT #{limit}
+    </select>
+
+    <select id="avgResponseTimeByDays" resultType="java.lang.Double">
+        SELECT AVG(response_time_ms) FROM steering_query_log
+        WHERE created_at >= NOW() - (#{days} || ' days')::INTERVAL
+    </select>
+
 </mapper>

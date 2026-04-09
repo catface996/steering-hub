@@ -27,11 +27,11 @@
         SELECT id, category_id, title, content, keywords, tags, status, current_version, created_at, updated_at, deleted
         FROM steering
         WHERE deleted = false AND status = 'active'
-          AND to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(content,'') || ' ' || coalesce(keywords,''))
+          AND to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(content,'') || ' ' || coalesce(tags,'') || ' ' || coalesce(keywords,''))
               @@ plainto_tsquery('simple', #{query})
         <if test="categoryId != null">AND category_id = #{categoryId}</if>
         ORDER BY ts_rank(
-            to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(content,'') || ' ' || coalesce(keywords,'')),
+            to_tsvector('simple', coalesce(title,'') || ' ' || coalesce(content,'') || ' ' || coalesce(tags,'') || ' ' || coalesce(keywords,'')),
             plainto_tsquery('simple', #{query})
         ) DESC
         LIMIT #{limit}
@@ -98,7 +98,7 @@
 
     <update id="commitActivate">
         UPDATE steering
-        SET title = #{title}, content = #{content}, tags = #{tags},
+        SET title = #{title}, content = #{content}, tags = #{tags}, keywords = #{keywords},
             current_version = #{currentVersion}, status = 'active',
             embedding = #{embeddingStr}::vector, content_embedding = #{contentEmbeddingStr}::vector,
             updated_at = NOW()
@@ -113,7 +113,7 @@
         <if test="status != null and status != ''">AND status = #{status}</if>
         <if test="categoryId != null">AND category_id = #{categoryId}</if>
         <if test="keyword != null and keyword != ''">
-            AND (title LIKE CONCAT('%', #{keyword}, '%') OR tags LIKE CONCAT('%', #{keyword}, '%'))
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR tags LIKE CONCAT('%', #{keyword}, '%') OR keywords LIKE CONCAT('%', #{keyword}, '%'))
         </if>
         ORDER BY updated_at DESC
         LIMIT #{size} OFFSET #{offset}
@@ -125,7 +125,7 @@
         <if test="status != null and status != ''">AND status = #{status}</if>
         <if test="categoryId != null">AND category_id = #{categoryId}</if>
         <if test="keyword != null and keyword != ''">
-            AND (title LIKE CONCAT('%', #{keyword}, '%') OR tags LIKE CONCAT('%', #{keyword}, '%'))
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR tags LIKE CONCAT('%', #{keyword}, '%') OR keywords LIKE CONCAT('%', #{keyword}, '%'))
         </if>
     </select>
 

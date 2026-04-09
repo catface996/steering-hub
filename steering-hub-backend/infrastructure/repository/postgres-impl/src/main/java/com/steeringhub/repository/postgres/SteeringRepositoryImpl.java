@@ -113,9 +113,9 @@ public class SteeringRepositoryImpl implements SteeringRepository {
     }
 
     @Override
-    public int commitActivate(Long id, String title, String content, String tags,
+    public int commitActivate(Long id, String title, String content, String tags, String keywords,
                               Integer currentVersion, String embeddingStr, String contentEmbeddingStr) {
-        return mapper.commitActivate(id, title, content, tags, currentVersion, embeddingStr, contentEmbeddingStr);
+        return mapper.commitActivate(id, title, content, tags, keywords, currentVersion, embeddingStr, contentEmbeddingStr);
     }
 
     private String toVectorString(float[] embedding) {

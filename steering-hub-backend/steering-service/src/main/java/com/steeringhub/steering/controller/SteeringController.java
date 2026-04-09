@@ -66,11 +66,13 @@ public class SteeringController {
     @GetMapping
     public Result<PageResult<SteeringDetailResponse>> pageSteerings(
             @RequestParam(defaultValue = "1") int page,
+            @RequestParam(required = false) Integer current,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword) {
-        return Result.ok(steeringApplicationService.pageSteerings(page, size, categoryId, status, keyword));
+        int pageNum = current != null ? current : page;
+        return Result.ok(steeringApplicationService.pageSteerings(pageNum, size, categoryId, status, keyword));
     }
 
     @Operation(summary = "审核操作（提交/通过/驳回/生效/废弃）")

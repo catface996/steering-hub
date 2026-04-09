@@ -217,7 +217,7 @@ export default function SteeringEditPage() {
       <div style={{ width: 360, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Tags & Keywords */}
         <div style={{ borderRadius: 12, border: '1px solid #27273a', padding: 24 }}>
-          {sectionHeader(<TagIcon size={18} color="var(--primary-color)" />, '标签与关键词')}
+          {sectionHeader(<TagIcon size={18} color="var(--primary-color)" />, '标签')}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={labelStyle}>标签</label>
@@ -242,32 +242,6 @@ export default function SteeringEditPage() {
                   ))}
                 </Flex>
               )}
-            </div>
-            <div>
-              <label style={labelStyle}>关键词</label>
-              <Flex gap={8}>
-                <Input
-                  value={keywordInput}
-                  onChange={(e) => setKeywordInput(e.target.value)}
-                  onPressEnter={(e) => { e.preventDefault(); addKeyword(); }}
-                  placeholder="输入关键词后点击添加"
-                  style={{ flex: 1 }}
-                />
-                <Button icon={<Plus size={14} />} onClick={addKeyword}>添加</Button>
-              </Flex>
-              {keywordsList.length > 0 && (
-                <Flex wrap="wrap" gap={6} style={{ marginTop: 10 }}>
-                  {keywordsList.map((kw, i) => (
-                    <Tag key={kw} className={`tag-base tag-editable tag-color-${i % 7}`}>
-                      {kw}
-                      <X size={12} className="tag-close" onClick={() => removeKeyword(kw)} />
-                    </Tag>
-                  ))}
-                </Flex>
-              )}
-              <Typography.Text style={{ fontSize: 11, color: '#71717a', marginTop: 6, display: 'block' }}>
-                关键词用于提升规范的检索命中率
-              </Typography.Text>
             </div>
           </div>
         </div>
